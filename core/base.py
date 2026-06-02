@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-
+from llama_index.core import PromptTemplate
 
 class BaseRAG(ABC):
 
@@ -13,25 +13,46 @@ class BaseRAG(ABC):
   async def retrieve(self, query: str):
     pass
 
-  async def build_context(self, docs):
-    return "\n\n".join([d.text for d in docs])
-  
+    
+  @abstractmethod
+  async def build_context(self, retrieved):
+    pass
+
+
   async def generate(self, query: str, context: str):
-    prompt = f"""
-You are a helpful assistant.
+    template = PromptTemplate("""
+  You are a helpful assistant.
 
-Context:
-{context}
+  Use ONLY the context below to answer the question.
 
-Question:
-{query}
+  Context:
+  {context}
 
-Answer:
-"""
-    return await self.llm.apredict(prompt)
-  
+  Question:
+  {query}
+
+  Answer:
+  """)
+
+    return await self.llm.apredict(
+          template,
+          context=context,
+          query=query
+    )
 
   async def answer(self, query: str):
-    docs = await self.retrieve(query)
-    context = await self.build_context(docs)
-    return await self.generate(query, context)
+    print(f"\n[QUERY] {query}")
+
+    retrieved = await self.retrieve(query)
+    print("\n[RETRIEVED]")
+    for r in retrieved:
+        print(r.text)
+
+        
+    context = await self.build_context(retrieved)
+    print("\n[CONTEXT]\n", context)
+
+    answer = await self.generate(query, context)
+    print("\n[ANSWER]\n", answer)
+
+    return answer
