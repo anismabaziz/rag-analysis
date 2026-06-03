@@ -1,58 +1,66 @@
-from rag.naive_rag import NaiveRAG
-from llama_index.llms.groq import Groq
-from data.embed import get_embed_model
-from data.loader import load_documents
-from data.splitter import split_documents
-from vector.store import get_vector_store
-from dotenv import load_dotenv
-import os 
 import asyncio
+import argparse     
+from vector.store import reset_vector_store
+from build_index import build_index
+from runners.hybrid_rag import run_hybrid
+from runners.naive_rag import run_naive
 
 
-load_dotenv()
+async def main():
+    """
+    Main CLI parser and router for the RAG Comparison Benchmarking application.
+    Allows users to ingest documents, clear the vector store, test models, or compare them.
+    """
 
-
-
-def init():
-  embedding_model = get_embed_model()
-  vector_store = get_vector_store()
-
-  print(f"[INIT] create embedding model and vector store")
-
-  doc_path = "./documents"
-  documents = load_documents(doc_path)
-
-  print(f"[DOC] read documents: {len(documents)} documents")
-
-  nodes = split_documents(documents)
-
-  print(f"[SPLIT] split document to nodes: {len(nodes)} nodes")
-
-  for node in nodes:
-      text = node.text
-      node.embedding = embedding_model.get_text_embedding(text)
-
-  print("[EMBED] embeddings created")
-
-  vector_store.add(nodes)
-
-  print(f"[DB] added {len(nodes)} nodes to vector store")
-
-async def test_naive():
-  # test naive rag
-  llm = Groq(
-        model="llama-3.3-70b-versatile",
-        api_key=os.getenv("GROQ_API_KEY")
-  )
-  embedding_model = get_embed_model()
-  vector_store = get_vector_store()
-
-  naive_rag = NaiveRAG(llm, embedding_model, vector_store)
-
-  await naive_rag.answer("What is the architecture of a transformer?")
+    # create main argument parser
+    parser = argparse.ArgumentParser(
+        description="RAG Comparison Benchmarking CLI - A tool to test and compare RAG architectures."
+    )
+    
+    # add subparsers for each command
+    subparsers = parser.add_subparsers(dest="command", required=True, help="RAG commands")
+    
+    # ingest command
+    subparsers.add_parser(
+        "ingest", 
+        help="Reset vector store, load files from ./documents, split them, embed, and index into Qdrant"
+    )
+    
+    # clear command
+    subparsers.add_parser(
+        "clear", 
+        help="Clear/delete the Qdrant vector store collection to prevent data contamination"
+    )
+    
+    # test-naive command
+    naive_parser = subparsers.add_parser(
+        "test-naive", 
+        help="Retrieve context and answer a query using Naive RAG (Dense vector search only)"
+    )
+    naive_parser.add_argument("query", type=str, help="The query/question to run")
+    
+    # test-hybrid command
+    hybrid_parser = subparsers.add_parser(
+        "test-hybrid", 
+        help="Retrieve context and answer a query using Hybrid RAG (Dense + BM25 Sparse Search + RRF)"
+    )
+    hybrid_parser.add_argument("query", type=str, help="The query/question to run")
+    
+    # parse CLI arguments
+    args = parser.parse_args()
+    
+    # route command to appropriate action
+    if args.command == "ingest":
+        print("[CLI] Ingesting documents...")
+        build_index()
+    elif args.command == "clear":
+        print("[CLI] Clearing vector store...")
+        reset_vector_store()
+    elif args.command == "test-naive":
+        await run_naive(args.query)
+    elif args.command == "test-hybrid":
+        await run_hybrid(args.query)
 
 
 if __name__ == "__main__":
-  asyncio.run(test_naive())
-
-
+    asyncio.run(main())
