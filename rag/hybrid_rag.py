@@ -28,12 +28,21 @@ class HybridRAG(BaseRAG):
     
     # run semantic dense search against Qdrant
     dense = await self.dense_search(query, top_k)
-        
+    
     # run keyword sparse search using BM25
     sparse = self.sparse_search(query, top_k)
-        
+
+
+    print("\n=== DENSE ===")
+    for n in dense:
+      print(n.id_, n.text[:100])
+
+    print("\n=== SPARSE ===")
+    for n in sparse:
+      print(n.id_, n.text[:100])
+    
     # combine and re-rank the retrieved nodes using RRF
-    return self.rrf(dense, sparse, top_k)
+    return self.rrf(dense, sparse, top_k=5)
 
   def sparse_search(self, query: str, top_k=10):
     """
@@ -42,7 +51,7 @@ class HybridRAG(BaseRAG):
     
     # tokenize the query terms
     tokenized_query = self._tokenize(query)
-        
+    
     # calculate BM25 scores for all documents/nodes
     scores = self.bm25.get_scores(tokenized_query)
 
@@ -52,7 +61,7 @@ class HybridRAG(BaseRAG):
       for i, score in enumerate(scores)
       if score > 0
     ]
-        
+    
     # sort the matching nodes by score in descending order
     ranked = sorted(ranked, key=lambda x: x[1], reverse=True)
 
@@ -89,7 +98,7 @@ class HybridRAG(BaseRAG):
 
     return fixed_nodes
 
-  def rrf(self, dense, sparse, top_k=10, k=60):
+  def rrf(self, dense, sparse, top_k=5, k=60):
     """
     Combines results of dense and sparse search using Reciprocal Rank Fusion (RRF).
     RRF prioritizes documents that appear high in either or both of the ranked results.

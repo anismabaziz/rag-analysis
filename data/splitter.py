@@ -1,10 +1,11 @@
-from llama_index.core.node_parser import SentenceSplitter
+from llama_index.core.node_parser import SemanticSplitterNodeParser
 
 
-def split_documents(documents):
-  splitter = SentenceSplitter(
-    chunk_size=512,
-    chunk_overlap=50
+def split_documents(documents, embed_model):
+  splitter = SemanticSplitterNodeParser(
+    embed_model=embed_model,
+    buffer_size=1,
+    breakpoint_percentile_threshold=95
   )
 
   return splitter.get_nodes_from_documents(documents)

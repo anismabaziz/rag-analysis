@@ -1,7 +1,7 @@
-from ..data.embed import get_embed_model
-from ..rag.naive_rag import NaiveRAG
-from ..vector.store import get_vector_store
-from ..config.params import Params
+from data.embed import get_embed_model
+from rag.naive_rag import NaiveRAG
+from vector.store import get_vector_store
+from config.params import Params
 from llama_index.llms.groq import Groq
 
 
