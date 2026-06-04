@@ -1,9 +1,6 @@
 from data.embed import get_embed_model
-from data.splitter import split_documents
-from data.loader import load_documents
 from rag.hybrid_rag import HybridRAG
 from vector.store import get_vector_store
-from data.utils import get_deterministic_node_id
 from config.params import Params
 from llama_index.llms.groq import Groq
 from rank_bm25 import BM25Okapi
@@ -24,17 +21,17 @@ def init():
 
     # load documents from the local documents directory
     print("[INIT] Loading documents from ./documents...")
-    documents = load_documents("./documents")
+    documents = None
     
     # split documents into smaller text chunks/nodes
     print("[INIT] Splitting documents into text nodes...")
-    nodes = split_documents(documents, embed_model=embedding_model)
+    nodes = None
 
     # assign deterministic UUIDs to nodes using our utility
     print("[INIT] Generating deterministic node IDs...")
     for node in nodes:
         file_path = node.metadata.get("file_path", "unknown_path")
-        node.id_ = get_deterministic_node_id(file_path, node.text)
+        """node.id_ = get_deterministic_node_id(file_path, node.text)"""
 
     # tokenize the nodes for the BM25 sparse search index
     tokenized_docs = [
