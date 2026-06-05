@@ -21,10 +21,13 @@ async def main():
 	subparsers = parser.add_subparsers(dest="command", required=True, help="RAG commands")
 	
 	# ingest command
-	subparsers.add_parser(
+	ingest_parser = subparsers.add_parser(
 		"ingest", 
 		help="Reset vector store, load files from ./documents, split them, embed, and index into Qdrant"
 	)
+	ingest_parser.add_argument("collection_name", type=str, help="The collection name to use for ingestion")
+	ingest_parser.add_argument("--hybrid", action="store_true", help="Wether to use sparse index with the dense one or not")
+
 	
 	# clear command
 	clear_parser = subparsers.add_parser(
@@ -53,13 +56,17 @@ async def main():
 	# route command to appropriate action
 	if args.command == "ingest":
 		print("[CLI] Ingesting documents...")
-		build_index()
+		collection_name = args.collection_name
+		enable_hybrid = args.hybrid
+		build_index(collection_name, enable_hybrid)
 	elif args.command == "clear":
 		print("[CLI] Clearing vector store...")
 		reset_vector_store(args.collection_name)
 	elif args.command == "test-naive":
+		print("[CLI] Running NaiveRAG...")
 		await run_naive(args.query)
 	elif args.command == "test-hybrid":
+		print("[CLI] Running HybridRAG...")
 		await run_hybrid(args.query)
 
 

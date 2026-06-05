@@ -75,7 +75,7 @@ def reset_vector_store(collection_name: str):
 
 
 	if client.collection_exists(collection_name):
-		client.delete_collecion(collection_name)
+		client.delete_collection(collection_name)
 		print(f"[INFO] deleted collection: {collection_name}")
 	else:
 		print(f"[INFO] collection '{collection_name}' does not exist")
