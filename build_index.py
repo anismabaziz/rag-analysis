@@ -6,7 +6,7 @@ from llama_index.core.schema import TextNode
 from glob import glob
 
 
-def build_index():
+def build_index(collection_name: str, enable_hybrid: bool):
 	"""
 	Clears the existing Qdrant collection to prevent contamination, 
 	loads raw documents, splits them into text nodes, embeds them, 
@@ -22,13 +22,13 @@ def build_index():
 
 	# initialize vector store and embedding models
 	embedding_model = get_embed_model()
-	vector_store = get_vector_store()
+	vector_store = get_vector_store(collection_name, enable_hybrid)
 
 	# initialize loader and splitter
 	print("[INDEX] loading documents")
 	loader = PDFLoader(
-		infer_table_structure=False,
-		fallback_strategy="fast"
+		infer_table_structure=True,
+		fallback_strategy="hi_res"
 	)
 	splitter = PDFSplitter(
 		chunking_strategy="semantic",
