@@ -1,40 +1,43 @@
 from core.base import BaseRAG
-from qdrant_client import QdrantClient
-from llama_index.core.schema import TextNode
+from qdrant_client import models
+from vector.store import get_qdrant_client
+from data.embed import get_sparse_embed_model
 
 
 class HybridRAG(BaseRAG):
-    
-    def __init__(self, llm, embed_model):
-        super().__init__(llm, embed_model)
-        self.client = QdrantClient(url="http://localhost:6333")
-        self.collection_name = "rag_hybrid"
+	
+	def __init__(self, llm, embed_model, collection_name):
+		super().__init__(llm, embed_model)
+		self.client = get_qdrant_client()
+		self.collection_name = collection_name
+		self.sparse_model = get_sparse_embed_model()
 
-    async def retrieve(self, query: str, top_k: int = 5):
-        # Generate dense embedding (this returns a list already)
-        query_embedding = await self.embed_model.aget_query_embedding(query)
-        
-        # query_points is the correct method [citation:4]
-        # No .tolist() needed - it's already a list
-        results = self.client.query_points(
-            collection_name=self.collection_name,
-            query=query_embedding,  # Just pass the list directly
-            limit=top_k,
-            with_payload=True,
-        )
-        
-        print(f"[DEBUG] Hybrid search results")
-        
-        nodes = []
-        for point in results.points:
-            print(f"Score: {point.score:.4f}")
-            
-            node = TextNode(
-                text=point.payload.get("text", ""),
-                id_=str(point.id),
-                metadata=point.payload.get("metadata", {}),
-            )
-            node.metadata["score"] = point.score
-            nodes.append(node)
-        
-        return nodes
+	async def retrieve(self, query: str, top_k: int = 5):
+		
+		# generate dense embedding
+		dense_query = list(self.embed_model.embed([query]))[0]
+
+		# generate sparse embedding
+		sparse_query = list(self.sparse_model.embed([query]))[0]
+
+		# get results
+		results = self.client.query_points(
+			collection_name=self.collection_name,
+			prefetch= [
+				models.Prefetch(
+					query=models.SparseVector(indices=sparse_query.indices.tolist(), values=sparse_query.values.tolist()),
+					using='sparse',
+					limit=top_k
+				),
+				models.Prefetch(
+					query=dense_query,
+					using= 'dense',
+					limit=top_k
+				)
+			],
+			query=models.FusionQuery(fusion=models.Fusion.RRF)
+		)
+
+		nodes = [point.payload['text'] for point in results.points]
+		
+		return nodes or []

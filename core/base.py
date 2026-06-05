@@ -32,12 +32,7 @@ class BaseRAG(ABC):
 		if not nodes:
 			return "No relevant documents returned"
 		
-		context_parts = []
-		for i, node in enumerate(nodes, 1):
-			section = node.metadata.get("section", "Unknown")
-			context_parts.append(f"[{i}] ({section}): {node.text}")
-
-		return "\n\n".join(context_parts)
+		return "\n\n".join(nodes)
 
 	async def generate(self, query: str, context: str):
 		"""
@@ -76,7 +71,7 @@ Answer:
 		print("[RETRIEVED]")
 		for r in retrieved:
 				print("#"*60)
-				print(r.text)
+				print(r)
 
 		# combine nodes into a single context string
 		context = await self.build_context(retrieved)

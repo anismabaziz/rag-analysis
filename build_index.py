@@ -117,7 +117,7 @@ def create_sparse_vector(text: str):
 	"""
 
 	embedding_model = get_sparse_embed_model()
-	embeddings = embedding_model.embed([text])[0]
+	embeddings = list(embedding_model.embed([text]))[0]
 
 	sparse_vector = models.SparseVector(
 		indices=embeddings.indices.tolist(),

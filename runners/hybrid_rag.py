@@ -15,13 +15,13 @@ async def run_hybrid(query: str):
 	
 	# set up the Groq LLM client
 	llm = Groq(
-		model="llama-3.3-70b-versatile",
+		model='llama-3.3-70b-versatile',
 		api_key=Params.GROQ_API_KEY
 	)
 	
 	# instantiate the HybridRAG pipeline with BM25 resources
-	hybrid_rag = HybridRAG(llm, embedding_model)
+	hybrid_rag = HybridRAG(llm, embedding_model, 'rag_hybrid')
 	
 	# run hybrid retrieval (dense + sparse fused via RRF) and generate answer
-	print(f"[INFO] Running Hybrid RAG (Dense + BM25 Sparse Search)")
+	print(f"[INFO] Running Hybrid RAG (Dense + Sparse Search)")
 	await hybrid_rag.answer(query)

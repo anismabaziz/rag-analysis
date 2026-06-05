@@ -18,7 +18,7 @@ async def run_naive(query: str):
 	)
 	
 	# instantiate the NaiveRAG pipeline
-	naive_rag = NaiveRAG(llm, embedding_model)
+	naive_rag = NaiveRAG(llm, embedding_model, "rag_naive")
 	
 	# run retrieval, build context, and generate response
 	print(f"[INFO] Running Naive RAG (Dense Search only)")
