@@ -25,8 +25,7 @@ async def main():
 		"ingest", 
 		help="Reset vector store, load files from ./documents, split them, embed, and index into Qdrant"
 	)
-	ingest_parser.add_argument("collection_name", type=str, help="The collection name to use for ingestion")
-	ingest_parser.add_argument("--hybrid", action="store_true", help="Wether to use sparse index with the dense one or not")
+	ingest_parser.add_argument("architecture", type=str, help="The architecture for which we do the ingestion")
 
 	
 	# clear command
@@ -56,17 +55,28 @@ async def main():
 	# route command to appropriate action
 	if args.command == "ingest":
 		print("[CLI] Ingesting documents...")
-		collection_name = args.collection_name
-		enable_hybrid = args.hybrid
-		build_index(collection_name, enable_hybrid)
+		
+		archi = args.architecture
+		if archi == "naive":
+			build_index("rag_naive", enable_hybrid=False)
+		elif archi == "hybrid":
+			build_index("rag_hybrid", enable_hybrid=True)
+		else:
+			print("[INFO] Invalid architecture specified")
+
 	elif args.command == "clear":
 		print("[CLI] Clearing vector store...")
+		
 		reset_vector_store(args.collection_name)
+
 	elif args.command == "test-naive":
 		print("[CLI] Running NaiveRAG...")
+
 		await run_naive(args.query)
+
 	elif args.command == "test-hybrid":
 		print("[CLI] Running HybridRAG...")
+		
 		await run_hybrid(args.query)
 
 

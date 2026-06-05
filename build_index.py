@@ -1,8 +1,8 @@
-from data.embed import get_embed_model
+from data.embed import get_embed_model, get_sparse_embed_model
 from data.loader import PDFLoader
 from data.splitter import PDFSplitter
-from vector.store import get_vector_store, reset_vector_store
-from llama_index.core.schema import TextNode
+from vector.store import reset_vector_store, get_qdrant_client, create_collection
+from qdrant_client import models
 from glob import glob
 
 
@@ -16,34 +16,37 @@ def build_index(collection_name: str, enable_hybrid: bool):
 	# delete existing collection to avoid duplicated or contaminated points
 	print("[INDEX] resetting vector store collection...")
 	try:
-			reset_vector_store()
+			reset_vector_store(collection_name)
 	except Exception as e:
 			print(f"[INDEX] warning: could not reset collection: {e}")
+	qdrant_client = get_qdrant_client()
+	create_collection(qdrant_client, collection_name, enable_hybrid)
+
 
 	# initialize vector store and embedding models
+	print("[INDEX] Loading the embedding model & vector store...")
 	embedding_model = get_embed_model()
-	vector_store = get_vector_store(collection_name, enable_hybrid)
 
 	# initialize loader and splitter
-	print("[INDEX] loading documents")
+	print("[INDEX] loading documents...")
 	loader = PDFLoader(
 		infer_table_structure=True,
-		fallback_strategy="hi_res"
+		fallback_strategy='hi_res'
 	)
 	splitter = PDFSplitter(
-		chunking_strategy="semantic",
+		chunking_strategy='semantic',
 		chunk_size=512,
 		chunk_overlap=128
 	)
 
 	# find all pdfs
-	pdf_files = glob("./documents/**/*.pdf", recursive=True)
+	pdf_files = glob('./documents/**/*.pdf', recursive=True)
 	print(f"[INDEX] found {len(pdf_files)} PDF files")
 
-	all_nodes = []
+	points = []
 
 	for pdf_path in pdf_files:
-		print(f"[INDEX] processing: {pdf_path}")
+		print(f"[INDEX] processing: {pdf_path}...")
 		
 		# load elements from pdf
 		elements = loader.load(pdf_path)
@@ -53,31 +56,77 @@ def build_index(collection_name: str, enable_hybrid: bool):
 		nodes = splitter.process(elements)
 		print(f"  created {len(nodes)} nodes")
 
-		# convert to LlamaIndex TextNodes
 		for node in nodes:
-			text_node = TextNode(
-				text=node["text"],
-				id_=node["node_id"],
-				metadata=node["metadata"]
-			)
+
+			# generate dense embeddings
+			dense_embedding = list(embedding_model.embed([node['text']]))[0]
+
+			# create point
+			point = None
+			if enable_hybrid:
+				# generate sparse embeddings
+				sparse_embedding = create_sparse_vector(node['text'])
+
+				point = models.PointStruct(
+					id=node['node_id'],
+					vector= {
+						'dense': dense_embedding.tolist(),
+						'sparse': sparse_embedding,
+					},
+					payload= {
+						'text': node['text'],
+						'metadata': node['metadata']
+					}
+				)
+			else:
+
+				point = models.PointStruct(
+					id=node['node_id'],
+					vector= {
+						'dense': dense_embedding.tolist(),
+					},
+					payload= {
+						'text': node['text'],
+						'metadata': node['metadata']
+					}
+				)
 
 			# add source file
-			text_node.metadata["source_file"] = pdf_path
+			point.payload['metadata']['source_file'] = pdf_path
 
-			# generate emebeddings
-			text_node.embedding = embedding_model.get_text_embedding(text_node.text)
+			points.append(point)
 
-			all_nodes.append(text_node)
+	print(f"[INDEX] total nodes: {len(points)}")
 
-	print(f"[INDEX] total nodes: {len(all_nodes)}")
 
 	# add to vector store
-	print("[INDEX] indexing nodes to Qdrant")
-	vector_store.add(all_nodes)
+	print("[INDEX] indexing points to Qdrant...")
+	qdrant_client.upsert(
+		collection_name=collection_name,
+		points=points
+	)
 
-	print(f"[INDEX] stored {len(all_nodes)} nodes successfully")
+	print(f"[INDEX] stored {len(points)} points successfully")
 	
-	return all_nodes
+	return points
+
+
+def create_sparse_vector(text: str):
+	"""
+	Creates a sparse vector from text using SPLADE
+	"""
+
+	embedding_model = get_sparse_embed_model()
+	embeddings = embedding_model.embed([text])[0]
+
+	sparse_vector = models.SparseVector(
+		indices=embeddings.indices.tolist(),
+		values=embeddings.values.tolist()
+	)
+
+	return sparse_vector
+
+
 
 if __name__ == "__main__":
 	build_index()

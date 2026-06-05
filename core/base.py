@@ -8,13 +8,12 @@ class BaseRAG(ABC):
 	Concrete subclasses must implement the retrieve and build_context methods.
 	"""
 
-	def __init__(self, llm, embed_model, vector_store):
+	def __init__(self, llm, embed_model):
 		"""
 		Initializes the base RAG class with an LLM, embedding model, and vector store.
 		"""
 		self.llm = llm
 		self.embed_model = embed_model
-		self.vector_store = vector_store
 
 	@abstractmethod
 	async def retrieve(self, query: str):
@@ -35,7 +34,7 @@ class BaseRAG(ABC):
 		
 		context_parts = []
 		for i, node in enumerate(nodes, 1):
-			section = node.metadata.get("current_section", "Unknown")
+			section = node.metadata.get("section", "Unknown")
 			context_parts.append(f"[{i}] ({section}): {node.text}")
 
 		return "\n\n".join(context_parts)

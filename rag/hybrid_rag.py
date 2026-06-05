@@ -1,42 +1,40 @@
 from core.base import BaseRAG
-from llama_index.core.vector_stores.types import VectorStoreQuery
-from vector.store import get_vector_store
+from qdrant_client import QdrantClient
+from llama_index.core.schema import TextNode
 
 
 class HybridRAG(BaseRAG):
-  """
-  HybridRAG implements a hybrid search pipeline combining:
-  1. Dense Vector Search (semantic similarity via embeddings).
-  2. Sparse Search (keyword matching via BM25).
-  Combined using Reciprocal Rank Fusion (RRF) to rank retrieved nodes.
-  """
+    
+    def __init__(self, llm, embed_model):
+        super().__init__(llm, embed_model)
+        self.client = QdrantClient(url="http://localhost:6333")
+        self.collection_name = "rag_hybrid"
 
-  def __init__(self, llm, embed_model):
-    """
-    Initializes the HybridRAG pipeline with the necessary search and LLM models.
-    """
-    super().__init__(llm, embed_model)
-    self.vector_store = get_vector_store("rag_hybrid", enable_hybrid=True)
-
-
-  async def retrieve(self, query: str):
-    """
-    Retrieves the top_k most relevant nodes using both dense and sparse search,
-    fused together using Reciprocal Rank Fusion (RRF).
-    """
-
-    # embed query
-    query_embedding = await self.embed_model.aget_query_embedding(query)
-
-    # query qdrant with hybrid search mode
-    results = self.vector_store.query(
-      VectorStoreQuery(
-        query_embedding=query_embedding,
-        mode="hybrid",
-        sparse_top_k=10,
-        dense_top_k=10,
-        similarity_top_k=5
-      )
-    )
-
-    return results.nodes or []
+    async def retrieve(self, query: str, top_k: int = 5):
+        # Generate dense embedding (this returns a list already)
+        query_embedding = await self.embed_model.aget_query_embedding(query)
+        
+        # query_points is the correct method [citation:4]
+        # No .tolist() needed - it's already a list
+        results = self.client.query_points(
+            collection_name=self.collection_name,
+            query=query_embedding,  # Just pass the list directly
+            limit=top_k,
+            with_payload=True,
+        )
+        
+        print(f"[DEBUG] Hybrid search results")
+        
+        nodes = []
+        for point in results.points:
+            print(f"Score: {point.score:.4f}")
+            
+            node = TextNode(
+                text=point.payload.get("text", ""),
+                id_=str(point.id),
+                metadata=point.payload.get("metadata", {}),
+            )
+            node.metadata["score"] = point.score
+            nodes.append(node)
+        
+        return nodes

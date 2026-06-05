@@ -12,3 +12,6 @@ wheels/
 
 # secrets
 .env
+
+# test files
+*.txt
