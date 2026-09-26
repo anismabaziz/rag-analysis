@@ -1,11 +1,13 @@
 from abc import ABC, abstractmethod
+
+from core.chunk import REFUSAL, Chunk, build_context
 from llama_index.core import PromptTemplate
 
 
 class BaseRAG(ABC):
 	"""
 	Abstract base class defining the standard structure and lifecycle of a RAG pipeline.
-	Concrete subclasses must implement the retrieve and build_context methods.
+	Concrete subclasses must implement the retrieve method.
 	"""
 
 	def __init__(self, llm, embed_model):
@@ -16,23 +18,13 @@ class BaseRAG(ABC):
 		self.embed_model = embed_model
 
 	@abstractmethod
-	async def retrieve(self, query: str):
+	async def retrieve(self, query: str) -> list[Chunk]:
 		"""
-		Retrieves relevant document nodes for the query.
+		Retrieves scored chunks for the query, each carrying its text and its provenance.
 		To be implemented by subclasses.
 		"""
 		pass
 
-
-	async def build_context(self, nodes):
-		"""
-		Builds the context string from retrieved nodes.
-		To be implemented by subclasses.
-		"""
-		if not nodes:
-			return "No relevant documents returned"
-		
-		return "\n\n".join(nodes)
 
 	async def generate(self, query: str, context: str):
 		"""
@@ -42,7 +34,8 @@ class BaseRAG(ABC):
 		template = PromptTemplate("""
 You are a helpful assistant.
 
-Use ONLY the context below to answer the question.
+Use ONLY the context below to answer the question. If the context does not contain the
+answer, say so instead of guessing.
 
 Context:
 {context}
@@ -66,15 +59,21 @@ Answer:
 		"""
 		print(f"[QUERY] {query}")
 
-		# retrieve context document nodes
-		retrieved = await self.retrieve(query)
+		# retrieve scored chunks, each carrying the score and provenance that selected it
+		chunks = await self.retrieve(query)
 		print("[RETRIEVED]")
-		for r in retrieved:
-				print("#"*60)
-				print(r)
+		for chunk in chunks:
+			print("#"*60)
+			print(chunk.report_line())
+			print(chunk.text)
 
-		# combine nodes into a single context string
-		context = await self.build_context(retrieved)
+		# nothing retrieved means the model is never asked, so it is never asked to invent
+		if not chunks:
+			print(f"[REFUSAL]\n{REFUSAL}")
+			return REFUSAL
+
+		# combine chunks into a single context string
+		context = build_context(chunks)
 		print("[CONTEXT]\n", context)
 
 		# call LLM to generate final response based on context

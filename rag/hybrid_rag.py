@@ -1,6 +1,7 @@
 from core.base import BaseRAG
+from core.chunk import Chunk
 from qdrant_client import models
-from vector.store import get_qdrant_client
+from vector.store import chunks_from_result, get_qdrant_client
 from data.embed import get_sparse_embed_model
 
 
@@ -12,7 +13,7 @@ class HybridRAG(BaseRAG):
 		self.collection_name = collection_name
 		self.sparse_model = get_sparse_embed_model()
 
-	async def retrieve(self, query: str, top_k: int = 5):
+	async def retrieve(self, query: str, top_k: int = 5) -> list[Chunk]:
 		
 		# generate dense embedding
 		dense_query = list(self.embed_model.embed([query]))[0]
@@ -38,6 +39,4 @@ class HybridRAG(BaseRAG):
 			query=models.FusionQuery(fusion=models.Fusion.RRF)
 		)
 
-		nodes = [point.payload['text'] for point in results.points]
-		
-		return nodes or []
+		return chunks_from_result(results)

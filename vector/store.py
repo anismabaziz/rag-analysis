@@ -1,9 +1,37 @@
 from config.params import Params
+from core.chunk import Chunk, Provenance
 from qdrant_client import QdrantClient, models
 
 
 def get_qdrant_client():
 	return QdrantClient(url=Params.QDRANT_URL)
+
+
+def chunk_from_point(point: models.ScoredPoint) -> Chunk:
+	"""Read one scored store point as a chunk carrying its text and its provenance.
+
+	Indexed nodes record the pages they span as a list, so a chunk is placed on the first of
+	them. A point without text is an indexing fault, not an empty chunk, so it raises rather
+	than being retrieved as a blank that still counts as a hit.
+	"""
+	metadata = (point.payload or {}).get('metadata') or {}
+	pages = metadata.get('pages') or []
+
+	return Chunk(
+		text=point.payload['text'],
+		score=float(point.score),
+		provenance=Provenance(
+			source=metadata.get('source_file'),
+			section=metadata.get('section'),
+			page=pages[0] if pages else None,
+			node_id=str(point.id) if point.id is not None else None,
+		),
+	)
+
+
+def chunks_from_result(result: models.QueryResponse) -> list[Chunk]:
+	"""Read a scored store response as chunks, in the order the store ranked them."""
+	return [chunk_from_point(point) for point in result.points]
 
 
 def create_collection(client: QdrantClient, collection_name: str, enable_hybrid: bool):

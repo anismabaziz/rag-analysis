@@ -1,5 +1,6 @@
 from core.base import BaseRAG
-from vector.store import get_qdrant_client
+from core.chunk import Chunk
+from vector.store import chunks_from_result, get_qdrant_client
 
 
 class NaiveRAG(BaseRAG):
@@ -13,7 +14,7 @@ class NaiveRAG(BaseRAG):
 		self.vector_store = get_qdrant_client()
 		self.collection_name = collection_name
 
-	async def retrieve(self, query: str, top_k: int = 5):
+	async def retrieve(self, query: str, top_k: int = 5) -> list[Chunk]:
 
 		# generate vector embedding for the query string
 		query_embedding = list(self.embed_model.embed([query]))[0]
@@ -26,7 +27,4 @@ class NaiveRAG(BaseRAG):
 			limit=top_k
 		)
 
-		
-		nodes = [point.payload['text'] for point in results.points]
-
-		return nodes or []
+		return chunks_from_result(results)
