@@ -21,6 +21,6 @@ async def run_naive(query: str):
 	naive_rag = NaiveRAG(llm, embedding_model, "rag_naive")
 	
 	# run retrieval, build context, and generate response
-	print(f"[INFO] Running Naive RAG (Dense Search only)")
+	print("[INFO] Running Naive RAG (Dense Search only)")
 	await naive_rag.answer(query)
 

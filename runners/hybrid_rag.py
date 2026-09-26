@@ -19,9 +19,9 @@ async def run_hybrid(query: str):
 		api_key=Params.GROQ_API_KEY
 	)
 	
-	# instantiate the HybridRAG pipeline with BM25 resources
+	# instantiate the HybridRAG pipeline with BM42 sparse resources
 	hybrid_rag = HybridRAG(llm, embedding_model, 'rag_hybrid')
 	
 	# run hybrid retrieval (dense + sparse fused via RRF) and generate answer
-	print(f"[INFO] Running Hybrid RAG (Dense + Sparse Search)")
+	print("[INFO] Running Hybrid RAG (Dense + Sparse Search)")
 	await hybrid_rag.answer(query)

@@ -1,9 +1,12 @@
+import argparse
+
 from data.embed import get_embed_model, get_sparse_embed_model
 from data.loader import PDFLoader
 from data.splitter import PDFSplitter
 from vector.store import reset_vector_store, get_qdrant_client, create_collection
 from qdrant_client import models
 from glob import glob
+
 
 
 def build_index(collection_name: str, enable_hybrid: bool):
@@ -113,7 +116,7 @@ def build_index(collection_name: str, enable_hybrid: bool):
 
 def create_sparse_vector(text: str):
 	"""
-	Creates a sparse vector from text using SPLADE
+	Creates a sparse vector from text using BM42
 	"""
 
 	embedding_model = get_sparse_embed_model()
@@ -127,6 +130,29 @@ def create_sparse_vector(text: str):
 	return sparse_vector
 
 
+def main():
+	"""
+	Command line entry point so ingestion can be run without the top-level CLI.
+	"""
+	parser = argparse.ArgumentParser(
+		description="Ingest the PDFs under ./documents into a Qdrant collection."
+	)
+	parser.add_argument(
+		"--collection",
+		type=str,
+		required=True,
+		help="Name of the Qdrant collection to create. It is reset first, so a rerun never mixes corpora."
+	)
+	parser.add_argument(
+		"--hybrid",
+		action="store_true",
+		help="Also index BM42 sparse vectors, which is what the hybrid architecture retrieves on"
+	)
+
+	args = parser.parse_args()
+
+	build_index(args.collection, args.hybrid)
+
 
 if __name__ == "__main__":
-	build_index()
+	main()

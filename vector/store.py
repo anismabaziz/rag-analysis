@@ -1,8 +1,9 @@
+from config.params import Params
 from qdrant_client import QdrantClient, models
 
 
 def get_qdrant_client():
-	return QdrantClient(url="http://localhost:6333")
+	return QdrantClient(url=Params.QDRANT_URL)
 
 
 def create_collection(client: QdrantClient, collection_name: str, enable_hybrid: bool):

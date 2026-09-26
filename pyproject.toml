@@ -1,14 +1,21 @@
 [project]
 name = "rag-analysis"
 version = "0.1.0"
-description = "Add your description here"
+description = "Measures how dense, sparse, and hybrid retrieval compare on the same corpus, under one frozen generation setup, so the differences in the results table come from retrieval and nothing else."
 readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Abdelaziz" }]
+keywords = ["rag", "retrieval", "hybrid-search", "qdrant", "evaluation"]
 requires-python = ">=3.12"
 dependencies = [
     "fastembed>=0.8.0",
+    "groq>=1.4.0",
     "llama-index-core>=0.14.22",
     "llama-index-embeddings-huggingface>=0.7.0",
     "llama-index-llms-groq>=0.5.0",
+    "neo4j>=6.2.0",
+    "pydantic>=2.13.4",
     "python-dotenv>=1.2.2",
     "qdrant-client>=1.18.0",
     "sentence-transformers>=5.5.1",
@@ -19,4 +26,23 @@ dependencies = [
 [dependency-groups]
 dev = [
     "check-requirements-txt>=1.4.2",
+    "pytest>=8.4.2",
+    "pytest-asyncio>=1.2.0",
+    "ruff>=0.14.0",
 ]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+asyncio_mode = "auto"
+
+[tool.ruff]
+target-version = "py312"
+
+[tool.ruff.lint]
+# Errors only, for now: the code is tab-indented and mid-migration, so the
+# formatting and import-order rules would bury the failures worth acting on.
+select = ["E4", "E7", "E9", "F"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["F401", "F811"]

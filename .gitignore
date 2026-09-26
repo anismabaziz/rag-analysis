@@ -9,9 +9,13 @@ wheels/
 # Virtual environments
 .venv
 
-
 # secrets
 .env
+.env.*
+!.env.example
 
-# test files
-*.txt
+# results are committed, so nothing is ignored by extension here
+
+# pytest and ruff caches
+.pytest_cache/
+.ruff_cache/

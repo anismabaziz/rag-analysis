@@ -45,7 +45,7 @@ async def main():
 	# test-hybrid command
 	hybrid_parser = subparsers.add_parser(
 		"test-hybrid", 
-		help="Retrieve context and answer a query using Hybrid RAG (Dense + BM25 Sparse Search + RRF)"
+		help="Retrieve context and answer a query using Hybrid RAG (Dense + BM42 Sparse Search + RRF)"
 	)
 	hybrid_parser.add_argument("query", type=str, help="The query/question to run")
 	
