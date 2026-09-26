@@ -3401,6 +3401,7 @@ dependencies = [
 [package.dev-dependencies]
 dev = [
     { name = "check-requirements-txt" },
+    { name = "pypdf" },
     { name = "pytest" },
     { name = "pytest-asyncio" },
     { name = "ruff" },
@@ -3425,6 +3426,7 @@ requires-dist = [
 [package.metadata.requires-dev]
 dev = [
     { name = "check-requirements-txt", specifier = ">=1.4.2" },
+    { name = "pypdf", specifier = ">=6.12.2" },
     { name = "pytest", specifier = ">=8.4.2" },
     { name = "pytest-asyncio", specifier = ">=1.2.0" },
     { name = "ruff", specifier = ">=0.14.0" },

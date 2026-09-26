@@ -1,0 +1,145 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [4 0 R 6 0 R 8 0 R 10 0 R 12 0 R] /Count 5 >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+4 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 5 0 R >>
+endobj
+5 0 obj
+<< /Length 1470 >>
+stream
+BT
+/F1 10 Tf 1 0 0 1 72 740 Tm (Draft, do not cite) Tj
+/F1 18 Tf 1 0 0 1 72 710 Tm (How Retrieval Quality Depends on Document Ingestion) Tj
+/F1 10 Tf 1 0 0 1 72 686 Tm (Abdelaziz Example and Rowan Sample) Tj
+/F1 13 Tf 1 0 0 1 72 662 Tm (1 Introduction) Tj
+/F1 10 Tf 1 0 0 1 72 638 Tm (Retrieval quality is decided twice: once while the document is read and) Tj
+/F1 10 Tf 1 0 0 1 72 624 Tm (once while the index is searched. A chunk cut in the wrong place cannot be) Tj
+/F1 10 Tf 1 0 0 1 72 610 Tm (recovered by a better ranker, so the ingestion stage is part of the result.) Tj
+/F1 10 Tf 1 0 0 1 72 578 Tm (A chunk is the unit of retrieval that the generator reads.) Tj
+/F1 9 Tf 1 0 0 1 72 550 Tm (Figure 1: Mean recall at five for each architecture on domain one.) Tj
+/F1 9 Tf 1 0 0 1 72 200 Tm (Architecture) Tj
+/F1 9 Tf 1 0 0 1 172 200 Tm (Dense) Tj
+/F1 9 Tf 1 0 0 1 272 200 Tm (Sparse) Tj
+/F1 9 Tf 1 0 0 1 372 200 Tm (Hybrid) Tj
+/F1 9 Tf 1 0 0 1 72 188 Tm (Dense) Tj
+/F1 9 Tf 1 0 0 1 172 188 Tm (0.61) Tj
+/F1 9 Tf 1 0 0 1 272 188 Tm (0.00) Tj
+/F1 9 Tf 1 0 0 1 372 188 Tm (0.68) Tj
+/F1 9 Tf 1 0 0 1 72 176 Tm (Sparse) Tj
+/F1 9 Tf 1 0 0 1 172 176 Tm (0.34) Tj
+/F1 9 Tf 1 0 0 1 272 176 Tm (0.72) Tj
+/F1 9 Tf 1 0 0 1 372 176 Tm (0.70) Tj
+/F1 9 Tf 1 0 0 1 72 164 Tm (Rerank) Tj
+/F1 9 Tf 1 0 0 1 172 164 Tm (0.55) Tj
+/F1 9 Tf 1 0 0 1 272 164 Tm (0.69) Tj
+/F1 9 Tf 1 0 0 1 372 164 Tm (0.74) Tj
+/F1 10 Tf 1 0 0 1 72 60 Tm (Preprint. Under review. Do not redistribute.) Tj
+ET
+endstream
+endobj
+6 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 7 0 R >>
+endobj
+7 0 obj
+<< /Length 1102 >>
+stream
+BT
+/F1 10 Tf 1 0 0 1 72 760 Tm (Journal of Reproducible Retrieval Studies, Volume 4, Issue 2) Tj
+/F1 10 Tf 1 0 0 1 72 740 Tm (Draft, do not cite) Tj
+/F1 13 Tf 1 0 0 1 72 710 Tm (2   Ingestion   and   Cleaning) Tj
+/F1 10 Tf 1 0 0 1 72 682 Tm (Text taken from a PDF arrives in pieces. A word split across two lines arrives) Tj
+/F1 10 Tf 1 0 0 1 72 668 Tm (as a hyphen at the end of one line and a fragment at the start of the next, and) Tj
+/F1 10 Tf 1 0 0 1 72 654 Tm (the word has to be put back together before the reader can judge it: the score is) Tj
+/F1 10 Tf 1 0 0 1 72 640 Tm (mea-) Tj
+/F1 10 Tf 1 0 0 1 72 626 Tm (sured by the annotators and not by the parser.) Tj
+/F1 10 Tf 1 0 0 1 72 598 Tm (A chunk is the unit of retrieval that the generator reads.) Tj
+/F1 13 Tf 1 0 0 1 72 570 Tm (A b c D e f G h) Tj
+/F1 10 Tf 1 0 0 1 72 542 Tm (The stamp above is not a heading. A layout model sometimes reads the margin as) Tj
+/F1 10 Tf 1 0 0 1 72 528 Tm (one, and the text under it still belongs to the section above it.) Tj
+/F1 10 Tf 1 0 0 1 72 60 Tm (Preprint. Under review. Do not redistribute.) Tj
+ET
+endstream
+endobj
+8 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 9 0 R >>
+endobj
+9 0 obj
+<< /Length 797 >>
+stream
+BT
+/F1 10 Tf 1 0 0 1 72 760 Tm (Journal of Reproducible Retrieval Studies, Volume 4, Issue 2) Tj
+/F1 10 Tf 1 0 0 1 72 740 Tm (Draft, do not cite) Tj
+/F1 13 Tf 1 0 0 1 72 710 Tm (3   Results   and   Findings) Tj
+/F1 10 Tf 1 0 0 1 72 682 Tm (Hybrid retrieval came first on both domains, and the gap over dense retrieval) Tj
+/F1 10 Tf 1 0 0 1 72 668 Tm (was wider on the domain with the more unusual vocabulary. Reranking on top of) Tj
+/F1 10 Tf 1 0 0 1 72 654 Tm (hybrid retrieval added little, which is reported here rather than left out.) Tj
+/F1 10 Tf 1 0 0 1 72 626 Tm (1 Correspondence to retrieval.study@example.org) Tj
+/F1 10 Tf 1 0 0 1 72 614 Tm (2 The loader is unchanged between the two runs reported here.) Tj
+/F1 10 Tf 1 0 0 1 72 60 Tm (Preprint. Under review. Do not redistribute.) Tj
+ET
+endstream
+endobj
+10 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 11 0 R >>
+endobj
+11 0 obj
+<< /Length 822 >>
+stream
+BT
+/F1 10 Tf 1 0 0 1 72 760 Tm (Journal of Reproducible Retrieval Studies, Volume 4, Issue 2) Tj
+/F1 10 Tf 1 0 0 1 72 740 Tm (Draft, do not cite) Tj
+/F1 10 Tf 1 0 0 1 72 682 Tm (The stamp on this page is the sideways identifier the typesetter ran into the) Tj
+/F1 10 Tf 1 0 0 1 72 668 Tm (margin. It is drawn as letters with a space between each of them, and it is not) Tj
+/F1 10 Tf 1 0 0 1 72 654 Tm (a section, so the text under it stays in the section above.) Tj
+/F1 13 Tf 1 0 0 1 72 626 Tm (g u A 2 ] L C . s c [ 7 v 2 6 7 3 0 . 6 0 7) Tj
+/F1 10 Tf 1 0 0 1 72 598 Tm (Reading order is what a layout model guesses at and what the rest of the) Tj
+/F1 10 Tf 1 0 0 1 72 584 Tm (project then depends on, so the guess is worth pinning down.) Tj
+/F1 10 Tf 1 0 0 1 72 60 Tm (Preprint. Under review. Do not redistribute.) Tj
+ET
+endstream
+endobj
+12 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 13 0 R >>
+endobj
+13 0 obj
+<< /Length 589 >>
+stream
+BT
+/F1 10 Tf 1 0 0 1 72 760 Tm (Journal of Reproducible Retrieval Studies, Volume 4, Issue 2) Tj
+/F1 10 Tf 1 0 0 1 72 740 Tm (Draft, do not cite) Tj
+/F1 9 Tf 1 0 0 1 72 630 Tm (arXiv:2401.00001v1 [cs.CL] 3 Feb 2024) Tj
+/F1 10 Tf 1 0 0 1 72 682 Tm (Nothing on this page starts a new section, which is the point of it: the last) Tj
+/F1 10 Tf 1 0 0 1 72 668 Tm (section of the document carries on to the end, and a page boundary in the) Tj
+/F1 10 Tf 1 0 0 1 72 654 Tm (middle of it is not a section boundary.) Tj
+/F1 10 Tf 1 0 0 1 72 60 Tm (Preprint. Under review. Do not redistribute.) Tj
+ET
+endstream
+endobj
+xref
+0 14
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000141 00000 n 
+0000000211 00000 n 
+0000000337 00000 n 
+0000001859 00000 n 
+0000001985 00000 n 
+0000003139 00000 n 
+0000003265 00000 n 
+0000004113 00000 n 
+0000004241 00000 n 
+0000005115 00000 n 
+0000005243 00000 n 
+trailer
+<< /Size 14 /Root 1 0 R >>
+startxref
+5884
+%%EOF
