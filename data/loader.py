@@ -195,10 +195,8 @@ class PDFLoader:
         pattern = r'^[gG]\s+[uU]\s+[Aa]\s+\d+\s+\]\s+[Ll]\s+[Cc]\s+\.\s+[Ss]\s+[Cc]\s+\[\s+[\d\s]+\]?'
         text = re.sub(pattern, '', text)
         
-        # Remove scattered character patterns (letters with spaces between them)
-        # Like "A b c D e f" that's actually garbage
-        if re.search(r'([A-Za-z]\s+){5,}', text):
-            # If more than 5 single letters with spaces, it's garbage
+        # A row of single letters, like "A b c D e f", is a stamp, not a heading
+        if self._is_scattered_letters(text):
             return "Unknown"
         
         # Clean extra whitespace
@@ -223,13 +221,9 @@ class PDFLoader:
         if re.match(r'^[gG]\s+[uU]\s+[Aa]\s+\d+', text):
             return True
         
-        # Scattered single letters (more than 4 single letters with spaces)
-        letters = re.findall(r'[A-Za-z]', text)
-        if len(letters) > 4:
-            # Check if they're spaced out (garbage pattern)
-            spaced = re.findall(r'[A-Za-z]\s+[A-Za-z]', text)
-            if len(spaced) > 2:
-                return True
+        # Scattered single letters, like "A b c D e f", read as a stamp rather than a heading
+        if self._is_scattered_letters(text):
+            return True
         
         # High symbol ratio with significant length
         alpha_ratio = sum(c.isalpha() for c in text) / max(len(text), 1)
@@ -237,6 +231,12 @@ class PDFLoader:
             return True
         
         return False
+    
+    def _is_scattered_letters(self, text: str) -> bool:
+        """Whether the text is a row of single letters, the way a margin stamp comes out"""
+        singles = [word for word in re.split(r'\s+', text) if re.fullmatch(r'[A-Za-z]', word)]
+        
+        return len(singles) > 4
     
     def _get_element_text(self, element: Element) -> str:
         """Extract text from different element types"""
