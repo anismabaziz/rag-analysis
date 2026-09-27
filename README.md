@@ -134,6 +134,7 @@ the embedding models are all swapped out inside the tests.
 | `main.py` | CLI: ingest, query, architectures, clear, fetch-corpus, verify-corpus |
 | `build_index.py` | PDF loading, chunking, embedding, indexing into Qdrant |
 | `corpus/` | The corpus manifest, and fetching and verifying the documents it names |
+| `evaluation/` | The hand-written questions each domain is scored on, and the rules their labels satisfy |
 | `data/` | Loading, splitting, and embedding the corpus |
 | `architectures/` | One file per retrieval architecture: the pipeline, and the declaration that registers it |
 | `core/` | The shared pipeline, prompt, and the architecture registry |

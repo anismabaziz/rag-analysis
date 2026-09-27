@@ -42,6 +42,7 @@ only-include = [
     "core",
     "corpus",
     "data",
+    "evaluation",
     "main.py",
     "vector",
 ]
