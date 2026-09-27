@@ -17,7 +17,7 @@ evaluation ran.
 
 | Domain | Documents | Pages | Register |
 | --- | --- | --- | --- |
-| `papers` | 6 | 90 | Continuous argument, dense technical vocabulary, sectioned prose |
+| `papers` | 6 | 94 | Continuous argument, dense technical vocabulary, sectioned prose |
 | `manuals` | 2 | 9,798 | Reference entries, option names, error codes, tables, one fact per paragraph |
 
 Every entry records its own page count and size, so those figures can be checked against the
@@ -27,9 +27,10 @@ The two registers are what the boundary condition is expected to sit between, so
 holds in one and not the other is a finding rather than noise.
 
 `papers` is the retrieval literature itself, six arXiv papers on dense, sparse, and hybrid
-retrieval. The questions a reader can most easily check an answer against are the ones about
-these documents, so the domain is both heterogeneous against the manuals and easy to
-hand-author ground truth for.
+retrieval: the Transformer, DPR, RAG, a study of where a model stops using a long prompt, a
+multilingual embedding model, and a lexical-seeded acceleration of dense search. The questions a
+reader can most easily check an answer against are the ones about these documents, so the domain is
+both heterogeneous against the manuals and easy to hand-author ground truth for.
 
 `manuals` is two database reference manuals, the PostgreSQL 16 documentation and the MySQL 9.3
 reference manual. They are the opposite register. Almost every paragraph is a self-contained

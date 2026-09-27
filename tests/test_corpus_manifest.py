@@ -24,7 +24,7 @@ PAPER_IDS = {
 	"attention-is-all-you-need",
 	"rag-for-knowledge-intensive-nlp-tasks",
 	"dense-passage-retrieval",
-	"lexical-and-dense-retrieval",
+	"lexically-accelerated-dense-retrieval",
 	"lost-in-the-middle",
 	"bge-m3",
 }

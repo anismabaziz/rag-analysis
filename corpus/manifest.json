@@ -31,14 +31,14 @@
       "bytes": 383508
     },
     {
-      "id": "lexical-and-dense-retrieval",
+      "id": "lexically-accelerated-dense-retrieval",
       "domain": "papers",
-      "title": "Lexical and Dense Retrieval: An Unholy Marriage?",
-      "url": "https://arxiv.org/pdf/2108.09652",
-      "sha256": "acef6d35b47fc4ae4b14af448d555845a7fe7c8998cd14a12ebb59ec676440af",
-      "filename": "lexical-dense-unholy-marriage.pdf",
-      "pages": 6,
-      "bytes": 1018763
+      "title": "Lexically-Accelerated Dense Retrieval",
+      "url": "https://arxiv.org/pdf/2307.16779",
+      "sha256": "413782698bc60436d39081630c24933fb090f243b4f6e33e9cb8d90ff8834089",
+      "filename": "lexically-accelerated-dense-retrieval.pdf",
+      "pages": 11,
+      "bytes": 954267
     },
     {
       "id": "lost-in-the-middle",
@@ -53,12 +53,12 @@
     {
       "id": "bge-m3",
       "domain": "papers",
-      "title": "BGE M3-Embedding: Multi-Lingual, Multi-Functionality, Multi-Granularity Text Embeddings Through Self-Knowledge Distillation",
-      "url": "https://arxiv.org/pdf/2202.08904",
-      "sha256": "9e054cc2e5438c8fde458cc520ba89718ed922df6172b31a8003d9b16aa649ea",
+      "title": "M3-Embedding: Multi-Linguality, Multi-Functionality, Multi-Granularity Text Embeddings Through Self-Knowledge Distillation",
+      "url": "https://arxiv.org/pdf/2402.03216",
+      "sha256": "eb38e53565da260dc1f3d49708f45441936447a7f3c7d7ef025ff62ea3e1e575",
       "filename": "bge-m3.pdf",
-      "pages": 19,
-      "bytes": 757198
+      "pages": 18,
+      "bytes": 754673
     },
     {
       "id": "postgresql-16-documentation",
