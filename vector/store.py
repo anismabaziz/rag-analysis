@@ -1,5 +1,6 @@
 from config.params import Params
 from core.chunk import Chunk, Provenance
+from core.registry import DENSE, SPARSE
 from qdrant_client import QdrantClient, models
 
 
@@ -34,47 +35,36 @@ def chunks_from_result(result: models.QueryResponse) -> list[Chunk]:
 	return [chunk_from_point(point) for point in result.points]
 
 
-def create_collection(client: QdrantClient, collection_name: str, enable_hybrid: bool):
+def create_collection(client: QdrantClient, collection_name: str, vectors: tuple[str, ...] = (DENSE,)):
 	"""
-	Creates collection with appropriate config
+	Creates collection with a config for each vector the architecture declares.
+
+	An architecture that retrieves on sparse vectors alone gets a collection with no dense
+	config, so a comparison between it and a dense one is not a comparison against a collection
+	that happens to hold both.
 	"""
-	
-	# dense vector config
-	dense_config = models.VectorParams(
-		size = 384, # matches all-MiniLM-L6-v2
-		distance = models.Distance.COSINE
-	)
-	
-	# sparse vector config 
-	if enable_hybrid:
-		sparse_config = models.SparseVectorParams(
-			index=models.SparseIndexParams(on_disk=False)
-		)
 
-		client.create_collection(
-			collection_name=collection_name,
-			vectors_config={
-				'dense': dense_config
-			},
-			sparse_vectors_config={
-				'sparse': sparse_config
-			}
-		)
+	vectors_config, sparse_vectors_config = {}, {}
 
-		print(f"[INFO] created hybrid collection: {collection_name}")
-	
-	else:
-		client.create_collection(
-			collection_name=collection_name,
-			vectors_config={
-				'dense': dense_config
-			}
-		)
+	for name in vectors:
+		if name == SPARSE:
+			sparse_vectors_config[name] = models.SparseVectorParams(
+				index=models.SparseIndexParams(on_disk=False)
+			)
+		else:
+			vectors_config[name] = models.VectorParams(
+				size = 384, # matches all-MiniLM-L6-v2
+				distance = models.Distance.COSINE
+			)
 
-		print(f"[INFO] created dense-only collection: {collection_name}")
-	
+	options = {"vectors_config": vectors_config}
+	if sparse_vectors_config:
+		options["sparse_vectors_config"] = sparse_vectors_config
 
-	
+	client.create_collection(collection_name=collection_name, **options)
+
+	indexed = ", ".join(vectors)
+	print(f"[INFO] created collection: {collection_name} ({indexed})")
 
 def reset_vector_store(collection_name: str):
 	""" 

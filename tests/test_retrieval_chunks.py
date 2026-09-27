@@ -10,9 +10,9 @@ import importlib
 
 from qdrant_client import models
 
+from architectures.hybrid import HybridRAG
+from architectures.naive import NaiveRAG
 from core.chunk import REFUSAL, Chunk, Provenance, build_context
-from rag.hybrid_rag import HybridRAG
-from rag.naive_rag import NaiveRAG
 
 
 def indexed_point(score, text="A span of retrieved text.", **metadata):

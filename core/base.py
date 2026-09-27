@@ -1,21 +1,37 @@
 from abc import ABC, abstractmethod
 
+from config.params import Params
 from core.chunk import REFUSAL, Chunk, build_context
 from llama_index.core import PromptTemplate
+from llama_index.llms.groq import Groq
+
+
+def get_generation_llm():
+	"""The one generation model every architecture answers with.
+
+	Architectures are only comparable while the generator is held still, so the model is named
+	once here and no architecture chooses its own.
+	"""
+	return Groq(model=Params.GENERATION_MODEL, api_key=Params.GROQ_API_KEY)
 
 
 class BaseRAG(ABC):
 	"""
 	Abstract base class defining the standard structure and lifecycle of a RAG pipeline.
 	Concrete subclasses must implement the retrieve method.
+
+	Every pipeline is built the same way, with the generation model, the encoder, and the name of
+	the collection it reads, because that triple is what the registry hands to every architecture
+	it knows about.
 	"""
 
-	def __init__(self, llm, embed_model):
+	def __init__(self, llm, embed_model, collection_name):
 		"""
-		Initializes the base RAG class with an LLM, embedding model, and vector store.
+		Initializes the base RAG class with an LLM, embedding model, and the collection to read.
 		"""
 		self.llm = llm
 		self.embed_model = embed_model
+		self.collection_name = collection_name
 
 	@abstractmethod
 	async def retrieve(self, query: str) -> list[Chunk]:

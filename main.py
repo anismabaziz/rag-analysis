@@ -1,10 +1,9 @@
-import asyncio
 import argparse
+import asyncio
 from pathlib import Path
+
+from core.registry import Architecture, UnknownArchitecture, all_architectures, architecture
 from vector.store import reset_vector_store
-from build_index import build_index
-from runners.hybrid_rag import run_hybrid
-from runners.naive_rag import run_naive
 from corpus.manifest import load_manifest
 from corpus.populate import Outcome, populate, verify_corpus
 
@@ -16,46 +15,47 @@ CORPUS_DIR = Path("documents")
 async def main():
 	"""
 	Main CLI parser and router for the RAG Comparison Benchmarking application.
-	Allows users to ingest documents, clear the vector store, test models, or compare them.
+	Takes an architecture name for anything that reads or writes a collection, so which
+	architectures exist is decided by what is registered and not by this file.
 	"""
 
 	# create main argument parser
 	parser = argparse.ArgumentParser(
+		prog="rag-analysis",
 		description="RAG Comparison Benchmarking CLI - A tool to test and compare RAG architectures."
 	)
-	
+
 	# add subparsers for each command
 	subparsers = parser.add_subparsers(dest="command", required=True, help="RAG commands")
-	
+
 	# ingest command
 	ingest_parser = subparsers.add_parser(
-		"ingest", 
-		help="Reset vector store, load files from ./documents, split them, embed, and index into Qdrant"
+		"ingest",
+		help="Reset an architecture's collection, load files from ./documents, split them, embed, and index into Qdrant"
 	)
-	ingest_parser.add_argument("architecture", type=str, help="The architecture for which we do the ingestion")
+	ingest_parser.add_argument("architecture", type=str, help="The architecture to ingest the corpus for")
 
-	
+	# query command
+	query_parser = subparsers.add_parser(
+		"query",
+		help="Retrieve context and answer a query using one architecture"
+	)
+	query_parser.add_argument("architecture", type=str, help="The architecture to answer with")
+	query_parser.add_argument("question", type=str, help="The query/question to run")
+
+	# architectures command
+	subparsers.add_parser(
+		"architectures",
+		help="List every registered architecture, with the collection it reads"
+	)
+
 	# clear command
 	clear_parser = subparsers.add_parser(
-		"clear", 
+		"clear",
 		help="Clear/delete the Qdrant vector store collection to prevent data contamination"
 	)
 	clear_parser.add_argument("collection_name", type=str, help="The collection name to clear")
-	
-	# test-naive command
-	naive_parser = subparsers.add_parser(
-		"test-naive", 
-		help="Retrieve context and answer a query using Naive RAG (Dense vector search only)"
-	)
-	naive_parser.add_argument("query", type=str, help="The query/question to run")
-	
-	# test-hybrid command
-	hybrid_parser = subparsers.add_parser(
-		"test-hybrid", 
-		help="Retrieve context and answer a query using Hybrid RAG (Dense + BM42 Sparse Search + RRF)"
-	)
-	hybrid_parser.add_argument("query", type=str, help="The query/question to run")
-	
+
 	# fetch-corpus command
 	fetch_parser = subparsers.add_parser(
 		"fetch-corpus",
@@ -80,36 +80,46 @@ async def main():
 
 	# parse CLI arguments
 	args = parser.parse_args()
-	
-	# route command to appropriate action
-	if args.command == "ingest":
+
+	if args.command == "architectures":
+		list_architectures()
+
+	elif args.command == "ingest":
 		print("[CLI] Ingesting documents...")
-		
-		archi = args.architecture
-		if archi == "naive":
-			build_index("rag_naive", enable_hybrid=False)
-		elif archi == "hybrid":
-			build_index("rag_hybrid", enable_hybrid=True)
-		else:
-			print("[INFO] Invalid architecture specified")
+
+		resolve(args.architecture, parser).ingest()
+
+	elif args.command == "query":
+		print("[CLI] Running retrieval and generation...")
+
+		await resolve(args.architecture, parser).build().answer(args.question)
 
 	elif args.command == "clear":
 		print("[CLI] Clearing vector store...")
-		
+
 		reset_vector_store(args.collection_name)
-
-	elif args.command == "test-naive":
-		print("[CLI] Running NaiveRAG...")
-
-		await run_naive(args.query)
-
-	elif args.command == "test-hybrid":
-		print("[CLI] Running HybridRAG...")
-		
-		await run_hybrid(args.query)
 
 	elif args.command in ("fetch-corpus", "verify-corpus"):
 		corpus_command(args, parser)
+
+
+def resolve(name: str, parser: argparse.ArgumentParser) -> Architecture:
+	"""The named architecture, or a usage error naming what is registered instead.
+
+	The name is resolved before anything is built or contacted, so a command naming an
+	architecture that does not exist stops before it can touch a store.
+	"""
+	try:
+		return architecture(name)
+	except UnknownArchitecture as error:
+		parser.error(str(error))
+
+
+def list_architectures():
+	"""Print every registered architecture, so a reader can see what exists without reading code."""
+	print("[CLI] Registered architectures:")
+	for registered in all_architectures():
+		print(f"  {registered.name}\t{registered.collection}\t{registered.description}")
 
 
 def corpus_command(args, parser):
@@ -146,5 +156,10 @@ def report_outcomes(verb: str, outcomes: list[Outcome]):
 		raise SystemExit(1)
 
 
-if __name__ == "__main__":
+def cli():
+	"""Console entry point, so the harness runs without anyone having to know the module layout."""
 	asyncio.run(main())
+
+
+if __name__ == "__main__":
+	cli()

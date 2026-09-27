@@ -52,27 +52,31 @@ model, which takes a few minutes. Later runs reuse the cache.
 
 ## Running it
 
-The corpus is a committed manifest of URLs and digests, not committed PDFs. Fetch it, then index
-it once per architecture:
+The harness is installed as a command, so none of this needs the module layout. The corpus is a
+committed manifest of URLs and digests, not committed PDFs, so fetch it before the first
+ingest:
 
 ```bash
-uv run python main.py fetch-corpus              # 60 MB, both domains
-uv run python main.py fetch-corpus --domain papers
+uv run rag-analysis fetch-corpus              # 60 MB, both domains
+uv run rag-analysis fetch-corpus --domain papers
+
+# see what can be ingested and queried
+uv run rag-analysis architectures
 
 # index the corpus, once per architecture
-uv run python main.py ingest naive
-uv run python main.py ingest hybrid
+uv run rag-analysis ingest naive
+uv run rag-analysis ingest hybrid
 
 # ask a question against one of them
-uv run python main.py test-naive "how are the positional encodings scaled?"
-uv run python main.py test-hybrid "how are the positional encodings scaled?"
+uv run rag-analysis query naive "how are the positional encodings scaled?"
+uv run rag-analysis query hybrid "how are the positional encodings scaled?"
 
 # drop a collection and start over
-uv run python main.py clear rag_naive
+uv run rag-analysis clear rag_naive
 
 # check the documents on disk against the manifest, without any network
-uv run python main.py verify-corpus
-uv run python main.py verify-corpus --domain papers
+uv run rag-analysis verify-corpus
+uv run rag-analysis verify-corpus --domain papers
 ```
 
 A document is written to `documents/<domain>/` only once its bytes match the digest in
@@ -83,14 +87,35 @@ the two are described in [docs/corpus.md](docs/corpus.md). Ingestion reads every
 `./documents`, and the manuals domain is 9,798 pages of it, so `--domain papers` is the fast
 way in.
 
-Ingestion can also be run on its own, without the top-level CLI:
+Ingestion can also be run on its own, without the rest of the CLI:
 
 ```bash
-uv run python build_index.py --collection rag_naive
-uv run python build_index.py --collection rag_hybrid --hybrid
+uv run python build_index.py --architecture naive
+uv run python build_index.py --architecture hybrid
 ```
 
 `ingest` replaces the contents of the target collection, so run it again after adding documents.
+
+## Adding an architecture
+
+An architecture is one file: the pipeline class, decorated with a declaration of the collection
+it reads and the vectors it indexes. `core/registry.py` discovers every module in
+`architectures/` and registers what it finds, so ingestion and querying both read that
+declaration and nothing else lists architectures. Drop a new module in and it can be ingested,
+queried, and listed:
+
+```python
+# architectures/sparse.py
+@register(
+	name="sparse",
+	description="BM42 sparse vectors only.",
+	collection="rag_sparse",
+	vectors=(SPARSE,),
+)
+class SparseRAG(BaseRAG):
+	async def retrieve(self, query: str) -> list[Chunk]:
+		...
+```
 
 ## Tests
 
@@ -106,13 +131,12 @@ the embedding models are all swapped out inside the tests.
 
 | Path | What lives there |
 | --- | --- |
-| `main.py` | CLI: ingest, clear, test-naive, test-hybrid, fetch-corpus, verify-corpus |
+| `main.py` | CLI: ingest, query, architectures, clear, fetch-corpus, verify-corpus |
 | `build_index.py` | PDF loading, chunking, embedding, indexing into Qdrant |
 | `corpus/` | The corpus manifest, and fetching and verifying the documents it names |
 | `data/` | Loading, splitting, and embedding the corpus |
-| `rag/` | The retrieval architectures |
-| `runners/` | Wiring from the CLI to an architecture |
-| `core/` | The shared pipeline and prompt |
+| `architectures/` | One file per retrieval architecture: the pipeline, and the declaration that registers it |
+| `core/` | The shared pipeline, prompt, and the architecture registry |
 | `vector/` | Qdrant access |
 | `config/` | Configuration, read once at startup |
 | `docs/adr/` | Recorded decisions and the options that lost |

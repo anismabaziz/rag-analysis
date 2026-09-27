@@ -46,10 +46,10 @@ in one register shows up as a difference rather than being averaged away.
 ## Fetching and verifying
 
 ```bash
-uv run python main.py fetch-corpus               # both domains, 60 MB
-uv run python main.py fetch-corpus --domain papers
-uv run python main.py verify-corpus              # no network, checks the digests on disk
-uv run python main.py verify-corpus --domain papers
+uv run rag-analysis fetch-corpus               # both domains, 60 MB
+uv run rag-analysis fetch-corpus --domain papers
+uv run rag-analysis verify-corpus              # no network, checks the digests on disk
+uv run rag-analysis verify-corpus --domain papers
 ```
 
 `fetch-corpus` writes a document into `documents/<domain>/` only after its bytes hash to the

@@ -23,6 +23,29 @@ dependencies = [
     "unstructured[pdf]>=0.22.31",
 ]
 
+[project.scripts]
+# The harness is run as a command, so neither a reader nor an agent has to know the module
+# layout to ingest a corpus, ask a question, or list what can be asked.
+rag-analysis = "main:cli"
+
+# The project is installed rather than run from a checkout, which is what puts the command
+# above on the path at all.
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+only-include = [
+    "architectures",
+    "build_index.py",
+    "config",
+    "core",
+    "corpus",
+    "data",
+    "main.py",
+    "vector",
+]
+
 [dependency-groups]
 dev = [
     "check-requirements-txt>=1.4.2",
