@@ -52,9 +52,13 @@ model, which takes a few minutes. Later runs reuse the cache.
 
 ## Running it
 
-Put your PDFs under `./documents/`, then:
+The corpus is a committed manifest of URLs and digests, not committed PDFs. Fetch it, then index
+it once per architecture:
 
 ```bash
+uv run python main.py fetch-corpus              # 60 MB, both domains
+uv run python main.py fetch-corpus --domain papers
+
 # index the corpus, once per architecture
 uv run python main.py ingest naive
 uv run python main.py ingest hybrid
@@ -65,7 +69,19 @@ uv run python main.py test-hybrid "how are the positional encodings scaled?"
 
 # drop a collection and start over
 uv run python main.py clear rag_naive
+
+# check the documents on disk against the manifest, without any network
+uv run python main.py verify-corpus
+uv run python main.py verify-corpus --domain papers
 ```
+
+A document is written to `documents/<domain>/` only once its bytes match the digest in
+`corpus/manifest.json`, and a mismatch fails the command, so a truncated download cannot end up
+inside a corpus. `verify-corpus` answers whether the corpus is unmodified, which is the check a
+reader needs before trusting a number in the results table. The two domains and why they are
+the two are described in [docs/corpus.md](docs/corpus.md). Ingestion reads every PDF under
+`./documents`, and the manuals domain is 9,798 pages of it, so `--domain papers` is the fast
+way in.
 
 Ingestion can also be run on its own, without the top-level CLI:
 
@@ -90,8 +106,9 @@ the embedding models are all swapped out inside the tests.
 
 | Path | What lives there |
 | --- | --- |
-| `main.py` | CLI: ingest, clear, test-naive, test-hybrid |
+| `main.py` | CLI: ingest, clear, test-naive, test-hybrid, fetch-corpus, verify-corpus |
 | `build_index.py` | PDF loading, chunking, embedding, indexing into Qdrant |
+| `corpus/` | The corpus manifest, and fetching and verifying the documents it names |
 | `data/` | Loading, splitting, and embedding the corpus |
 | `rag/` | The retrieval architectures |
 | `runners/` | Wiring from the CLI to an architecture |

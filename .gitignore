@@ -14,7 +14,11 @@ wheels/
 .env.*
 !.env.example
 
-# results are committed, so nothing is ignored by extension here
+# The corpus is a committed manifest, not committed documents. The PDFs under ./documents are
+# fetched and checked against their digest, and are far too large to keep in the repository.
+documents/**/*.pdf
+
+# results are committed, so nothing else is ignored by extension here
 
 # pytest and ruff caches
 .pytest_cache/
