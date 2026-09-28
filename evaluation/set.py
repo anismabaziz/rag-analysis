@@ -7,9 +7,11 @@ section detection would move wherever the loader moves, and the score of every a
 then be a measure of the loader rather than of retrieval.
 
 Two things follow from that, and both are enforced here rather than left to the author. Every
-question names a document that the corpus manifest actually holds, so a label cannot point at a
-paper the run never ingested. Every question also names a document on its own, so a chunk with the
-wrong section is still counted as a hit, which is what keeps one loader bug from zeroing a domain.
+question that can be answered names a document the corpus manifest actually holds, so a label
+cannot point at a paper the run never ingested. Those same questions name a document on their own
+as well as a section, so a chunk with the wrong section is still counted as a hit, which is what
+keeps one loader bug from zeroing a domain. The questions that cannot be answered name nothing,
+and are the only exception, because a section to look in would make them answerable.
 
 The strata are declared before any question is written, in the set file, together with the share
 and the count of questions each one should hold. The claim under test is that retrieval signals
@@ -20,6 +22,13 @@ rejected.
 The answers are spans copied out of the sources, and the file records who read a source a second
 time to check them. A label nobody else has looked at is one person's reading of a paper, and
 saying so is the difference between a spot-checked label and an assumed one.
+
+The last two strata cannot be scored the way the first two are, and each carries a label of its own
+for that reason. A question that needs two passages lists them, because a retriever that returned
+one of the two has not answered it. A question with no answer anywhere lists nothing, because a
+section to look in would make it answerable, and instead carries the string a correct answer would
+have to name, which is what lets the corpus be checked for support rather than the author's
+confidence being taken for it.
 """
 
 import json
@@ -38,7 +47,7 @@ SETS_DIR = Path(__file__).with_name("sets")
 SET_FILE_SUFFIX = ".json"
 
 # How far a set's questions may sit from the shares it declares. A single question is worth about
-# 4% of a 24-question domain, so this is roughly one question either way and no more.
+# 3% of a 32-question domain, so this is roughly one question either way and no more.
 PROPORTION_TOLERANCE = 0.05
 
 
@@ -48,8 +57,7 @@ class Stratum(StrEnum):
 	A question that quotes a rare identifier from the source and one that asks about the same
 	content in the asker's own words retrieve differently, and the project's claim is that the
 	difference is not in the average. The strata are therefore written down before any question is,
-	all four of them, including the two this set does not use yet: a set drafted without the boundary
-	in mind would blur it, and a boundary that was never defined cannot be reported as measured.
+	all four of them, so the boundary the results rest on is the boundary that gets measured.
 	"""
 
 	IDENTIFIER_HEAVY = "identifier_heavy"
@@ -67,10 +75,18 @@ class Stratum(StrEnum):
 	"""
 
 	MULTI_HOP = "multi_hop"
-	"""Needs more than one location combined before it can be answered."""
+	"""Needs more than one location combined before it can be answered.
+
+	Scored on whether retrieval turns up every location the question names, which is why each of
+	them is written down rather than left implied by the question's wording.
+	"""
 
 	UNANSWERABLE = "unanswerable"
-	"""Has no correct answer anywhere in the domain, so answering it at all is the failure."""
+	"""Has no correct answer anywhere in the domain, so answering it at all is the failure.
+
+	Cheap to write and the only thing that makes citation accuracy mean anything: on a question the
+	corpus does cover, a citation lands on a real document whether or not it supports the answer.
+	"""
 
 
 class StratumShare(BaseModel):
@@ -103,16 +119,38 @@ class SpotCheck(BaseModel):
 	answers: list[str] = Field(min_length=1)
 
 
+class Location(BaseModel):
+	"""One place in the corpus: the document, and the heading inside it a person read the answer off.
+
+	Same label as a question's own place, kept as its own shape so a question that has to combine
+	three places says three of them rather than describing them in prose a test cannot check.
+	"""
+
+	model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+	document: str = Field(min_length=1)
+	section: str = Field(min_length=1)
+
+
 class Question(BaseModel):
 	"""One question with the ground truth a scorer needs to check an answer against.
 
 	`document` is the document-level label and `section` is the finer one. Both are read off the
 	source by a person, and the document label is always present, so a retrieved chunk is judged
-	correct on the document when its section does not match rather than being called wrong.
+	correct on the document when its section does not match rather than being called wrong. An
+	unanswerable question is the exception: it carries neither, because a place to look is a place
+	an answer might be found.
 
 	`gold_answer` is a short span copied from the source, present on every extractive question and
 	on no other. Exact match is only meaningful where there is a span to match, and a question that
 	cannot be answered with one says so rather than carrying an answer nobody checked.
+
+	`locations` and `absent_probe` are the labels the two strata that cannot be scored the usual way
+	carry instead. A multi-hop question repeats its own place as its first location and then lists
+	the rest, so a document-level label still exists and retrieval can be scored on whether every
+	named location was found. An unanswerable question says what a correct system should do and
+	carries the string a correct answer would have to name, which is what lets the corpus be
+	checked for support rather than the author's confidence being taken for it.
 	"""
 
 	model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
@@ -120,10 +158,13 @@ class Question(BaseModel):
 	id: str = Field(min_length=1)
 	question: str = Field(min_length=1)
 	stratum: Stratum
-	document: str = Field(min_length=1)
-	section: str = Field(min_length=1)
+	document: str | None = Field(default=None, min_length=1)
+	section: str | None = Field(default=None, min_length=1)
 	extractive: bool
 	gold_answer: str | None = None
+	locations: list[Location] | None = None
+	expected_behavior: str | None = Field(default=None, min_length=1)
+	absent_probe: str | None = Field(default=None, min_length=1)
 
 	@model_validator(mode="after")
 	def check_answer_presence(self) -> "Question":
@@ -140,6 +181,77 @@ class Question(BaseModel):
 			raise ValueError(f"{self.id} is not extractive but carries a gold answer")
 
 		return self
+
+	@model_validator(mode="after")
+	def check_stratum_labels(self) -> "Question":
+		"""Refuse a question whose labels do not match the kind of question it claims to be.
+
+		The point of the two extra strata is that they cannot be scored the way the other two are.
+		A multi-hop question that does not list its locations is indistinguishable from one that
+		needed only the first, and an unanswerable question carrying a document and a heading is
+		answerable, whatever the author intended when writing it.
+		"""
+		if self.stratum is Stratum.MULTI_HOP:
+			self._check_multi_hop_labels()
+		elif self.stratum is Stratum.UNANSWERABLE:
+			self._check_unanswerable_labels()
+		else:
+			self._check_single_location_labels()
+
+		return self
+
+	def _check_multi_hop_labels(self) -> None:
+		"""A question that needs two places has to say which, and has to start at its own."""
+		if self.locations is None:
+			raise ValueError(f"{self.id} is multi_hop but names no locations to combine")
+
+		if len(self.locations) < 2:
+			raise ValueError(f"{self.id} is multi_hop but names one location, which is not a hop")
+
+		if (self.locations[0].document, self.locations[0].section) != (self.document, self.section):
+			raise ValueError(f"{self.id} is multi_hop but does not start at its own document and section")
+
+		if self.expected_behavior or self.absent_probe:
+			raise ValueError(f"{self.id} is multi_hop but carries an unanswerable question's labels")
+
+	def _check_unanswerable_labels(self) -> None:
+		"""A question with no answer has nowhere to point, and has to say what to do instead."""
+		if self.document or self.section or self.locations:
+			raise ValueError(f"{self.id} is unanswerable but names a document and section to look in")
+
+		if not self.expected_behavior:
+			raise ValueError(f"{self.id} says nothing about what a correct system should do instead")
+
+		if not self.absent_probe:
+			raise ValueError(f"{self.id} carries no string to check the corpus against")
+
+		if self.extractive:
+			raise ValueError(f"{self.id} is unanswerable but claims to be extractive")
+
+	def _check_single_location_labels(self) -> None:
+		"""A question answered from one place says one place, and nothing of the other two strata."""
+		if not self.document or not self.section:
+			raise ValueError(f"{self.id} names no document and section to answer from")
+
+		if self.locations is not None:
+			raise ValueError(f"{self.id} is not a multi_hop question but names locations to combine")
+
+		if self.expected_behavior or self.absent_probe:
+			raise ValueError(f"{self.id} carries an unanswerable question's labels but is not one")
+
+	def all_locations(self) -> list[Location]:
+		"""Every place in the corpus this question is answered from, in the order they matter.
+
+		The question's own document and section come first for a single-location question, and the
+		listed locations for a multi-hop one, which is the same order in both cases.
+		"""
+		if self.locations is not None:
+			return list(self.locations)
+
+		if self.document and self.section:
+			return [Location(document=self.document, section=self.section)]
+
+		return []
 
 
 class EvaluationSet(BaseModel):
@@ -209,8 +321,14 @@ class EvaluationSet(BaseModel):
 		return Counter(question.stratum for question in self.questions)
 
 	def documents(self) -> set[str]:
-		"""The corpus documents this set draws its questions from."""
-		return {question.document for question in self.questions}
+		"""The corpus documents this set draws its questions from.
+
+		A multi-hop question can reach into a second document, so the documents it names count as
+		drawn on as much as its own.
+		"""
+		return {
+			location.document for question in self.questions for location in question.all_locations()
+		}
 
 	def for_stratum(self, stratum: Stratum) -> list[Question]:
 		"""The questions of one stratum, in the order the set files them."""

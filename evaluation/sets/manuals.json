@@ -3,23 +3,23 @@
   "strata": {
     "identifier_heavy": {
       "definition": "The question names a rare string from the source: a parameter name, an error code, a function, an option, a keyword. The manuals are the register where this stratum is easiest to write honestly, because the string being asked about is usually the label the entry itself is filed under. The shares match the papers domain so the two are comparable.",
-      "share": 0.6,
+      "share": 0.44,
       "count": 14
     },
     "paraphrase": {
       "definition": "The question asks about the same content as an entry without reusing that entry's wording. No rare string carries the question to its answer, so a retriever has to match meaning rather than tokens. This is the share the claim expects dense retrieval to win.",
-      "share": 0.4,
+      "share": 0.31,
       "count": 10
     },
     "multi_hop": {
-      "definition": "The question cannot be answered from one location: two or more passages have to be combined. Not yet used in this domain's set.",
-      "share": 0.0,
-      "count": 0
+      "definition": "The question cannot be answered from one location: two or more passages have to be combined. Each question lists the locations it needs, starting with its own, because a retriever that returns one of the two has not answered it. Every extra location is a section no other question is filed under, so one retrieved passage cannot count for two questions.",
+      "share": 0.125,
+      "count": 4
     },
     "unanswerable": {
-      "definition": "The question has no correct answer anywhere in the domain, so a system that answers it confidently is visibly wrong. Not yet used in this domain's set.",
-      "share": 0.0,
-      "count": 0
+      "definition": "The question has no correct answer anywhere in the domain, so a system that answers it confidently is visibly wrong. Each question names nothing, and carries the string a correct answer would have to name so the corpus can be checked for support. Two manuals of several thousand pages each is a large enough corpus that these are written about software neither manual documents.",
+      "share": 0.125,
+      "count": 4
     }
   },
   "spot_check": {
@@ -252,6 +252,102 @@
       "section": "12.9.8 Converting Between 3-Byte and 4-Byte Unicode Character Sets",
       "extractive": true,
       "gold_answer": "utf8mb3 supports only characters in the Basic Multilingual Plane (BMP). utf8mb4 additionally supports supplementary characters that lie outside the BMP."
+    },
+    {
+      "id": "manuals-multi-hop-01",
+      "question": "Both manuals tell you what a standby is doing. Which PostgreSQL function reports the last WAL location the standby has replayed, and which MySQL statement shows the replication threads?",
+      "stratum": "multi_hop",
+      "document": "postgresql-16-documentation",
+      "section": "27.2.5.2. Monitoring",
+      "extractive": false,
+      "gold_answer": null,
+      "locations": [
+        { "document": "postgresql-16-documentation", "section": "27.2.5.2. Monitoring" },
+        { "document": "mysql-9-3-reference-manual", "section": "19.2.3.1 Monitoring Replication Main Threads" }
+      ]
+    },
+    {
+      "id": "manuals-multi-hop-02",
+      "question": "One extension scores how alike two strings are. Which function returns that score, and which index types make it fast over a column?",
+      "stratum": "multi_hop",
+      "document": "postgresql-16-documentation",
+      "section": "F.35.2. Functions and Operators",
+      "extractive": false,
+      "gold_answer": null,
+      "locations": [
+        { "document": "postgresql-16-documentation", "section": "F.35.2. Functions and Operators" },
+        { "document": "postgresql-16-documentation", "section": "F.35.4. Index Support" }
+      ]
+    },
+    {
+      "id": "manuals-multi-hop-03",
+      "question": "InnoDB records every change somewhere before the data file is touched. Which log is that, and which statement creates the tables its pages end up in?",
+      "stratum": "multi_hop",
+      "document": "mysql-9-3-reference-manual",
+      "section": "17.6.5 Redo Log",
+      "extractive": false,
+      "gold_answer": null,
+      "locations": [
+        { "document": "mysql-9-3-reference-manual", "section": "17.6.5 Redo Log" },
+        { "document": "mysql-9-3-reference-manual", "section": "17.6.1 Tables" }
+      ]
+    },
+    {
+      "id": "manuals-multi-hop-04",
+      "question": "MySQL 9.3 ships two authentication plugins that both hash with SHA-256. Which one is deprecated, and which plugin covers the case where the client has no TLS and the password goes over the wire in the clear?",
+      "stratum": "multi_hop",
+      "document": "mysql-9-3-reference-manual",
+      "section": "8.4.1.2 SHA-256 Pluggable Authentication",
+      "extractive": false,
+      "gold_answer": null,
+      "locations": [
+        { "document": "mysql-9-3-reference-manual", "section": "8.4.1.2 SHA-256 Pluggable Authentication" },
+        { "document": "mysql-9-3-reference-manual", "section": "8.4.1.3 Client-Side Cleartext Pluggable Authentication" }
+      ]
+    },
+    {
+      "id": "manuals-unanswerable-01",
+      "question": "Which extension gives PostgreSQL 16 a column type you can store vector embeddings in, and which index type does that extension need for a nearest-neighbour search?",
+      "stratum": "unanswerable",
+      "document": null,
+      "section": null,
+      "extractive": false,
+      "gold_answer": null,
+      "expected_behavior": "Say that this manual documents no column type for vectors, and name no document and no section.",
+      "absent_probe": "pgvector"
+    },
+    {
+      "id": "manuals-unanswerable-02",
+      "question": "How do you get changes out of a running MySQL server and into a NoSQL store? Which store does the manual name, and which command starts the flow?",
+      "stratum": "unanswerable",
+      "document": null,
+      "section": null,
+      "extractive": false,
+      "gold_answer": null,
+      "expected_behavior": "Say that the manual names no such destination, and name no document and no section.",
+      "absent_probe": "mongodb"
+    },
+    {
+      "id": "manuals-unanswerable-03",
+      "question": "Which public benchmark suite should be used to compare the two retrieval architectures in this repository, and which of its tasks does it score?",
+      "stratum": "unanswerable",
+      "document": null,
+      "section": null,
+      "extractive": false,
+      "gold_answer": null,
+      "expected_behavior": "Say that neither manual documents a retrieval benchmark, and name no document and no section.",
+      "absent_probe": "MTEB"
+    },
+    {
+      "id": "manuals-unanswerable-04",
+      "question": "How do you keep a pool of PostgreSQL backends already started so a web application stops paying to open a session per request, and what do you call the tool?",
+      "stratum": "unanswerable",
+      "document": null,
+      "section": null,
+      "extractive": false,
+      "gold_answer": null,
+      "expected_behavior": "Say that the manual documents connection handling but no such pooler, and name no document and no section.",
+      "absent_probe": "pgbouncer"
     }
   ]
 }

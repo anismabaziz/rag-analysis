@@ -2,24 +2,24 @@
   "domain": "papers",
   "strata": {
     "identifier_heavy": {
-      "definition": "The question names a rare string from the source: a model, a dataset, an option name, a number, a symbol. Lexical matching is expected to do well on these, and a retriever that keeps identifiers apart is expected to beat one that embeds the question and hopes.",
-      "share": 0.6,
+      "definition": "The question names a rare string from the source: a model, a dataset, an option name, a number, a symbol. Lexical matching is expected to do well on these, and a retriever that keeps identifiers apart is expected to beat one that embeds the question and hopes. The shares match the manuals domain so the two are comparable.",
+      "share": 0.44,
       "count": 14
     },
     "paraphrase": {
       "definition": "The question asks about the same content as a passage without reusing that passage's wording. No rare string carries the question to its answer, so a retriever has to match meaning rather than tokens. This is the share the claim expects dense retrieval to win.",
-      "share": 0.4,
+      "share": 0.31,
       "count": 10
     },
     "multi_hop": {
-      "definition": "The question cannot be answered from one location: two or more passages have to be combined. Not yet used in this domain's set.",
-      "share": 0.0,
-      "count": 0
+      "definition": "The question cannot be answered from one location: two or more passages have to be combined. Each question lists the locations it needs, starting with its own, because a retriever that returns one of the two has not answered it. Every extra location is a section no other question is filed under, so one retrieved passage cannot count for two questions.",
+      "share": 0.125,
+      "count": 4
     },
     "unanswerable": {
-      "definition": "The question has no correct answer anywhere in the domain, so a system that answers it confidently is visibly wrong. Not yet used in this domain's set.",
-      "share": 0.0,
-      "count": 0
+      "definition": "The question has no correct answer anywhere in the domain, so a system that answers it confidently is visibly wrong. Each question names nothing, and carries the string a correct answer would have to name so the corpus can be checked for support. These are what make citation accuracy mean something: without them a fabricated citation still lands on a real document.",
+      "share": 0.125,
+      "count": 4
     }
   },
   "spot_check": {
@@ -252,6 +252,103 @@
       "section": "5.4 RQ5: Document Proximity Sources",
       "extractive": false,
       "gold_answer": null
+    },
+    {
+      "id": "papers-multi-hop-01",
+      "question": "The base model is described by the hardware it was trained on, and a separate small model shows the same architecture generalising to parsing. How many GPUs and how much wall-clock time did the base translation model take, and what F1 does the parsing model reach?",
+      "stratum": "multi_hop",
+      "document": "attention-is-all-you-need",
+      "section": "5.2 Hardware and Schedule",
+      "extractive": false,
+      "gold_answer": null,
+      "locations": [
+        { "document": "attention-is-all-you-need", "section": "5.2 Hardware and Schedule" },
+        { "document": "attention-is-all-you-need", "section": "6.3 English Constituency Parsing" }
+      ]
+    },
+    {
+      "id": "papers-multi-hop-02",
+      "question": "RAG fine-tunes one half of the DPR retriever and leaves the other half alone. Which half does it leave alone, and how large does DPR say the collection behind that half is?",
+      "stratum": "multi_hop",
+      "document": "rag-for-knowledge-intensive-nlp-tasks",
+      "section": "2.4 Training",
+      "extractive": false,
+      "gold_answer": null,
+      "locations": [
+        { "document": "rag-for-knowledge-intensive-nlp-tasks", "section": "2.4 Training" },
+        { "document": "dense-passage-retrieval", "section": "3 Dense Passage Retriever (DPR)" }
+      ]
+    },
+    {
+      "id": "papers-multi-hop-03",
+      "question": "The paper compares its U-shaped accuracy curve to a named effect from memory research, then tries one change to how the prompt is laid out. What is the effect called, and what change does the paper try?",
+
+      "stratum": "multi_hop",
+      "document": "lost-in-the-middle",
+      "section": "6.3 The Serial-Position Effect",
+      "extractive": false,
+      "gold_answer": null,
+      "locations": [
+        { "document": "lost-in-the-middle", "section": "6.3 The Serial-Position Effect" },
+        { "document": "lost-in-the-middle", "section": "4.2 Effect of Query-Aware Contextualization" }
+      ]
+    },
+    {
+      "id": "papers-multi-hop-04",
+      "question": "On the long-document benchmark, which of the three retrieval heads does best, and where does the paper say the lexical head's term weights come from?",
+      "stratum": "multi_hop",
+      "document": "bge-m3",
+      "section": "4.3 Multilingual Long-Doc Retrieval",
+      "extractive": false,
+      "gold_answer": null,
+      "locations": [
+        { "document": "bge-m3", "section": "4.3 Multilingual Long-Doc Retrieval" },
+        { "document": "bge-m3", "section": "3.2 Hybrid Retrieval" }
+      ]
+    },
+    {
+      "id": "papers-unanswerable-01",
+      "question": "The BGE-M3 paper reports one retrieval score that pools many datasets into a single number. Which benchmark suite does that score come from?",
+      "stratum": "unanswerable",
+      "document": null,
+      "section": null,
+      "extractive": false,
+      "gold_answer": null,
+      "expected_behavior": "Say that no paper in the corpus reports such an aggregate, and name no document and no section.",
+      "absent_probe": "MTEB"
+    },
+    {
+      "id": "papers-unanswerable-02",
+      "question": "The dense retriever that the RAG and LADR papers both build on is released as a checkpoint with a particular name. What is that name?",
+      "stratum": "unanswerable",
+      "document": null,
+      "section": null,
+      "extractive": false,
+      "gold_answer": null,
+      "expected_behavior": "Say that none of the papers gives the checkpoint a name, and name no document and no section.",
+      "absent_probe": "psgs_w100"
+    },
+    {
+      "id": "papers-unanswerable-03",
+      "question": "One of the papers in this collection was written for retrieving photographs by their captions. Which is it, and which dataset does it evaluate on?",
+      "stratum": "unanswerable",
+      "document": null,
+      "section": null,
+      "extractive": false,
+      "gold_answer": null,
+      "expected_behavior": "Say that every paper here is about text retrieval, and name no document and no section.",
+      "absent_probe": "Flickr30k"
+    },
+    {
+      "id": "papers-unanswerable-04",
+      "question": "One of the papers in this collection shares an author with the original BERT paper. Which is it, and what is the arXiv identifier of that BERT paper?",
+      "stratum": "unanswerable",
+      "document": null,
+      "section": null,
+      "extractive": false,
+      "gold_answer": null,
+      "expected_behavior": "Say that the corpus holds no BERT paper, so it names no author to match and no identifier to give, and name no document and no section.",
+      "absent_probe": "1810.04805"
     }
   ]
 }

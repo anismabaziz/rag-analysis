@@ -8,7 +8,9 @@ disk, the checks that need it say they are being skipped rather than passing qui
 
 The rejection cases are written the way an author would hit them, a stray document id or a
 question added without a gold answer, because those are the mistakes that would otherwise make a
-whole domain's numbers meaningless while the file still parses.
+whole domain's numbers meaningless while the file still parses. The two strata that cannot be
+scored like the others are rejected for their own reasons: a multi-hop question that does not say
+which locations to combine, and an unanswerable one that points at a place to look.
 """
 
 import json
@@ -35,7 +37,7 @@ CORPUS_ROOT = Path(__file__).parents[1] / "documents"
 # than recomputed: adding a question has to be a deliberate change to this test, not a side effect
 # of appending to a file. Both domains are held to the same split on purpose, which is what lets the
 # results table compare them; the test below says so out loud.
-SPLIT = {Stratum.IDENTIFIER_HEAVY: 14, Stratum.PARAPHRASE: 10}
+SPLIT = {Stratum.IDENTIFIER_HEAVY: 14, Stratum.PARAPHRASE: 10, Stratum.MULTI_HOP: 4, Stratum.UNANSWERABLE: 4}
 
 
 @dataclass(frozen=True)
@@ -49,9 +51,20 @@ class Expected:
 
 
 DOMAINS = {
-	domain: Expected(domain=domain, total=24, by_stratum=SPLIT, documents=documents)
+	domain: Expected(domain=domain, total=32, by_stratum=SPLIT, documents=documents)
 	for domain, documents in {"papers": 6, "manuals": 2}.items()
 }
+
+
+def letters(text: str) -> str:
+	"""Text reduced to the letters and digits a reader would search for.
+
+	An unanswerable question is only unanswerable if nothing in the corpus supports it, and the
+	check that establishes that has to survive a PDF printing a name as `psgs_w100` in one place and
+	`psgs w100` in another. Everything that is not alphanumeric is dropped on both sides, and case
+	is ignored, so a probe cannot be absent merely because the typesetting differs.
+	"""
+	return re.sub(r"[^a-z0-9]+", "", text.lower())
 
 
 def set_path(domain: str) -> Path:
@@ -133,7 +146,7 @@ def test_a_set_holds_the_counts_it_was_built_to(domain):
 
 
 @pytest.mark.parametrize("domain", sorted(DOMAINS))
-def test_both_strata_the_claim_turns_on_are_present_and_declared(domain):
+def test_every_declared_stratum_is_present_and_the_shares_add_up(domain):
 	evaluation_set = load_evaluation_set(domain)
 
 	answered = {stratum: len(evaluation_set.for_stratum(stratum)) for stratum in DOMAINS[domain].by_stratum}
@@ -143,11 +156,17 @@ def test_both_strata_the_claim_turns_on_are_present_and_declared(domain):
 
 
 @pytest.mark.parametrize("domain", sorted(DOMAINS))
-def test_every_question_is_labeled_with_a_document_and_a_section_the_corpus_holds(domain):
+def test_every_answerable_question_is_labeled_with_a_document_and_a_section_the_corpus_holds(domain):
+	"""An unanswerable question is the one question with nowhere to point, so it carries no label.
+
+	Everything else names a document the domain holds and a heading inside it, and the heading is
+	checked against the source itself further down.
+	"""
 	evaluation_set = load_evaluation_set(domain)
 	available = {document.id for document in load_manifest().in_domain(domain)}
+	answerable = placed(evaluation_set.questions)
 
-	for question in evaluation_set.questions:
+	for question in answerable:
 		assert question.document in available
 		assert question.section.strip() == question.section
 		assert question.section
@@ -161,13 +180,98 @@ def test_every_question_in_a_set_is_about_a_different_place_in_the_corpus(domain
 	be scored on fewer locations than the question count makes it look.
 
 	Every document the domain holds has to be asked about, and no two questions may share a
-	section, so the score is spread as widely as the set says it is.
+	section, so the score is spread as widely as the set says it is. Together with the check below
+	on a multi-hop question's extra locations, that gives every (document, section) pair in the
+	domain to exactly one question.
 	"""
 	evaluation_set = load_evaluation_set(domain)
 	held = {document.id for document in load_manifest().in_domain(domain)}
+	answerable = placed(evaluation_set.questions)
 
 	assert evaluation_set.documents() == held
-	assert len({question.section for question in evaluation_set.questions}) == len(evaluation_set.questions)
+	assert len({question.section for question in answerable}) == len(answerable)
+
+
+@pytest.mark.parametrize("domain", sorted(DOMAINS))
+def test_a_multi_hop_question_says_which_locations_have_to_be_combined(domain):
+	"""A question that needs two passages is only measurable if it says which two.
+
+	The first location is the question's own place, so the document-level fallback a retrieved
+	chunk is judged on still points somewhere real, and the rest are what has to be retrieved
+	alongside it.
+	"""
+	evaluation_set = load_evaluation_set(domain)
+	multi_hop = evaluation_set.for_stratum(Stratum.MULTI_HOP)
+
+	for question in multi_hop:
+		assert question.locations is not None
+		assert len(question.locations) >= 2
+		assert question.locations[0].document == question.document
+		assert question.locations[0].section == question.section
+		assert len({(location.document, location.section) for location in question.locations}) == len(
+			question.locations
+		)
+
+
+@pytest.mark.parametrize("domain", sorted(DOMAINS))
+def test_no_extra_location_a_multi_hop_question_needs_is_another_question_s_own_place(domain):
+	"""A passage that answers one question outright and is part of another's answer is counted twice.
+
+	Retrieval has to turn up every location a multi-hop question names, so a second location that
+	is some other question's whole answer would let one hit stand in for two questions.
+	"""
+	evaluation_set = load_evaluation_set(domain)
+	extra = {
+		(location.document, location.section)
+		for question in evaluation_set.for_stratum(Stratum.MULTI_HOP)
+		for location in question.locations[1:]
+	}
+
+	assert extra
+	assert not extra & anchors(evaluation_set.questions)
+
+
+@pytest.mark.parametrize("domain", sorted(DOMAINS))
+def test_an_unanswerable_question_names_no_place_to_look_and_says_what_to_do_instead(domain):
+	"""Pointing at a section would make the question answerable and the stratum empty.
+
+	What a correct system does is part of the label: a system that declines is right here and the
+	only way to score that is to have said so before the run.
+	"""
+	evaluation_set = load_evaluation_set(domain)
+	unanswerable = evaluation_set.for_stratum(Stratum.UNANSWERABLE)
+
+	for question in unanswerable:
+		assert question.document is None
+		assert question.section is None
+		assert question.locations is None
+		assert question.gold_answer is None
+		assert question.extractive is False
+		assert question.expected_behavior
+		assert question.absent_probe
+
+
+@pytest.mark.parametrize("domain", sorted(DOMAINS))
+def test_no_unanswerable_question_is_supported_anywhere_in_its_domain(domain):
+	"""The stratum is worth nothing unless the corpus really holds no answer.
+
+	Each question carries the string a correct answer would have to name, and the check is that
+	the string is in no document of the domain. Read from the PDFs directly, and skipped, loudly,
+	when the corpus is not on disk.
+	"""
+	evaluation_set = load_evaluation_set(domain)
+	unanswerable = evaluation_set.for_stratum(Stratum.UNANSWERABLE)
+	manifest = load_manifest()
+	sources = sources_for(document.id for document in manifest.in_domain(domain))
+
+	# Reduced once per document rather than once per probe: the manuals run to several thousand
+	# pages each, and re-reducing one of them for every question is minutes of nothing.
+	corpus = {document_id: letters(text) for document_id, text in sources.items()}
+
+	for question in unanswerable:
+		probe = letters(question.absent_probe)
+		for document_id, text in corpus.items():
+			assert probe not in text, f"{question.id} is supported by {document_id}"
 
 
 @pytest.mark.parametrize("domain", sorted(DOMAINS))
@@ -217,7 +321,8 @@ def test_every_section_label_is_a_heading_the_source_prints(domain):
 	sources = sources_for(evaluation_set.documents())
 
 	for question in evaluation_set.questions:
-		assert collapsed(question.section) in collapsed(sources[question.document])
+		for location in question.all_locations():
+			assert collapsed(location.section) in collapsed(sources[location.document])
 
 
 @pytest.mark.parametrize("domain", sorted(DOMAINS))
@@ -289,6 +394,133 @@ def test_an_extractive_question_with_no_gold_answer_is_refused(tmp_path):
 		load_evaluation_set("papers", root=tmp_path)
 
 
+def test_a_multi_hop_question_that_does_not_say_which_locations_to_combine_is_refused(tmp_path):
+	recorded = committed_set("papers")
+	recorded["questions"].append(
+		a_question(id="papers-one-place-01", stratum="multi_hop", extractive=False, gold_answer=None)
+	)
+	write_set(tmp_path, recorded, "papers")
+
+	with pytest.raises(ValidationError, match="multi_hop but names no locations"):
+		load_evaluation_set("papers", root=tmp_path)
+
+
+def test_a_multi_hop_question_naming_a_single_location_is_refused(tmp_path):
+	recorded = committed_set("papers")
+	recorded["questions"].append(
+		a_question(
+			id="papers-one-hop-01",
+			stratum="multi_hop",
+			extractive=False,
+			gold_answer=None,
+			locations=[{"document": "attention-is-all-you-need", "section": "3.1 Encoder and Decoder Stacks"}],
+		)
+	)
+	write_set(tmp_path, recorded, "papers")
+
+	with pytest.raises(ValidationError, match="names one location"):
+		load_evaluation_set("papers", root=tmp_path)
+
+
+def test_a_multi_hop_question_whose_first_location_is_not_its_own_place_is_refused(tmp_path):
+	recorded = committed_set("papers")
+	recorded["questions"].append(
+		a_question(
+			id="papers-mismatched-01",
+			stratum="multi_hop",
+			extractive=False,
+			gold_answer=None,
+			locations=[
+				{"document": "attention-is-all-you-need", "section": "3.1 Encoder and Decoder Stacks"},
+				{"document": "attention-is-all-you-need", "section": "6.2 Model Variations"},
+			],
+		)
+	)
+	write_set(tmp_path, recorded, "papers")
+
+	with pytest.raises(ValidationError, match="does not start at its own document and section"):
+		load_evaluation_set("papers", root=tmp_path)
+
+
+def question_named(recorded: dict, question_id: str) -> dict:
+	"""The one question a committed set files under an id, so a test can change a single field."""
+	return next(question for question in recorded["questions"] if question["id"] == question_id)
+
+
+def placed(questions) -> list:
+	"""The questions that name a place to look, which is every question but an unanswerable one."""
+	return [question for question in questions if question.section]
+
+
+def anchors(questions) -> set:
+	"""Where each placed question says its answer is, as (document, section) pairs."""
+	return {(question.document, question.section) for question in placed(questions)}
+
+
+def test_a_question_naming_a_location_the_corpus_does_not_hold_is_refused(tmp_path):
+	recorded = committed_set("papers")
+	question_named(recorded, "papers-multi-hop-01")["locations"][1]["document"] = "some-other-paper"
+	write_set(tmp_path, recorded, "papers")
+
+	with pytest.raises(ValueError, match="names documents the corpus does not hold: some-other-paper"):
+		load_evaluation_set("papers", root=tmp_path)
+
+
+def an_unanswerable_question(**overrides) -> dict:
+	"""One question with no answer in the corpus, so a test states only the field it is breaking."""
+	question = {
+		"id": "papers-unanswerable-example-01",
+		"question": "Which of the papers in this collection reports on retrieving photographs by caption?",
+		"stratum": "unanswerable",
+		"extractive": False,
+		"expected_behavior": "decline, and name no document and no section",
+		"absent_probe": "Flickr30k",
+	}
+	question.update(overrides)
+	return question
+
+
+def an_answerable_question_claiming_the_unanswerable_labels(**overrides) -> dict:
+	"""A question that can be answered, wearing the labels that say it cannot be."""
+	return a_question(**{"expected_behavior": "decline, and name no document and no section", "absent_probe": "Flickr30k", **overrides})
+
+
+def test_an_unanswerable_question_that_points_at_a_document_is_refused(tmp_path):
+	recorded = committed_set("papers")
+	recorded["questions"].append(an_unanswerable_question(document="attention-is-all-you-need"))
+	write_set(tmp_path, recorded, "papers")
+
+	with pytest.raises(ValidationError, match="unanswerable but names a document"):
+		load_evaluation_set("papers", root=tmp_path)
+
+
+def test_an_unanswerable_question_that_does_not_say_what_to_do_instead_is_refused(tmp_path):
+	recorded = committed_set("papers")
+	recorded["questions"].append(an_unanswerable_question(expected_behavior=None))
+	write_set(tmp_path, recorded, "papers")
+
+	with pytest.raises(ValidationError, match="says nothing about what a correct system should do"):
+		load_evaluation_set("papers", root=tmp_path)
+
+
+def test_an_unanswerable_question_with_nothing_to_check_against_is_refused(tmp_path):
+	recorded = committed_set("papers")
+	recorded["questions"].append(an_unanswerable_question(absent_probe=None))
+	write_set(tmp_path, recorded, "papers")
+
+	with pytest.raises(ValidationError, match="no string to check the corpus against"):
+		load_evaluation_set("papers", root=tmp_path)
+
+
+def test_an_answerable_question_that_claims_to_be_unanswerable_is_refused(tmp_path):
+	recorded = committed_set("papers")
+	recorded["questions"].append(an_answerable_question_claiming_the_unanswerable_labels(id="papers-false-refusal-01"))
+	write_set(tmp_path, recorded, "papers")
+
+	with pytest.raises(ValidationError, match="is not one"):
+		load_evaluation_set("papers", root=tmp_path)
+
+
 def test_a_gold_answer_on_a_question_that_never_claimed_to_be_extractive_is_refused(tmp_path):
 	recorded = committed_set("papers")
 	recorded["questions"].append(a_question(id="papers-unchecked-01", extractive=False))
@@ -302,6 +534,8 @@ def test_a_set_whose_questions_drifted_from_its_declared_shares_is_refused(tmp_p
 	recorded = committed_set("papers")
 	recorded["strata"]["identifier_heavy"]["share"] = 0.9
 	recorded["strata"]["paraphrase"]["share"] = 0.1
+	recorded["strata"]["multi_hop"]["share"] = 0.0
+	recorded["strata"]["unanswerable"]["share"] = 0.0
 	write_set(tmp_path, recorded, "papers")
 
 	with pytest.raises(ValueError, match="against a declared"):
