@@ -23,10 +23,14 @@ together.
 
 `naive` indexes and retrieves dense vectors only, using cosine similarity.
 
+`sparse` indexes a BM42 sparse vector per chunk and retrieves on it alone, so the sparse signal's
+contribution can be told apart from the fusion. Without this row, a gain over dense-only could be
+the sparse signal doing the work or the fusion doing it, and the table would not say which.
+
 `hybrid` indexes a dense vector (all-MiniLM-L6-v2) alongside a BM42 sparse vector for the same
 chunk, then fuses two ranked candidate lists with reciprocal rank fusion.
 
-Both are ingested into their own Qdrant collection, so a rerun never mixes corpora and one
+Each is ingested into its own Qdrant collection, so a rerun never mixes corpora and one
 architecture can never retrieve the other's points. Generation is frozen to one model
 (`llama-3.3-70b-versatile`) at temperature 0 with a single shared prompt, for the same reason.
 
@@ -65,14 +69,17 @@ uv run rag-analysis architectures
 
 # index the corpus, once per architecture
 uv run rag-analysis ingest naive
+uv run rag-analysis ingest sparse
 uv run rag-analysis ingest hybrid
 
 # ask a question against one of them
 uv run rag-analysis query naive "how are the positional encodings scaled?"
+uv run rag-analysis query sparse "how are the positional encodings scaled?"
 uv run rag-analysis query hybrid "how are the positional encodings scaled?"
 
 # run one architecture over a domain's evaluation set and write the result file
 uv run rag-analysis run naive --domain papers
+uv run rag-analysis run sparse --domain papers
 uv run rag-analysis run hybrid --domain manuals
 
 # point a run at a cache of your own instead of the committed one
@@ -102,6 +109,7 @@ Ingestion can also be run on its own, without the rest of the CLI:
 
 ```bash
 uv run python build_index.py --architecture naive
+uv run python build_index.py --architecture sparse
 uv run python build_index.py --architecture hybrid
 ```
 
@@ -133,7 +141,7 @@ queried, and listed:
 # architectures/sparse.py
 @register(
 	name="sparse",
-	description="BM42 sparse vectors only.",
+	description="BM42 sparse vectors only, ranked by term overlap.",
 	collection="rag_sparse",
 	vectors=(SPARSE,),
 )
@@ -141,6 +149,9 @@ class SparseRAG(BaseRAG):
 	async def retrieve(self, query: str) -> list[Chunk]:
 		...
 ```
+
+That is the whole of it. The name, the collection, and the vectors it indexes are what separate
+one architecture from the next; nothing else in the project has to change.
 
 ## Tests
 

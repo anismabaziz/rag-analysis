@@ -60,24 +60,45 @@ def run_over_results(tmp_path, monkeypatch, architecture, domain, chunks_for):
 	)
 
 
-def two_architectures_two_domains(tmp_path, monkeypatch):
-	"""One run of each architecture over each domain, written where runs are written."""
-	run_over_results(tmp_path, monkeypatch, "naive", "papers", found_everywhere)
-	run_over_results(tmp_path, monkeypatch, "hybrid", "papers", found_nothing)
-	run_over_results(tmp_path, monkeypatch, "naive", "manuals", found_everywhere)
-	run_over_results(tmp_path, monkeypatch, "hybrid", "manuals", found_nothing)
+def every_architecture_two_domains(tmp_path, monkeypatch):
+	"""One run of each registered architecture over each domain, written where runs are written.
+
+	Dense finds the passages and the rest find nothing, so the rows differ rather than repeating.
+	"""
+	finders = {"naive": found_everywhere}
+
+	for domain in ("papers", "manuals"):
+		for registered in registry.all_architectures():
+			run_over_results(
+				tmp_path, monkeypatch, registered.name, domain, finders.get(registered.name, found_nothing)
+			)
 
 	return runs_dir(tmp_path)
 
 
-def test_both_architectures_are_compared_in_one_table(tmp_path, monkeypatch, offline):
-	"""The finding is the comparison, so one table holds naive and hybrid side by side."""
+def test_every_architecture_is_compared_in_one_table(tmp_path, monkeypatch, offline):
+	"""The finding is the comparison, so one table holds every architecture side by side.
+
+	The sparse architecture is in the table because without it a gain over dense could be the
+	sparse signal alone, and no row would say which of the two parts did the work.
+	"""
 	from evaluation.summary import load_runs, render_markdown, summarize
 
-	table = render_markdown(summarize(load_runs(two_architectures_two_domains(tmp_path, monkeypatch))))
+	registered_names = {registered.name for registered in registry.all_architectures()}
+	table = render_markdown(summarize(load_runs(every_architecture_two_domains(tmp_path, monkeypatch))))
 
-	assert table.count("| naive |") == 3
-	assert table.count("| hybrid |") == 3
+	assert "sparse" in registered_names
+	for name in registered_names:
+		assert table.count(f"| {name} |") == 3, name
+
+
+def test_the_sparse_architecture_is_reported_pooled_and_per_domain(tmp_path, monkeypatch, offline):
+	from evaluation.summary import load_runs, summarize
+
+	summary = summarize(load_runs(every_architecture_two_domains(tmp_path, monkeypatch)))
+	scopes = {row.scope for row in summary.rows if row.architecture == "sparse"}
+
+	assert scopes == {"papers", "manuals", "pooled"}
 
 
 def test_every_metric_is_reported_pooled_and_per_domain(tmp_path, monkeypatch, offline):
@@ -85,7 +106,7 @@ def test_every_metric_is_reported_pooled_and_per_domain(tmp_path, monkeypatch, o
 	its own row and the pool gets one computed over every scored question."""
 	from evaluation.summary import load_runs, render_markdown, summarize
 
-	runs = two_architectures_two_domains(tmp_path, monkeypatch)
+	runs = every_architecture_two_domains(tmp_path, monkeypatch)
 	table = render_markdown(summarize(load_runs(runs)))
 
 	assert "| papers |" in table
@@ -100,7 +121,7 @@ def test_the_pooled_row_is_the_mean_over_every_scored_question(tmp_path, monkeyp
 	counts once, however uneven the domains are."""
 	from evaluation.summary import load_runs, summarize
 
-	runs = two_architectures_two_domains(tmp_path, monkeypatch)
+	runs = every_architecture_two_domains(tmp_path, monkeypatch)
 	summary = summarize(load_runs(runs))
 
 	naive_files = [load_run_file(path) for path in run_files(runs) if path.name.startswith("naive-")]
@@ -119,7 +140,7 @@ def test_the_table_is_generated_from_the_files_not_written_by_hand(tmp_path, mon
 	reading of the files rather than a document of its own."""
 	from evaluation.summary import load_runs, summarize
 
-	runs = two_architectures_two_domains(tmp_path, monkeypatch)
+	runs = every_architecture_two_domains(tmp_path, monkeypatch)
 
 	def pooled_recall_at_1():
 		summary = summarize(load_runs(runs))
@@ -147,7 +168,7 @@ def test_runs_measured_at_different_configurations_are_refused(tmp_path, monkeyp
 	retrievers, so the summary stops rather than averaging over the difference."""
 	from evaluation.summary import load_runs, summarize
 
-	runs = two_architectures_two_domains(tmp_path, monkeypatch)
+	runs = every_architecture_two_domains(tmp_path, monkeypatch)
 	target = next(path for path in run_files(runs) if path.name.startswith("hybrid-"))
 	recorded = json.loads(target.read_text())
 	recorded["configuration"]["retrieval_depth"] = 10
@@ -169,7 +190,7 @@ def test_the_summarize_command_writes_the_table_a_reader_asked_for(tmp_path, mon
 	"""One command regenerates the table from the run files, to stdout and to a file."""
 	from main import main as cli
 
-	runs = two_architectures_two_domains(tmp_path, monkeypatch)
+	runs = every_architecture_two_domains(tmp_path, monkeypatch)
 	out = tmp_path / "table.md"
 	monkeypatch.setattr(
 		sys, "argv", ["rag-analysis", "summarize", "--results-dir", str(runs), "--out", str(out)]
@@ -184,6 +205,6 @@ def test_the_summarize_command_writes_the_table_a_reader_asked_for(tmp_path, mon
 
 	assert table.startswith("# Retrieval results")
 	assert table in reported
-	assert "| naive |" in table
-	assert "| hybrid |" in table
+	for name in (registered.name for registered in registry.all_architectures()):
+		assert f"| {name} |" in table
 	assert "| pooled |" in table

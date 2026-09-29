@@ -17,6 +17,7 @@ import pytest
 
 from architectures.hybrid import HybridRAG
 from architectures.naive import NaiveRAG
+from architectures.sparse import SparseRAG
 from core import registry
 
 PYPROJECT = Path(__file__).resolve().parent.parent / "pyproject.toml"
@@ -64,6 +65,10 @@ def declared_architecture(tmp_path, monkeypatch):
 
 	monkeypatch.syspath_prepend(str(tmp_path))
 	importlib.invalidate_caches()
+	# Registering on import is what makes adding an architecture a one-file change, and the
+	# cost is that a declaration outlives the package it came from. Swapping the registry for a
+	# copy puts the committed architectures back when the package goes.
+	monkeypatch.setattr(registry, "_REGISTERED", dict(registry._REGISTERED))
 
 	yield f"{THROWAWAY_PACKAGE}.word_frequency"
 
@@ -79,9 +84,9 @@ def no_store(monkeypatch):
 	return ingested
 
 
-def test_the_two_architectures_are_registered_by_declaration():
+def test_every_architecture_is_registered_by_declaration():
 	"""Nothing lists architectures anymore, so these are the only place the names exist."""
-	assert {architecture.name for architecture in registry.all_architectures()} == {"naive", "hybrid"}
+	assert {architecture.name for architecture in registry.all_architectures()} == {"naive", "sparse", "hybrid"}
 
 
 def test_listing_prints_every_registered_architecture(capsys):
@@ -126,11 +131,23 @@ def test_ingestion_reads_the_collection_the_architecture_declares(no_store):
 def test_querying_reads_the_pipeline_the_architecture_declares(monkeypatch):
 	monkeypatch.setattr(registry, "get_generation_llm", lambda: "llm")
 	monkeypatch.setattr(registry, "get_embed_model", lambda: "encoder")
+	pipelines = (("naive", NaiveRAG), ("sparse", SparseRAG), ("hybrid", HybridRAG))
 
-	for architecture, expected in (("naive", NaiveRAG), ("hybrid", HybridRAG)):
+	assert {name for name, _ in pipelines} == {a.name for a in registry.all_architectures()}
+	for architecture, expected in pipelines:
 		pipeline = registry.architecture(architecture).build()
 		assert isinstance(pipeline, expected)
 		assert pipeline.collection_name == registry.architecture(architecture).collection
+
+
+def test_every_architecture_is_ingested_into_a_collection_of_its_own():
+	"""A rerun must not mix corpora, and a sparse architecture judged against a collection that
+	also holds dense points would be judging a setup rather than a retriever. Ingestion is what
+	could break this, and the test above pins that it reads the declaration."""
+	declared = {a.name: (a.collection, a.vectors) for a in registry.all_architectures()}
+
+	assert declared["sparse"] == ("rag_sparse", (registry.SPARSE,))
+	assert len({collection for collection, _ in declared.values()}) == len(declared)
 
 
 def test_the_cli_ingests_through_the_same_declaration_ingestion_reads(no_store):

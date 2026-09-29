@@ -460,15 +460,32 @@ def _another_commit():
 
 
 def test_each_architecture_is_run_against_the_same_evaluation_set_and_writes_its_own_file(tmp_path, monkeypatch, offline):
-	run_over(tmp_path, monkeypatch, "naive", "papers", found_everywhere)
-	hybrid = run_over(tmp_path, monkeypatch, "hybrid", "papers", found_nothing)
-
+	"""Sparse finds the passages and the other architectures find nothing, so a run that recorded
+	one architecture's retrieval for another's would be caught here rather than in a table."""
+	runs = {
+		registered.name: run_over(
+			tmp_path,
+			monkeypatch,
+			registered.name,
+			"papers",
+			found_everywhere if registered.name == "sparse" else found_nothing,
+		)
+		for registered in registry.all_architectures()
+	}
 	written = [path.name for path in written_files(tmp_path)]
 
-	assert hybrid.collection == "rag_hybrid"
-	assert hybrid.aggregates.recall == 0.0
-	assert any(name.startswith("naive-") for name in written)
-	assert any(name.startswith("hybrid-") for name in written)
+	assert runs["sparse"].collection == "rag_sparse"
+	assert {name: run.collection for name, run in runs.items()} == {
+		registered.name: registered.collection for registered in registry.all_architectures()
+	}
+	assert len(set(run.collection for run in runs.values())) == len(runs)
+	for name, run in runs.items():
+		assert any(file_name.startswith(f"{name}-") for file_name in written), name
+		assert run.aggregates.questions == 32, name
+	assert runs["sparse"].aggregates.recall > 0.0
+	assert all(
+		run.aggregates.recall == 0.0 for name, run in runs.items() if name != "sparse"
+	)
 
 
 def test_the_run_file_is_json_readable_back_into_the_shape_it_was_written_in(tmp_path, monkeypatch, offline):
