@@ -418,9 +418,26 @@ def test_a_second_run_at_the_same_commit_and_corpus_writes_a_comparable_file(tmp
 	first = run_over(tmp_path, monkeypatch, "naive", "papers", found_everywhere)
 	second = run_over(tmp_path, monkeypatch, "naive", "papers", found_everywhere)
 
-	assert second == first
+	# Latency is timed per run, so two runs never agree on it to the microsecond: what makes
+	# the second comparable to the first is everything else, measured the same way twice.
+	assert _without_latency(second) == _without_latency(first)
 	assert len(written_files(tmp_path)) == 1
-	assert load_run_file(written_files(tmp_path)[0]) == first
+	assert _without_latency(load_run_file(written_files(tmp_path)[0])) == _without_latency(first)
+
+
+def _without_latency(run):
+	"""A run as a plain record with its timed fields dropped, for comparing two runs."""
+	return run.model_dump(
+		exclude={
+			"results": {"__all__": {"retrieval_latency_s", "generation_latency_s"}},
+			"aggregates": {
+				"retrieval_latency_p50_s",
+				"retrieval_latency_p95_s",
+				"generation_latency_p50_s",
+				"generation_latency_p95_s",
+			},
+		}
+	)
 
 
 def test_a_run_at_another_commit_is_written_beside_the_first_rather_than_over_it(tmp_path, monkeypatch, offline):

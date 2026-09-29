@@ -19,7 +19,7 @@ from pathlib import Path
 from core.chunk import Chunk, Provenance
 from evaluation.citations import citation_accuracy
 from evaluation.exact_match import exact_match_score
-from evaluation.metrics import mean
+from evaluation.metrics import mean, mean_or_nothing, percentile
 from evaluation.run import RESULTS_DIR, QuestionResult, RunFile, load_run_file
 
 # The scope of a row built from every domain's scored questions rather than one domain's.
@@ -58,6 +58,15 @@ class SummaryRow:
 	exact_match_unscored: int = 0
 	citation_accuracy_extractive: float | None = None
 	citation_extractive_scored: int = 0
+	retrieval_latency_p50_s: float = 0.0
+	retrieval_latency_p95_s: float = 0.0
+	generation_latency_p50_s: float | None = None
+	generation_latency_p95_s: float | None = None
+	prompt_tokens_mean: float | None = None
+	completion_tokens_mean: float | None = None
+	total_tokens_mean: float | None = None
+	total_tokens: int = 0
+	generation_count: int = 0
 
 
 @dataclass(frozen=True)
@@ -152,6 +161,12 @@ def render_markdown(summary: Summary) -> str:
 		"exact_match",
 		"exact_match_n",
 		"cite_extractive",
+		"retrieval_p50_s",
+		"retrieval_p95_s",
+		"generation_p50_s",
+		"generation_p95_s",
+		"tokens_total",
+		"tokens_mean",
 	]
 
 	lines = [
@@ -181,6 +196,12 @@ def render_markdown(summary: Summary) -> str:
 			_cell(row.exact_match),
 			str(row.exact_match_scored),
 			_cell(row.citation_accuracy_extractive),
+			f"{row.retrieval_latency_p50_s:.4f}",
+			f"{row.retrieval_latency_p95_s:.4f}",
+			_cell(row.generation_latency_p50_s),
+			_cell(row.generation_latency_p95_s),
+			str(row.total_tokens),
+			_cell(row.total_tokens_mean),
 		]
 		lines.append("| " + " | ".join(cells) + " |")
 
@@ -192,6 +213,10 @@ def render_markdown(summary: Summary) -> str:
 			"exact_match is the share of extractive questions whose answer matches the gold span, "
 			"tolerating surrounding whitespace and punctuation only; "
 			"cite_extractive is citation accuracy over those same questions.",
+			"retrieval_p50_s and retrieval_p95_s are the median and 95th percentile retrieval seconds "
+			"over the run's questions; generation_p50_s and generation_p95_s are the same over the "
+			"generated answers alone. tokens_total is prompt plus completion words summed over the "
+			"generated answers, counted as whitespace-separated words.",
 		]
 	)
 
@@ -223,6 +248,8 @@ def _domain_row(run: RunFile) -> SummaryRow:
 		citation_scored=len([result for result in run.results if result.citation_accuracy is not None]),
 		citation_unscored=len([result for result in run.results if result.citation_accuracy is None]),
 		**_extractive_cells(run.results),
+		**_latency_cells(run.results),
+		**_cost_cells(run.results),
 	)
 
 
@@ -252,6 +279,8 @@ def _pooled_row(group: list[RunFile]) -> SummaryRow:
 		citation_scored=len([result for result in pooled if result.citation_accuracy is not None]),
 		citation_unscored=len([result for result in pooled if result.citation_accuracy is None]),
 		**_extractive_cells(pooled),
+		**_latency_cells(pooled),
+		**_cost_cells(pooled),
 	)
 
 
@@ -272,6 +301,45 @@ def _extractive_cells(results: list[QuestionResult]) -> dict:
 		"citation_extractive_scored": len(
 			[result for result in extractive if result.citation_accuracy is not None]
 		),
+	}
+
+
+def _latency_cells(results: list[QuestionResult]) -> dict:
+	"""The latency percentile columns, recomputed from the stored per-question timings.
+
+	One helper serves the domain row and the pooled row, so the pooled percentiles are
+	percentiles over the pooled questions rather than means of domain medians. Retrieval
+	covers every stored question and generation covers only the answers the model was
+	asked for, because empty retrieval never reaches it.
+	"""
+	retrieval = [result.retrieval_latency_s for result in results]
+	generation = [
+		result.generation_latency_s for result in results if result.generation_latency_s is not None
+	]
+
+	return {
+		"retrieval_latency_p50_s": percentile(retrieval, 50),
+		"retrieval_latency_p95_s": percentile(retrieval, 95),
+		"generation_latency_p50_s": percentile(generation, 50) if generation else None,
+		"generation_latency_p95_s": percentile(generation, 95) if generation else None,
+	}
+
+
+def _cost_cells(results: list[QuestionResult]) -> dict:
+	"""The token cost columns, recomputed from the stored per-question counts.
+
+	One helper serves the domain row and the pooled row, so the two can never disagree
+	about what counts as generated: a question whose retrieval never reached the model
+	carries no tokens and drops out of the means instead of dragging them down.
+	"""
+	generated = [result for result in results if result.total_tokens is not None]
+
+	return {
+		"prompt_tokens_mean": mean_or_nothing([result.prompt_tokens for result in generated]),
+		"completion_tokens_mean": mean_or_nothing([result.completion_tokens for result in generated]),
+		"total_tokens_mean": mean_or_nothing([result.total_tokens for result in generated]),
+		"total_tokens": sum(result.total_tokens for result in generated if result.total_tokens is not None),
+		"generation_count": len(generated),
 	}
 
 

@@ -32,13 +32,16 @@ from core.commit import current_revision
 from core.registry import architecture
 from corpus.manifest import Manifest, corpus_identifier, load_manifest
 from evaluation.citations import citation_accuracy, claim_supported, split_claims
+from evaluation.cost import estimate_tokens, rendered_prompt
 from evaluation.exact_match import exact_match_score
 from evaluation.metrics import (
 	REPORT_DEPTHS,
 	Retrieved,
 	locate,
 	mean,
+	mean_or_nothing,
 	ndcg_at,
+	percentile,
 	recall,
 	recall_at,
 	reciprocal_rank,
@@ -111,6 +114,26 @@ class QuestionResult(BaseModel):
 		default=None,
 		description="One for an exact match on an extractive question, zero for a miss, nothing when not extractive.",
 	)
+	retrieval_latency_s: float = Field(
+		default=0.0,
+		description="Seconds the retrieval call took for this question.",
+	)
+	generation_latency_s: float | None = Field(
+		default=None,
+		description="Seconds the generation call took, or nothing when empty retrieval never reached the model.",
+	)
+	prompt_tokens: int | None = Field(
+		default=None,
+		description="Words in the rendered prompt, or nothing when nothing was generated.",
+	)
+	completion_tokens: int | None = Field(
+		default=None,
+		description="Words in the generated answer, or nothing when nothing was generated.",
+	)
+	total_tokens: int | None = Field(
+		default=None,
+		description="Prompt plus completion words, or nothing when nothing was generated.",
+	)
 
 
 class Aggregates(BaseModel):
@@ -180,6 +203,42 @@ class Aggregates(BaseModel):
 	citation_extractive_scored: int = Field(
 		default=0,
 		description="Extractive questions whose answers made claims and carry a citation score.",
+	)
+	retrieval_latency_p50_s: float = Field(
+		default=0.0,
+		description="Median retrieval seconds over this run's questions.",
+	)
+	retrieval_latency_p95_s: float = Field(
+		default=0.0,
+		description="95th percentile retrieval seconds over this run's questions.",
+	)
+	generation_latency_p50_s: float | None = Field(
+		default=None,
+		description="Median generation seconds over this run's generated answers, or nothing when it generated none.",
+	)
+	generation_latency_p95_s: float | None = Field(
+		default=None,
+		description="95th percentile generation seconds over this run's generated answers, or nothing when it generated none.",
+	)
+	prompt_tokens_mean: float | None = Field(
+		default=None,
+		description="Mean prompt words over this run's generated answers.",
+	)
+	completion_tokens_mean: float | None = Field(
+		default=None,
+		description="Mean completion words over this run's generated answers.",
+	)
+	total_tokens_mean: float | None = Field(
+		default=None,
+		description="Mean prompt-plus-completion words over this run's generated answers.",
+	)
+	total_tokens: int = Field(
+		default=0,
+		description="Prompt-plus-completion words summed over this run's generated answers.",
+	)
+	generation_count: int = Field(
+		default=0,
+		description="Questions whose retrieval reached the model and were counted for cost.",
 	)
 
 
@@ -282,16 +341,40 @@ async def _ask_every_question(
 	chunks it was answered with: each claim counts only when one retrieved chunk holds a
 	supporting span for it. Empty retrieval is never sent to the model; the refusal stands
 	in as the answer, produces no claims, and carries no citation score.
+
+	Each stage is timed on its own, so a reader comparing architectures can see whether a
+	quality gain moved retrieval or generation. Token cost is counted from the rendered
+	prompt and the answer, deterministically and without calling anything, so the same
+	run always reports the same cost.
 	"""
+	import time
+
 	results = []
 	total = len(evaluation_set.questions)
 
 	for number, question in enumerate(evaluation_set.questions, start=1):
+		started = time.perf_counter()
 		chunks = await pipeline.retrieve(question.question, top_k=configuration.retrieval_depth)
+		retrieval_latency = time.perf_counter() - started
 		retrieved = retrieved_from(chunks, manifest)
 		locations = question.all_locations()
 		depths = [depth for depth in REPORT_DEPTHS if depth <= configuration.retrieval_depth]
-		answer = REFUSAL if not chunks else await pipeline.generate(question.question, build_context(chunks))
+		if not chunks:
+			answer = REFUSAL
+			generation_latency = None
+			prompt_tokens = None
+			completion_tokens = None
+			total_question_tokens = None
+		else:
+			context = build_context(chunks)
+			started = time.perf_counter()
+			answer = await pipeline.generate(question.question, context)
+			generation_latency = time.perf_counter() - started
+			prompt_tokens = estimate_tokens(
+				rendered_prompt(configuration.prompt, context, question.question)
+			)
+			completion_tokens = estimate_tokens(answer)
+			total_question_tokens = prompt_tokens + completion_tokens
 		claims = split_claims(answer)
 		supported = sum(1 for claim in claims if claim_supported(claim, chunks))
 
@@ -325,6 +408,11 @@ async def _ask_every_question(
 			extractive=question.extractive,
 			gold_answer=question.gold_answer,
 			exact_match=exact_match_score(answer, question.gold_answer, question.extractive),
+			retrieval_latency_s=retrieval_latency,
+			generation_latency_s=generation_latency,
+			prompt_tokens=prompt_tokens,
+			completion_tokens=completion_tokens,
+			total_tokens=total_question_tokens,
 		)
 
 		results.append(result)
@@ -357,6 +445,11 @@ def _aggregates(results: list[QuestionResult]) -> Aggregates:
 	score a reader could not account for. Citation accuracy is averaged the same way, over
 	the questions whose answers made claims, with the unanswerable stratum kept as its own
 	slice beside the answerable one.
+
+	Latency percentiles are computed from this run's own per-question timings, never by
+	averaging across runs: a median over two runs' medians is not the median of what either
+	run measured. Retrieval covers every question and generation covers only the answers
+	the model was asked for, because empty retrieval never reaches it.
 	"""
 	scored = [result for result in results if result.scored]
 	count = len(scored)
@@ -365,10 +458,14 @@ def _aggregates(results: list[QuestionResult]) -> Aggregates:
 	unanswerable = [result for result in with_claims if result.stratum is Stratum.UNANSWERABLE]
 	extractive = [result for result in results if result.exact_match is not None]
 	extractive_with_claims = [result for result in extractive if result.citation_accuracy is not None]
+	retrieval_latencies = [result.retrieval_latency_s for result in results]
+	generation_latencies = [
+		result.generation_latency_s for result in results if result.generation_latency_s is not None
+	]
+	generated = [result for result in results if result.total_tokens is not None]
 
-	def _mean_or_nothing(values: list[float | None]) -> float | None:
-		measured = [value for value in values if value is not None]
-		return sum(measured) / len(measured) if measured else None
+	def _percentile_or_nothing(values: list[float], rank: float) -> float | None:
+		return percentile(values, rank) if values else None
 
 	return Aggregates(
 		questions=len(results),
@@ -378,18 +475,27 @@ def _aggregates(results: list[QuestionResult]) -> Aggregates:
 		reciprocal_rank=mean(result.reciprocal_rank for result in scored),
 		recall_at=_depth_means(scored, "recall_at"),
 		ndcg_at=_depth_means(scored, "ndcg_at"),
-		citation_accuracy=_mean_or_nothing([result.citation_accuracy for result in with_claims]),
-		citation_accuracy_answerable=_mean_or_nothing([result.citation_accuracy for result in answerable]),
-		citation_accuracy_unanswerable=_mean_or_nothing([result.citation_accuracy for result in unanswerable]),
+		citation_accuracy=mean_or_nothing([result.citation_accuracy for result in with_claims]),
+		citation_accuracy_answerable=mean_or_nothing([result.citation_accuracy for result in answerable]),
+		citation_accuracy_unanswerable=mean_or_nothing([result.citation_accuracy for result in unanswerable]),
 		citation_scored=len(with_claims),
 		citation_unscored=len(results) - len(with_claims),
-		exact_match=_mean_or_nothing([result.exact_match for result in extractive]),
+		exact_match=mean_or_nothing([result.exact_match for result in extractive]),
 		exact_match_scored=len(extractive),
 		exact_match_unscored=len(results) - len(extractive),
-		citation_accuracy_extractive=_mean_or_nothing(
+		citation_accuracy_extractive=mean_or_nothing(
 			[result.citation_accuracy for result in extractive_with_claims]
 		),
 		citation_extractive_scored=len(extractive_with_claims),
+		retrieval_latency_p50_s=percentile(retrieval_latencies, 50),
+		retrieval_latency_p95_s=percentile(retrieval_latencies, 95),
+		generation_latency_p50_s=_percentile_or_nothing(generation_latencies, 50),
+		generation_latency_p95_s=_percentile_or_nothing(generation_latencies, 95),
+		prompt_tokens_mean=mean_or_nothing([result.prompt_tokens for result in generated]),
+		completion_tokens_mean=mean_or_nothing([result.completion_tokens for result in generated]),
+		total_tokens_mean=mean_or_nothing([result.total_tokens for result in generated]),
+		total_tokens=sum(result.total_tokens for result in generated if result.total_tokens is not None),
+		generation_count=len(generated),
 	)
 
 
@@ -441,6 +547,8 @@ def report(run: RunFile, path: Path) -> None:
 	print(f"[RUN] reciprocal rank@{depth} {aggregates.reciprocal_rank:.4f}")
 	print(f"[RUN] {_citation_line(aggregates)}")
 	print(f"[RUN] {_exact_line(aggregates)}")
+	print(f"[RUN] {_latency_line(aggregates)}")
+	print(f"[RUN] {_cost_line(aggregates)}")
 	if aggregates.unscored:
 		print(f"[RUN] {aggregates.unscored} questions name no place to look in and are not scored on retrieval")
 	if aggregates.citation_unscored:
@@ -477,4 +585,29 @@ def _exact_line(aggregates: Aggregates) -> str:
 		f"exact_match {_cell(aggregates.exact_match)} "
 		f"(citation_on_extractive {_cell(aggregates.citation_accuracy_extractive)}) "
 		f"over {aggregates.exact_match_scored} extractive questions"
+	)
+
+
+def _latency_line(aggregates: Aggregates) -> str:
+	"""One line for the retrieval and generation latency percentiles, kept separate.
+
+	The two stages have different causes, so a reader comparing architectures needs to
+	know which one moved: retrieval time moves with the store and the encoders, and
+	generation time moves with the hosted model and the length of what it was given.
+	"""
+	return (
+		f"retrieval_latency_p50 {_cell(aggregates.retrieval_latency_p50_s)}s "
+		f"p95 {_cell(aggregates.retrieval_latency_p95_s)}s, "
+		f"generation_latency_p50 {_cell(aggregates.generation_latency_p50_s)}s "
+		f"p95 {_cell(aggregates.generation_latency_p95_s)}s"
+	)
+
+
+def _cost_line(aggregates: Aggregates) -> str:
+	"""One line for the generation token cost, so a quality gain can be weighed against price."""
+	return (
+		f"tokens total {aggregates.total_tokens} "
+		f"(prompt_mean {_cell(aggregates.prompt_tokens_mean)}, "
+		f"completion_mean {_cell(aggregates.completion_tokens_mean)}) "
+		f"over {aggregates.generation_count} generated answers"
 	)

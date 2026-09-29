@@ -173,6 +173,42 @@ def mean(scores: Iterable[float | None]) -> float:
 	return sum(measured) / len(measured) if measured else 0.0
 
 
+def percentile(values: Iterable[float | None], rank: float) -> float:
+	"""The value below which `rank` percent of the measured values fall.
+
+	A `None` is skipped rather than counted as zero, for the same reason an unscored
+	question is not a miss. Linear interpolation between closest ranks, so the 50th
+	percentile of an even count is the mean of the two middle values. Zero when there
+	was nothing to measure. Shared by the run and the summary so the two can never
+	disagree about what a percentile is.
+	"""
+	measured = sorted(value for value in values if value is not None)
+	if not measured:
+		return 0.0
+
+	position = (len(measured) - 1) * rank / 100
+	low = int(math.floor(position))
+	high = int(math.ceil(position))
+	if low == high:
+		return measured[low]
+
+	weight = position - low
+	return measured[low] * (1 - weight) + measured[high] * weight
+
+
+def mean_or_nothing(values: Iterable[float | None]) -> float | None:
+	"""The mean of the measured values, and nothing when there was nothing to average.
+
+	A `None` is skipped rather than counted as a miss, for the same reason an unscored
+	question is not a miss. Shared by the run that averages its generated answers and
+	the summary that averages the same stored counts, so the two can never disagree
+	about what a mean over tokens is.
+	"""
+	measured = [value for value in values if value is not None]
+
+	return sum(measured) / len(measured) if measured else None
+
+
 def _document_named_by(source: str | None, manifest: Manifest) -> str | None:
 	"""The manifest document a retrieved chunk's source path names, if the corpus holds it."""
 	if not source:
