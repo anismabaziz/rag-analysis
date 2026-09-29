@@ -75,6 +75,9 @@ uv run rag-analysis query hybrid "how are the positional encodings scaled?"
 uv run rag-analysis run naive --domain papers
 uv run rag-analysis run hybrid --domain manuals
 
+# point a run at a cache of your own instead of the committed one
+uv run rag-analysis run naive --domain papers --cache-dir /tmp/responses
+
 # read every run file back as one pooled and per-domain retrieval table
 uv run rag-analysis summarize
 uv run rag-analysis summarize --out results/summary.md
@@ -103,6 +106,20 @@ uv run python build_index.py --architecture hybrid
 ```
 
 `ingest` replaces the contents of the target collection, so run it again after adding documents.
+
+## Reproducing the published numbers
+
+A hosted model is not deterministic even at temperature zero, and hosted model aliases get
+withdrawn. Both would quietly change the numbers in the results table after the fact, so every
+generated answer is cached on disk under `results/cache/`, keyed by the prompt, the model, the
+temperature, the query, and the retrieved context. Change any one of those and the entry is a
+miss; keep all five and the answer is replayed without calling the model.
+
+The cache is committed, so a reader regenerates the published table by running the evaluation
+with no API key and no hosted model at all. It is gzipped JSON, one small file per question, so
+it costs a few kilobytes per domain and a regenerated run rewrites only the entries that
+actually changed. Answers for a run nobody has published do not need committing: point the run
+at a scratch cache with `--cache-dir` instead.
 
 ## Adding an architecture
 
@@ -133,7 +150,8 @@ uv run ruff check .
 ```
 
 No test needs a running service or network access. The vector store, the hosted model client, and
-the embedding models are all swapped out inside the tests.
+the embedding models are all swapped out inside the tests. Runs in tests also get a scratch
+cache, so a test run never writes into the committed one.
 
 ## Layout
 
@@ -147,6 +165,7 @@ the embedding models are all swapped out inside the tests.
 | `architectures/` | One file per retrieval architecture: the pipeline, and the declaration that registers it |
 | `core/` | The shared pipeline, prompt, and the architecture registry |
 | `results/runs/` | One result file per run: the configuration, the commit, the corpus identifier, per-question results, and aggregates |
+| `results/cache/` | The committed model responses the published numbers were measured from |
 | `vector/` | Qdrant access |
 | `config/` | Configuration, read once at startup |
 | `docs/adr/` | Recorded decisions and the options that lost |

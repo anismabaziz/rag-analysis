@@ -3,6 +3,7 @@ import asyncio
 from pathlib import Path
 
 from core.registry import Architecture, UnknownArchitecture, all_architectures, architecture
+from evaluation.cache import CACHE_DIR
 from evaluation.run import RESULTS_DIR, run_evaluation
 from evaluation.set import domains
 from vector.store import reset_vector_store
@@ -60,6 +61,11 @@ async def main():
 		"--out",
 		default=None,
 		help="Where to write the result file. Defaults to results/runs/<domain>/",
+	)
+	run_parser.add_argument(
+		"--cache-dir",
+		default=None,
+		help="Where to read and write cached model responses. Defaults to results/cache/.",
 	)
 
 	# architectures command
@@ -178,9 +184,10 @@ async def run_command(args, parser):
 		parser.error(f"no evaluation set for {args.domain}. There is one for: {', '.join(known)}")
 
 	results_dir = Path(args.out) if args.out else RESULTS_DIR
+	cache_dir = Path(args.cache_dir) if args.cache_dir else CACHE_DIR
 
 	try:
-		await run_evaluation(args.architecture, args.domain, results_dir=results_dir)
+		await run_evaluation(args.architecture, args.domain, results_dir=results_dir, cache_dir=cache_dir)
 	except UnknownArchitecture as error:
 		parser.error(str(error))
 

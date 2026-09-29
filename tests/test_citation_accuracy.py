@@ -133,7 +133,9 @@ def _run_over(tmp_path, monkeypatch, chunks_for, generate):
 	monkeypatch.setattr(pipeline, "retrieve", retrieve_from(chunks_for))
 	monkeypatch.setattr(pipeline, "generate", generate)
 
-	return asyncio.run(run_evaluation("naive", "papers", results_dir=tmp_path / "results"))
+	return asyncio.run(
+		run_evaluation("naive", "papers", results_dir=tmp_path / "results", cache_dir=tmp_path / "cache")
+	)
 
 
 class _embed_model:

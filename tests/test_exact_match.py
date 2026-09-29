@@ -83,7 +83,9 @@ def test_a_run_scores_each_extractive_question_by_exact_match(tmp_path, monkeypa
 
 	monkeypatch.setattr(registry.architecture("naive").pipeline, "generate", _generate)
 
-	run = asyncio.run(run_evaluation("naive", "papers", results_dir=tmp_path / "results"))
+	run = asyncio.run(
+		run_evaluation("naive", "papers", results_dir=tmp_path / "results", cache_dir=tmp_path / "cache")
+	)
 
 	for result in run.results:
 		question = by_question[result.question]
@@ -111,7 +113,9 @@ def test_a_wrong_answer_scores_zero_and_a_refusal_scores_zero(tmp_path, monkeypa
 	monkeypatch.setattr(registry.architecture("naive").pipeline, "retrieve", retrieve_from(found_everywhere))
 	monkeypatch.setattr(registry.architecture("naive").pipeline, "generate", wrong_generate)
 
-	run = asyncio.run(run_evaluation("naive", "papers", results_dir=tmp_path / "results"))
+	run = asyncio.run(
+		run_evaluation("naive", "papers", results_dir=tmp_path / "results", cache_dir=tmp_path / "cache")
+	)
 
 	for result in run.results:
 		if result.extractive:
@@ -147,7 +151,9 @@ def test_exact_match_is_reported_alongside_citation_for_the_same_questions(tmp_p
 	monkeypatch.setattr(registry.architecture("naive").pipeline, "retrieve", retrieve_from(chunks_for))
 	monkeypatch.setattr(registry.architecture("naive").pipeline, "generate", quoting_generate)
 
-	run = asyncio.run(run_evaluation("naive", "papers", results_dir=tmp_path / "results"))
+	run = asyncio.run(
+		run_evaluation("naive", "papers", results_dir=tmp_path / "results", cache_dir=tmp_path / "cache")
+	)
 
 	assert run.aggregates.exact_match == 1.0
 	assert run.aggregates.citation_accuracy_extractive == 1.0
@@ -193,7 +199,11 @@ def test_summary_reports_exact_match_pooled_and_per_domain(tmp_path, monkeypatch
 		for domain in ("papers", "manuals"):
 			monkeypatch.setattr(registry.architecture(architecture).pipeline, "retrieve", retrieve)
 			monkeypatch.setattr(registry.architecture(architecture).pipeline, "generate", exact_generate)
-			asyncio.run(run_evaluation(architecture, domain, results_dir=tmp_path / "runs"))
+			asyncio.run(
+				run_evaluation(
+					architecture, domain, results_dir=tmp_path / "runs", cache_dir=tmp_path / "cache"
+				)
+			)
 
 	from evaluation.summary import load_runs, render_markdown, summarize
 

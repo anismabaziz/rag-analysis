@@ -163,6 +163,7 @@ def retrieve_from(chunks_for):
 def run_over(tmp_path, monkeypatch, architecture, domain, chunks_for, **kwargs):
 	"""A run of `architecture` over `domain`, with retrieval answered by `chunks_for`."""
 	monkeypatch.setattr(registry.architecture(architecture).pipeline, "retrieve", retrieve_from(chunks_for))
+	kwargs.setdefault("cache_dir", tmp_path / "cache")
 
 	return asyncio.run(run_evaluation(architecture, domain, results_dir=tmp_path / "results", **kwargs))
 
@@ -507,7 +508,9 @@ def test_an_evaluation_set_whose_labels_do_not_hold_stops_the_run_before_a_quest
 	monkeypatch.setattr(registry.architecture("naive").pipeline, "retrieve", refuse)
 
 	with pytest.raises(ValueError, match="names documents the corpus does not hold"):
-		asyncio.run(run_evaluation("naive", "papers", results_dir=tmp_path / "results"))
+		asyncio.run(
+			run_evaluation("naive", "papers", results_dir=tmp_path / "results", cache_dir=tmp_path / "cache")
+		)
 
 
 def test_the_run_command_asks_for_a_domain_that_has_an_evaluation_set(tmp_path, monkeypatch, capsys, offline):
@@ -542,7 +545,21 @@ def test_the_run_command_writes_the_file_a_reader_asked_for(tmp_path, monkeypatc
 	from main import main as cli
 
 	monkeypatch.setattr(registry.architecture("naive").pipeline, "retrieve", retrieve_from(found_everywhere))
-	monkeypatch.setattr(sys, "argv", ["rag-analysis", "run", "naive", "--domain", "papers", "--out", str(tmp_path)])
+	monkeypatch.setattr(
+		sys,
+		"argv",
+		[
+			"rag-analysis",
+			"run",
+			"naive",
+			"--domain",
+			"papers",
+			"--out",
+			str(tmp_path),
+			"--cache-dir",
+			str(tmp_path / "cache"),
+		],
+	)
 
 	asyncio.run(cli())
 	reported = capsys.readouterr().out

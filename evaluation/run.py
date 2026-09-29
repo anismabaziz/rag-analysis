@@ -31,6 +31,7 @@ from core.chunk import REFUSAL, build_context
 from core.commit import current_revision
 from core.registry import architecture
 from corpus.manifest import Manifest, corpus_identifier, load_manifest
+from evaluation.cache import CACHE_DIR, generate_with_cache
 from evaluation.citations import citation_accuracy, claim_supported, split_claims
 from evaluation.cost import estimate_tokens, rendered_prompt
 from evaluation.exact_match import exact_match_score
@@ -289,12 +290,15 @@ async def run_evaluation(
 	domain: str,
 	results_dir: Path = RESULTS_DIR,
 	root: Path = Path("."),
+	cache_dir: Path = CACHE_DIR,
 ) -> RunFile:
 	"""Run one architecture over one domain's evaluation set, and write the file recording it.
 
 	The architecture is resolved and the evaluation set is read and checked before anything is
 	built or contacted, so a name that does not exist or a set whose labels do not hold costs a
-	run nothing.
+	run nothing. Generated answers are read from the response cache when an identical prompt,
+	model, temperature, query, and context was answered before, so a repeated run is free and
+	identical; anything else asks the model once and writes what it said.
 	"""
 	registered = architecture(architecture_name)
 	manifest = load_manifest()
@@ -303,7 +307,7 @@ async def run_evaluation(
 	revision = current_revision(root)
 
 	pipeline = registered.build()
-	results = await _ask_every_question(pipeline, evaluation_set, manifest, configuration)
+	results = await _ask_every_question(pipeline, evaluation_set, manifest, configuration, cache_dir)
 
 	run = RunFile(
 		architecture=registered.name,
@@ -334,6 +338,7 @@ async def _ask_every_question(
 	evaluation_set: EvaluationSet,
 	manifest: Manifest,
 	configuration: Configuration,
+	cache_dir: Path = CACHE_DIR,
 ) -> list[QuestionResult]:
 	"""Retrieve for every question in the set, answer from what came back, and score both.
 
@@ -341,6 +346,9 @@ async def _ask_every_question(
 	chunks it was answered with: each claim counts only when one retrieved chunk holds a
 	supporting span for it. Empty retrieval is never sent to the model; the refusal stands
 	in as the answer, produces no claims, and carries no citation score.
+
+	Non-empty retrieval answers through the response cache, so a repeated run returns the same
+	answer without calling the model again.
 
 	Each stage is timed on its own, so a reader comparing architectures can see whether a
 	quality gain moved retrieval or generation. Token cost is counted from the rendered
@@ -368,7 +376,9 @@ async def _ask_every_question(
 		else:
 			context = build_context(chunks)
 			started = time.perf_counter()
-			answer = await pipeline.generate(question.question, context)
+			answer = await generate_with_cache(
+				pipeline, configuration, question.question, context, cache_dir
+			)
 			generation_latency = time.perf_counter() - started
 			prompt_tokens = estimate_tokens(
 				rendered_prompt(configuration.prompt, context, question.question)

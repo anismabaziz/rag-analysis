@@ -55,7 +55,9 @@ def run_over_results(tmp_path, monkeypatch, architecture, domain, chunks_for):
 		registry.architecture(architecture).pipeline, "retrieve", retrieve_from_both(chunks_for)
 	)
 
-	return asyncio.run(run_evaluation(architecture, domain, results_dir=runs_dir(tmp_path)))
+	return asyncio.run(
+		run_evaluation(architecture, domain, results_dir=runs_dir(tmp_path), cache_dir=tmp_path / "cache")
+	)
 
 
 def two_architectures_two_domains(tmp_path, monkeypatch):
