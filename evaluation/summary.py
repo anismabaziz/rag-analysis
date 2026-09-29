@@ -16,6 +16,9 @@ the summary, because a row over two setups would compare everything except retri
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from core.chunk import Chunk, Provenance
+from evaluation.citations import citation_accuracy
+from evaluation.exact_match import exact_match_score
 from evaluation.metrics import mean
 from evaluation.run import RESULTS_DIR, QuestionResult, RunFile, load_run_file
 
@@ -31,6 +34,9 @@ class SummaryRow:
 	question of the architecture's domains rather than one domain's. Citation accuracy is the
 	mean over the questions whose answers made claims, with the unanswerable slice beside
 	the answerable one, because answering regardless is the failure that stratum exists to show.
+	Exact match is the mean over the extractive questions, with citation accuracy over those
+	same questions beside it, so a reader can see whether the deterministic support check
+	and the objective span check agree.
 	"""
 
 	architecture: str
@@ -47,6 +53,11 @@ class SummaryRow:
 	citation_accuracy_unanswerable: float | None = None
 	citation_scored: int = 0
 	citation_unscored: int = 0
+	exact_match: float | None = None
+	exact_match_scored: int = 0
+	exact_match_unscored: int = 0
+	citation_accuracy_extractive: float | None = None
+	citation_extractive_scored: int = 0
 
 
 @dataclass(frozen=True)
@@ -138,6 +149,9 @@ def render_markdown(summary: Summary) -> str:
 		"cite",
 		"cite_answerable",
 		"cite_unanswerable",
+		"exact_match",
+		"exact_match_n",
+		"cite_extractive",
 	]
 
 	lines = [
@@ -164,6 +178,9 @@ def render_markdown(summary: Summary) -> str:
 			_cell(row.citation_accuracy),
 			_cell(row.citation_accuracy_answerable),
 			_cell(row.citation_accuracy_unanswerable),
+			_cell(row.exact_match),
+			str(row.exact_match_scored),
+			_cell(row.citation_accuracy_extractive),
 		]
 		lines.append("| " + " | ".join(cells) + " |")
 
@@ -172,6 +189,9 @@ def render_markdown(summary: Summary) -> str:
 			"",
 			"cite is the share of answer claims one retrieved chunk each supports; "
 			f"cite_unanswerable is the same share over the {Stratum.UNANSWERABLE.value} stratum alone.",
+			"exact_match is the share of extractive questions whose answer matches the gold span, "
+			"tolerating surrounding whitespace and punctuation only; "
+			"cite_extractive is citation accuracy over those same questions.",
 		]
 	)
 
@@ -202,6 +222,7 @@ def _domain_row(run: RunFile) -> SummaryRow:
 		citation_accuracy_unanswerable=_citation_mean(run.results, True),
 		citation_scored=len([result for result in run.results if result.citation_accuracy is not None]),
 		citation_unscored=len([result for result in run.results if result.citation_accuracy is None]),
+		**_extractive_cells(run.results),
 	)
 
 
@@ -230,7 +251,28 @@ def _pooled_row(group: list[RunFile]) -> SummaryRow:
 		citation_accuracy_unanswerable=_citation_mean(pooled, True),
 		citation_scored=len([result for result in pooled if result.citation_accuracy is not None]),
 		citation_unscored=len([result for result in pooled if result.citation_accuracy is None]),
+		**_extractive_cells(pooled),
 	)
+
+
+def _extractive_cells(results: list[QuestionResult]) -> dict:
+	"""The exact-match columns over the extractive questions, recomputed from what is stored.
+
+	One helper serves the domain row and the pooled row, so the two can never disagree
+	about which questions count as extractive: the flag the run stored from the evaluation
+	set, which is what identifies an extractive question.
+	"""
+	extractive = [result for result in results if result.extractive]
+
+	return {
+		"exact_match": _exact_mean(results),
+		"exact_match_scored": len([result for result in extractive if exact_match_score(result.answer, result.gold_answer, True) is not None]),
+		"exact_match_unscored": len(results) - len(extractive),
+		"citation_accuracy_extractive": _citation_mean_extractive(results),
+		"citation_extractive_scored": len(
+			[result for result in extractive if result.citation_accuracy is not None]
+		),
+	}
 
 
 def _citation_mean(results: list[QuestionResult], unanswerable: bool | None) -> float | None:
@@ -244,8 +286,6 @@ def _citation_mean(results: list[QuestionResult], unanswerable: bool | None) -> 
 	rather than trusted from the run's aggregates, so a hand-edited aggregate cannot survive
 	next to the questions behind it.
 	"""
-	from core.chunk import Chunk, Provenance
-	from evaluation.citations import citation_accuracy
 	from evaluation.set import Stratum
 
 	if unanswerable is True:
@@ -254,6 +294,42 @@ def _citation_mean(results: list[QuestionResult], unanswerable: bool | None) -> 
 		kept = [result for result in results if result.stratum is not Stratum.UNANSWERABLE]
 	else:
 		kept = list(results)
+
+	measured = []
+	for result in kept:
+		chunks = [Chunk(text=item.text, score=item.score, provenance=Provenance()) for item in result.retrieved]
+		score = citation_accuracy(result.answer, chunks)
+		if score is not None:
+			measured.append(score)
+
+	return sum(measured) / len(measured) if measured else None
+
+
+def _exact_mean(results: list[QuestionResult]) -> float | None:
+	"""The mean exact match over the extractive questions, recomputed from what is stored.
+
+	Each stored answer is compared to its stored gold span rather than trusting the run's
+	aggregates, so a hand-edited aggregate cannot survive next to the questions behind it.
+	`None` when no question in the pool is extractive, and a refusal on an extractive
+	question counts as a miss because the span was there to name.
+	"""
+	measured = []
+	for result in results:
+		score = exact_match_score(result.answer, result.gold_answer, result.extractive)
+		if score is not None:
+			measured.append(score)
+
+	return sum(measured) / len(measured) if measured else None
+
+
+def _citation_mean_extractive(results: list[QuestionResult]) -> float | None:
+	"""Citation accuracy over the extractive questions alone, recomputed from what is stored.
+
+	The same recomputation as the overall citation mean, sliced to the questions the
+	evaluation set marked extractive, because that slice is what sits beside exact match
+	in the table.
+	"""
+	kept = [result for result in results if result.extractive]
 
 	measured = []
 	for result in kept:

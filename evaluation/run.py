@@ -32,6 +32,7 @@ from core.commit import current_revision
 from core.registry import architecture
 from corpus.manifest import Manifest, corpus_identifier, load_manifest
 from evaluation.citations import citation_accuracy, claim_supported, split_claims
+from evaluation.exact_match import exact_match_score
 from evaluation.metrics import (
 	REPORT_DEPTHS,
 	Retrieved,
@@ -98,6 +99,18 @@ class QuestionResult(BaseModel):
 		default=None,
 		description="Share of the answer's claims one retrieved chunk each supports, or nothing when it makes none.",
 	)
+	extractive: bool = Field(
+		default=False,
+		description="Whether the question carries a gold span to match exactly.",
+	)
+	gold_answer: str | None = Field(
+		default=None,
+		description="The short span copied from the source, present on extractive questions only.",
+	)
+	exact_match: float | None = Field(
+		default=None,
+		description="One for an exact match on an extractive question, zero for a miss, nothing when not extractive.",
+	)
 
 
 class Aggregates(BaseModel):
@@ -147,6 +160,26 @@ class Aggregates(BaseModel):
 	citation_unscored: int = Field(
 		default=0,
 		description="Questions whose answers made no claims and carry none.",
+	)
+	exact_match: float | None = Field(
+		default=None,
+		description="Mean exact match over the extractive questions.",
+	)
+	exact_match_scored: int = Field(
+		default=0,
+		description="Extractive questions carrying an exact-match score.",
+	)
+	exact_match_unscored: int = Field(
+		default=0,
+		description="Non-extractive questions carrying no exact-match score.",
+	)
+	citation_accuracy_extractive: float | None = Field(
+		default=None,
+		description="Mean citation accuracy over the extractive questions whose answers made claims.",
+	)
+	citation_extractive_scored: int = Field(
+		default=0,
+		description="Extractive questions whose answers made claims and carry a citation score.",
 	)
 
 
@@ -289,6 +322,9 @@ async def _ask_every_question(
 			claims_supported=supported,
 			claims_total=len(claims),
 			citation_accuracy=citation_accuracy(answer, chunks),
+			extractive=question.extractive,
+			gold_answer=question.gold_answer,
+			exact_match=exact_match_score(answer, question.gold_answer, question.extractive),
 		)
 
 		results.append(result)
@@ -303,10 +339,14 @@ def _score_line(result: QuestionResult) -> str:
 		cited = "citation=n/a"
 	else:
 		cited = f"citation={result.citation_accuracy:.2f}"
+	if result.exact_match is None:
+		matched = "exact_match=n/a"
+	else:
+		matched = f"exact_match={result.exact_match:.2f}"
 	if not result.scored:
-		return f"not scored on retrieval {cited}"
+		return f"not scored on retrieval {cited} {matched}"
 
-	return f"recall={result.recall:.2f} reciprocal_rank={result.reciprocal_rank:.2f} {cited}"
+	return f"recall={result.recall:.2f} reciprocal_rank={result.reciprocal_rank:.2f} {cited} {matched}"
 
 
 def _aggregates(results: list[QuestionResult]) -> Aggregates:
@@ -323,6 +363,8 @@ def _aggregates(results: list[QuestionResult]) -> Aggregates:
 	with_claims = [result for result in results if result.citation_accuracy is not None]
 	answerable = [result for result in with_claims if result.stratum is not Stratum.UNANSWERABLE]
 	unanswerable = [result for result in with_claims if result.stratum is Stratum.UNANSWERABLE]
+	extractive = [result for result in results if result.exact_match is not None]
+	extractive_with_claims = [result for result in extractive if result.citation_accuracy is not None]
 
 	def _mean_or_nothing(values: list[float | None]) -> float | None:
 		measured = [value for value in values if value is not None]
@@ -341,6 +383,13 @@ def _aggregates(results: list[QuestionResult]) -> Aggregates:
 		citation_accuracy_unanswerable=_mean_or_nothing([result.citation_accuracy for result in unanswerable]),
 		citation_scored=len(with_claims),
 		citation_unscored=len(results) - len(with_claims),
+		exact_match=_mean_or_nothing([result.exact_match for result in extractive]),
+		exact_match_scored=len(extractive),
+		exact_match_unscored=len(results) - len(extractive),
+		citation_accuracy_extractive=_mean_or_nothing(
+			[result.citation_accuracy for result in extractive_with_claims]
+		),
+		citation_extractive_scored=len(extractive_with_claims),
 	)
 
 
@@ -391,10 +440,15 @@ def report(run: RunFile, path: Path) -> None:
 		print(f"[RUN] ndcg@{reported} {aggregates.ndcg_at[reported]:.4f}")
 	print(f"[RUN] reciprocal rank@{depth} {aggregates.reciprocal_rank:.4f}")
 	print(f"[RUN] {_citation_line(aggregates)}")
+	print(f"[RUN] {_exact_line(aggregates)}")
 	if aggregates.unscored:
 		print(f"[RUN] {aggregates.unscored} questions name no place to look in and are not scored on retrieval")
 	if aggregates.citation_unscored:
 		print(f"[RUN] {aggregates.citation_unscored} questions made no claims and are not scored on citation")
+	if aggregates.exact_match_unscored:
+		print(
+			f"[RUN] {aggregates.exact_match_unscored} questions are not extractive and are not scored on exact match"
+		)
 	if run.commit.sha is None:
 		print("[RUN] no commit was found for this working tree, so this run cannot be traced to one")
 	elif run.commit.dirty:
@@ -402,14 +456,25 @@ def report(run: RunFile, path: Path) -> None:
 	print(f"[RUN] wrote {path}")
 
 
+def _cell(value: float | None) -> str:
+	"""One mean as a report line shows it, or a word when there was nothing to average."""
+	return f"{value:.4f}" if value is not None else "n/a"
+
+
 def _citation_line(aggregates: Aggregates) -> str:
 	"""One line for the citation means, with the unanswerable slice beside the rest."""
-	def _cell(value: float | None) -> str:
-		return f"{value:.4f}" if value is not None else "n/a"
-
 	return (
 		f"citation {_cell(aggregates.citation_accuracy)} "
 		f"(answerable {_cell(aggregates.citation_accuracy_answerable)}, "
 		f"unanswerable {_cell(aggregates.citation_accuracy_unanswerable)}) "
 		f"over {aggregates.citation_scored} questions with claims"
+	)
+
+
+def _exact_line(aggregates: Aggregates) -> str:
+	"""One line for the extractive exact-match mean, beside citation over the same questions."""
+	return (
+		f"exact_match {_cell(aggregates.exact_match)} "
+		f"(citation_on_extractive {_cell(aggregates.citation_accuracy_extractive)}) "
+		f"over {aggregates.exact_match_scored} extractive questions"
 	)
