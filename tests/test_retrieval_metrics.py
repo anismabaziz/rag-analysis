@@ -13,7 +13,7 @@ import pytest
 
 from core.chunk import Chunk, Provenance
 from corpus.manifest import load_manifest
-from evaluation.metrics import locate, recall, reciprocal_rank, retrieved_from
+from evaluation.metrics import locate, ndcg_at, recall, recall_at, reciprocal_rank, retrieved_from
 from evaluation.set import Location
 
 DPR = "./documents/papers/dpr.pdf"
@@ -117,3 +117,95 @@ def test_an_empty_retrieval_scores_as_a_miss_rather_than_raising():
 
 	assert recall(results, [dpr()]) == 0.0
 	assert reciprocal_rank(results, dpr()) == 0.0
+
+
+def test_recall_at_one_counts_only_a_first_place_hit():
+	"""A hit buried below first place is a miss at depth one, not a near hit."""
+	results = retrieved_from([a_chunk(source=LOST, node="n0"), a_chunk()], load_manifest())
+
+	assert recall_at(results, [dpr()], 1) == 0.0
+	assert recall_at(results, [dpr()], 3) == pytest.approx(1.0)
+
+
+def test_recall_beyond_the_depth_is_not_counted():
+	"""Depths are read off one retrieval by truncation, so a fourth-place hit is invisible at three."""
+	chunks = [a_chunk(source=LOST, node=f"n{i}") for i in range(4)] + [a_chunk(node="hit")]
+	results = retrieved_from(chunks, load_manifest())
+
+	assert recall_at(results, [dpr()], 3) == 0.0
+	assert recall_at(results, [dpr()], 5) == pytest.approx(1.0)
+
+
+def test_recall_at_is_partial_over_a_multi_hop_questions_locations():
+	"""Finding one of two passages is half the recall at whatever depth found it."""
+	results = retrieved_from([a_chunk()], load_manifest())
+
+	assert recall_at(results, [dpr(), bge()], 5) == pytest.approx(0.5)
+	assert recall_at(results, [dpr(), bge()], 1) == pytest.approx(0.5)
+
+
+def test_recall_at_with_nothing_to_find_is_zero():
+	results = retrieved_from([a_chunk(source=LOST)], load_manifest())
+
+	assert recall_at(results, [], 5) == 0.0
+	assert recall_at(results, [dpr()], 5) == 0.0
+
+
+def test_ndcg_of_a_first_place_hit_is_one():
+	results = retrieved_from([a_chunk()], load_manifest())
+
+	assert ndcg_at(results, [dpr()], 5) == pytest.approx(1.0)
+
+
+def test_ndcg_of_a_second_place_hit_is_discounted_by_rank():
+	"""Second place earns one over log-two of three, which is what separates it from first."""
+	results = retrieved_from([a_chunk(source=LOST, node="n0"), a_chunk()], load_manifest())
+
+	assert ndcg_at(results, [dpr()], 5) == pytest.approx(0.6309297535714575)
+
+
+def test_ndcg_beyond_the_depth_is_zero():
+	"""A hit below the depth is a miss at that depth, however discounted it would have been."""
+	chunks = [a_chunk(source=LOST, node=f"n{i}") for i in range(4)] + [a_chunk(node="hit")]
+	results = retrieved_from(chunks, load_manifest())
+
+	assert ndcg_at(results, [dpr()], 3) == 0.0
+	assert ndcg_at(results, [dpr()], 5) == pytest.approx(1.0 / 2.584962500721156)
+
+
+def test_ndcg_of_a_miss_is_zero():
+	results = retrieved_from([a_chunk(source=LOST)], load_manifest())
+
+	assert ndcg_at(results, [dpr()], 5) == 0.0
+
+
+def test_ndcg_of_two_passages_found_first_is_one():
+	"""Two locations in two documents, both at the top, is the ideal ranking."""
+	bge_chunk = Chunk(
+		text="a span",
+		score=0.4,
+		provenance=Provenance(
+			source="./documents/papers/bge-m3.pdf",
+			section="4.3 Multilingual Long-Doc Retrieval",
+			page=5,
+			node_id="n2",
+		),
+	)
+	results = retrieved_from([a_chunk(), bge_chunk], load_manifest())
+
+	assert ndcg_at(results, [dpr(), bge()], 5) == pytest.approx(1.0)
+
+
+def test_ndcg_counts_each_relevant_document_once():
+	"""Five chunks from one relevant document are one hit, not five: without that, returning
+	the same document five times would score above the ideal ranking it is normalized by."""
+	results = retrieved_from([a_chunk(node=f"n{i}") for i in range(5)], load_manifest())
+
+	assert ndcg_at(results, [dpr()], 5) == pytest.approx(1.0)
+
+
+def test_ndcg_with_nothing_to_find_is_zero():
+	results = retrieved_from([a_chunk()], load_manifest())
+
+	assert ndcg_at(results, [], 5) == 0.0
+	assert ndcg_at([], [dpr()], 5) == 0.0

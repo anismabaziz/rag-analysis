@@ -10,6 +10,12 @@ retrieval turned up, which is what a reader checks first because it says whether
 on the table at all. Reciprocal rank is the reciprocal of the rank of the first hit, which is what
 distinguishes a relevant passage in first place from one buried at the bottom of five.
 
+Recall is read at three depths rather than one, and normalized discounted cumulative gain sits
+beside it, because a retriever that finds everything at rank five is not the retriever that finds
+it first. Every depth is read off the same retrieval by truncation: the run retrieves once at the
+committed depth and the shallower numbers are what the first one or three results were worth, so
+no architecture is ever measured at a depth of its own choosing.
+
 A hit is a chunk from the document the label names, not one from the section. The section is
 stored on every result and the label names one, but the document label is the fallback the
 evaluation set was built with, on the grounds that a chunk from the right paper under the wrong
@@ -18,11 +24,18 @@ cost a domain its score. Scoring the section strictly is a later question, answe
 same per-question results without rerunning anything.
 """
 
+import math
 from dataclasses import dataclass
+from typing import Iterable
 
 from core.chunk import Chunk
 from corpus.manifest import Manifest
 from evaluation.set import Location
+
+# The depths recall and discounted gain are reported at. Every one of them is at or below the
+# retrieval depth the committed configuration names, because a depth is read off a run by
+# truncation and a run cannot report a depth it never retrieved.
+REPORT_DEPTHS: tuple[int, ...] = (1, 3, 5)
 
 
 @dataclass(frozen=True)
@@ -92,6 +105,47 @@ def recall(results: list[Retrieved], locations: list[Location]) -> float:
 	return sum(1 for location in locations if locate(results, location) is not None) / len(locations)
 
 
+def recall_at(results: list[Retrieved], locations: list[Location], depth: int) -> float:
+	"""The share of the places a question names that the first `depth` results turned up.
+
+	The depth is a truncation of the one retrieval the run made, not a second retrieval at a
+	shallow depth, so two depths of the same question are two readings of the same ranking.
+	"""
+	if not locations:
+		return 0.0
+
+	top = results[:depth]
+
+	return sum(1 for location in locations if locate(top, location) is not None) / len(locations)
+
+
+def ndcg_at(results: list[Retrieved], locations: list[Location], depth: int) -> float:
+	"""How high the places a question names ranked, discounted by rank and normalized.
+
+	Relevance is binary on the document: a result counts when it comes from a document the
+	question names. Each named document counts once, at the rank it first appears, so five
+	chunks from one relevant document earn one discounted gain rather than five: without that,
+	a retriever returning the same document five times would score above the ideal ranking.
+	The ideal ranking is each distinct named document in turn at the top, so a multi-hop
+	question whose two passages share one document is ideally answered by that document once
+	rather than twice. A question with no locations has nothing to rank and scores zero
+	rather than raising.
+	"""
+	if not locations:
+		return 0.0
+
+	relevant = {location.document for location in locations}
+	seen: set[str | None] = set()
+	discounted = 0.0
+	for result in results[:depth]:
+		if result.document in relevant and result.document not in seen:
+			seen.add(result.document)
+			discounted += 1.0 / math.log2(result.rank + 1)
+	ideal = sum(1.0 / math.log2(rank + 1) for rank in range(1, min(len(relevant), depth) + 1))
+
+	return discounted / ideal if ideal else 0.0
+
+
 def reciprocal_rank(results: list[Retrieved], location: Location) -> float:
 	"""The reciprocal of the rank of the first hit, and zero when there was none.
 
@@ -103,6 +157,18 @@ def reciprocal_rank(results: list[Retrieved], location: Location) -> float:
 	rank = locate(results, location)
 
 	return 0.0 if rank is None else 1.0 / rank
+
+
+def mean(scores: Iterable[float | None]) -> float:
+	"""The mean of the measured scores, and zero when there was nothing to average.
+
+	A `None` is skipped rather than counted as a miss, for the same reason an unscored
+	question is not a miss. Shared by the run that averages its questions and the summary
+	that averages across runs, so the two can never disagree about what a mean is.
+	"""
+	measured = [score for score in scores if score is not None]
+
+	return sum(measured) / len(measured) if measured else 0.0
 
 
 def _document_named_by(source: str | None, manifest: Manifest) -> str | None:

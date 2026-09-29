@@ -68,6 +68,22 @@ async def main():
 		help="List every registered architecture, with the collection it reads"
 	)
 
+	# summarize command
+	summarize_parser = subparsers.add_parser(
+		"summarize",
+		help="Read every run file and print the pooled and per-domain retrieval table"
+	)
+	summarize_parser.add_argument(
+		"--results-dir",
+		default=None,
+		help="Where the run files live. Defaults to results/runs/",
+	)
+	summarize_parser.add_argument(
+		"--out",
+		default=None,
+		help="Write the markdown table to this file as well as printing it",
+	)
+
 	# clear command
 	clear_parser = subparsers.add_parser(
 		"clear",
@@ -118,6 +134,11 @@ async def main():
 
 		await run_command(args, parser)
 
+	elif args.command == "summarize":
+		print("[CLI] Summarizing the run files...")
+
+		summarize_command(args, parser)
+
 	elif args.command == "clear":
 		print("[CLI] Clearing vector store...")
 
@@ -162,6 +183,32 @@ async def run_command(args, parser):
 		await run_evaluation(args.architecture, args.domain, results_dir=results_dir)
 	except UnknownArchitecture as error:
 		parser.error(str(error))
+
+
+def summarize_command(args, parser):
+	"""Print the pooled and per-domain retrieval table over every run file, and file it if asked.
+
+	The table is generated from the run files on every invocation, so it can never drift from
+	what the runs recorded the way a hand-written table would. Runs measured at different
+	configurations are refused rather than blended, because such a row would compare setups
+	instead of retrievers.
+	"""
+	from evaluation.summary import load_runs, render_markdown, summarize
+
+	results_dir = Path(args.results_dir) if args.results_dir else RESULTS_DIR
+
+	try:
+		table = render_markdown(summarize(load_runs(results_dir)))
+	except (FileNotFoundError, ValueError) as error:
+		parser.error(str(error))
+
+	print(table, end="")
+
+	if args.out:
+		out = Path(args.out)
+		out.parent.mkdir(parents=True, exist_ok=True)
+		out.write_text(table)
+		print(f"[SUMMARY] wrote {out}")
 
 
 def corpus_command(args, parser):

@@ -23,7 +23,6 @@ so it can be asked of the same run.
 """
 
 from pathlib import Path
-from typing import Iterable
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -31,7 +30,17 @@ from config.configuration import Configuration, frozen_configuration
 from core.commit import current_revision
 from core.registry import architecture
 from corpus.manifest import Manifest, corpus_identifier, load_manifest
-from evaluation.metrics import Retrieved, locate, recall, reciprocal_rank, retrieved_from
+from evaluation.metrics import (
+	REPORT_DEPTHS,
+	Retrieved,
+	locate,
+	mean,
+	ndcg_at,
+	recall,
+	recall_at,
+	reciprocal_rank,
+	retrieved_from,
+)
 from evaluation.set import EvaluationSet, Stratum, load_evaluation_set
 
 # Where run files are written. One directory per domain, because results are reported per domain
@@ -64,6 +73,14 @@ class QuestionResult(BaseModel):
 	unscored_reason: str | None = None
 	recall: float | None = None
 	reciprocal_rank: float | None = None
+	recall_at: dict[str, float] | None = Field(
+		default=None,
+		description="Recall read off the one retrieval at each reported depth, keyed by depth.",
+	)
+	ndcg_at: dict[str, float] | None = Field(
+		default=None,
+		description="Discounted gain read off the one retrieval at each reported depth, keyed by depth.",
+	)
 	locations: list[LocationResult] = Field(default_factory=list)
 	retrieved: list[Retrieved] = Field(default_factory=list)
 
@@ -83,6 +100,12 @@ class Aggregates(BaseModel):
 	unscored: int
 	recall: float
 	reciprocal_rank: float
+	recall_at: dict[str, float] = Field(
+		description="Mean recall at each reported depth, over the scored questions only.",
+	)
+	ndcg_at: dict[str, float] = Field(
+		description="Mean discounted gain at each reported depth, over the scored questions only.",
+	)
 
 
 class CorpusRecord(BaseModel):
@@ -186,6 +209,7 @@ async def _ask_every_question(
 		chunks = await pipeline.retrieve(question.question, top_k=configuration.retrieval_depth)
 		retrieved = retrieved_from(chunks, manifest)
 		locations = question.all_locations()
+		depths = [depth for depth in REPORT_DEPTHS if depth <= configuration.retrieval_depth]
 
 		result = QuestionResult(
 			question=question.id,
@@ -194,6 +218,12 @@ async def _ask_every_question(
 			unscored_reason=None if locations else "names no place in the corpus to look in",
 			recall=recall(retrieved, locations) if locations else None,
 			reciprocal_rank=reciprocal_rank(retrieved, locations[0]) if locations else None,
+			recall_at={str(depth): recall_at(retrieved, locations, depth) for depth in depths}
+			if locations
+			else None,
+			ndcg_at={str(depth): ndcg_at(retrieved, locations, depth) for depth in depths}
+			if locations
+			else None,
 			locations=[
 				LocationResult(
 					document=location.document,
@@ -233,21 +263,29 @@ def _aggregates(results: list[QuestionResult]) -> Aggregates:
 		questions=len(results),
 		scored=count,
 		unscored=len(results) - count,
-		recall=_mean(result.recall for result in scored),
-		reciprocal_rank=_mean(result.reciprocal_rank for result in scored),
+		recall=mean(result.recall for result in scored),
+		reciprocal_rank=mean(result.reciprocal_rank for result in scored),
+		recall_at=_depth_means(scored, "recall_at"),
+		ndcg_at=_depth_means(scored, "ndcg_at"),
 	)
 
 
-def _mean(scores: Iterable[float | None]) -> float:
-	"""The mean of the scores, and zero when a run had none to average.
+def _depth_means(scored: list[QuestionResult], field: str) -> dict[str, float]:
+	"""The mean at each reported depth, over the questions that carry that depth.
 
-	A set of nothing but unanswerable questions is possible, and a run that had nothing to score
-	has a mean of zero rather than no result file at all. A `None` is skipped rather than counted
-	as a miss, for the same reason an unscored question is not a miss.
+	The depths are the ones the runs recorded, not a list kept here, so a summary built from
+	run files and this aggregate can never disagree about which depths exist.
 	"""
-	measured = [score for score in scores if score is not None]
+	depths: list[str] = []
+	for result in scored:
+		for depth in getattr(result, field) or {}:
+			if depth not in depths:
+				depths.append(depth)
 
-	return sum(measured) / len(measured) if measured else 0.0
+	return {
+		depth: mean(getattr(result, field).get(depth) for result in scored if getattr(result, field))
+		for depth in depths
+	}
 
 
 def run_path(results_dir: Path, run: RunFile) -> Path:
@@ -273,7 +311,10 @@ def report(run: RunFile, path: Path) -> None:
 	aggregates = run.aggregates
 
 	print(f"[RUN] {run.architecture} on {run.domain}: {aggregates.questions} questions, {aggregates.scored} scored")
-	print(f"[RUN] recall@{depth} {aggregates.recall:.4f}")
+	for reported in sorted(aggregates.recall_at, key=int):
+		print(f"[RUN] recall@{reported} {aggregates.recall_at[reported]:.4f}")
+	for reported in sorted(aggregates.ndcg_at, key=int):
+		print(f"[RUN] ndcg@{reported} {aggregates.ndcg_at[reported]:.4f}")
 	print(f"[RUN] reciprocal rank@{depth} {aggregates.reciprocal_rank:.4f}")
 	if aggregates.unscored:
 		print(f"[RUN] {aggregates.unscored} questions name no place to look in and are not scored on retrieval")

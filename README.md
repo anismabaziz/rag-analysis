@@ -75,6 +75,10 @@ uv run rag-analysis query hybrid "how are the positional encodings scaled?"
 uv run rag-analysis run naive --domain papers
 uv run rag-analysis run hybrid --domain manuals
 
+# read every run file back as one pooled and per-domain retrieval table
+uv run rag-analysis summarize
+uv run rag-analysis summarize --out results/summary.md
+
 # drop a collection and start over
 uv run rag-analysis clear rag_naive
 
@@ -135,7 +139,7 @@ the embedding models are all swapped out inside the tests.
 
 | Path | What lives there |
 | --- | --- |
-| `main.py` | CLI: ingest, query, run, architectures, clear, fetch-corpus, verify-corpus |
+| `main.py` | CLI: ingest, query, run, summarize, architectures, clear, fetch-corpus, verify-corpus |
 | `build_index.py` | PDF loading, chunking, embedding, indexing into Qdrant |
 | `corpus/` | The corpus manifest, and fetching and verifying the documents it names |
 | `evaluation/` | The hand-written questions each domain is scored on, the rules their labels satisfy, and the run that scores an architecture against them |

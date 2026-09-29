@@ -132,6 +132,19 @@ def found_nothing(question, top_k):
 	return []
 
 
+def finds_at_rank_five(question, top_k):
+	"""A retriever that buries the answer at the bottom of five, beneath four misses.
+
+	Depths are read off one retrieval by truncation, so this is what separates a recall at one
+	from a recall at five: the same ranking scores zero shallow and a hit deep.
+	"""
+	# A document of the other domain, so no question of this run's set can name it: every one
+	# of these four is a miss wherever the run is pointed.
+	misses = [a_chunk("postgresql-16-documentation", "Some other section") for _ in range(4)]
+
+	return (misses + found_everywhere(question, top_k))[:top_k]
+
+
 def retrieve_from(chunks_for):
 	"""A retriever that answers each question of the committed set with the passages a test names."""
 
@@ -199,6 +212,51 @@ def test_a_run_reports_recall_and_reciprocal_rank_for_the_questions_it_can(tmp_p
 	assert run.aggregates.unscored == 4
 	assert run.aggregates.recall == pytest.approx(27.5 / 28)
 	assert 0 < run.aggregates.reciprocal_rank <= 1
+
+
+def test_a_run_scores_recall_and_discounted_gain_at_three_depths(tmp_path, monkeypatch, offline):
+	"""The full retrieval set lives on the run file: recall at one, three, and five, and the
+	discounted gain beside it, all read off the one retrieval the run made."""
+	run = run_over(tmp_path, monkeypatch, "naive", "papers", found_everywhere)
+
+	assert set(run.aggregates.recall_at) == {"1", "3", "5"}
+	assert set(run.aggregates.ndcg_at) == {"1", "3", "5"}
+	assert run.aggregates.recall_at["5"] == pytest.approx(run.aggregates.recall)
+	assert run.aggregates.recall_at["1"] <= run.aggregates.recall_at["3"] <= run.aggregates.recall_at["5"]
+	for depth in ("1", "3", "5"):
+		assert 0 < run.aggregates.ndcg_at[depth] <= 1
+
+
+def test_depth_scores_are_read_off_one_retrieval_by_truncation(tmp_path, monkeypatch, offline):
+	"""An answer buried at rank five is invisible shallow and a hit deep, from the same ranking."""
+	run = run_over(tmp_path, monkeypatch, "naive", "papers", finds_at_rank_five)
+
+	assert run.aggregates.recall_at["1"] == 0.0
+	assert run.aggregates.recall_at["3"] == 0.0
+	assert run.aggregates.recall_at["5"] == pytest.approx(run.aggregates.recall)
+	assert run.aggregates.ndcg_at["1"] == 0.0
+	assert run.aggregates.ndcg_at["3"] == 0.0
+
+	single = next(
+		result
+		for result in run.results
+		if result.scored and len(result.locations) == 1
+	)
+	assert single.recall_at == {"1": 0.0, "3": 0.0, "5": 1.0}
+	assert single.ndcg_at["5"] == pytest.approx(0.38685280723454163)
+
+
+def test_per_question_results_carry_depth_scores_and_unscored_carry_none(tmp_path, monkeypatch, offline):
+	"""A surprising aggregate is traced to its questions, so the depths live there too."""
+	run = run_over(tmp_path, monkeypatch, "naive", "papers", found_everywhere)
+
+	for result in run.results:
+		if result.scored:
+			assert set(result.recall_at) == {"1", "3", "5"}
+			assert set(result.ndcg_at) == {"1", "3", "5"}
+		else:
+			assert result.recall_at is None
+			assert result.ndcg_at is None
 
 
 def test_a_question_with_nothing_to_look_in_is_recorded_but_not_scored_as_a_miss(tmp_path, monkeypatch, offline):
