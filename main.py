@@ -3,6 +3,8 @@ import asyncio
 from pathlib import Path
 
 from core.registry import Architecture, UnknownArchitecture, all_architectures, architecture
+from evaluation.run import RESULTS_DIR, run_evaluation
+from evaluation.set import domains
 from vector.store import reset_vector_store
 from corpus.manifest import load_manifest
 from corpus.populate import Outcome, populate, verify_corpus
@@ -42,6 +44,23 @@ async def main():
 	)
 	query_parser.add_argument("architecture", type=str, help="The architecture to answer with")
 	query_parser.add_argument("question", type=str, help="The query/question to run")
+
+	# run command
+	run_parser = subparsers.add_parser(
+		"run",
+		help="Run one architecture over a domain's evaluation set and write the result file"
+	)
+	run_parser.add_argument("architecture", type=str, help="The architecture to measure")
+	run_parser.add_argument(
+		"--domain",
+		required=True,
+		help="The domain whose evaluation set to run, as named in evaluation/sets",
+	)
+	run_parser.add_argument(
+		"--out",
+		default=None,
+		help="Where to write the result file. Defaults to results/runs/<domain>/",
+	)
 
 	# architectures command
 	subparsers.add_parser(
@@ -94,6 +113,11 @@ async def main():
 
 		await resolve(args.architecture, parser).build().answer(args.question)
 
+	elif args.command == "run":
+		print("[CLI] Running the evaluation set...")
+
+		await run_command(args, parser)
+
 	elif args.command == "clear":
 		print("[CLI] Clearing vector store...")
 
@@ -120,6 +144,24 @@ def list_architectures():
 	print("[CLI] Registered architectures:")
 	for registered in all_architectures():
 		print(f"  {registered.name}\t{registered.collection}\t{registered.description}")
+
+
+async def run_command(args, parser):
+	"""Run one architecture over a domain's evaluation set, and say plainly when it cannot.
+
+	The domain is checked against the sets that exist before the run starts, because a typo in
+	`--domain` would otherwise be reported as a run in which retrieval found nothing.
+	"""
+	known = domains()
+	if args.domain not in known:
+		parser.error(f"no evaluation set for {args.domain}. There is one for: {', '.join(known)}")
+
+	results_dir = Path(args.out) if args.out else RESULTS_DIR
+
+	try:
+		await run_evaluation(args.architecture, args.domain, results_dir=results_dir)
+	except UnknownArchitecture as error:
+		parser.error(str(error))
 
 
 def corpus_command(args, parser):

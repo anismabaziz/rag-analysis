@@ -335,14 +335,16 @@ class EvaluationSet(BaseModel):
 		return [question for question in self.questions if question.stratum == stratum]
 
 
-def load_evaluation_set(domain: str, root: Path = SETS_DIR, manifest: Manifest | None = None) -> EvaluationSet:
+def load_evaluation_set(domain: str, root: Path | None = None, manifest: Manifest | None = None) -> EvaluationSet:
 	"""Read the questions of one domain and check them against its own rules and the corpus.
 
 	Every label is checked against the manifest, so a set naming a document the corpus does not
-	hold fails to load rather than scoring every question in it wrong. The manifest defaults to
-	the committed one, because a set is only meaningful against the corpus it was written for.
+	hold fails to load rather than scoring every question in it wrong. The manifest and the
+	directory default to the committed ones, because a set is only meaningful against the corpus
+	it was written for, and both are read when this is called rather than when it is defined so
+	that a run can be pointed at either.
 	"""
-	path = Path(root) / f"{domain}{SET_FILE_SUFFIX}"
+	path = Path(root or SETS_DIR) / f"{domain}{SET_FILE_SUFFIX}"
 	if not path.is_file():
 		raise FileNotFoundError(f"no evaluation set for {domain} at {path}")
 

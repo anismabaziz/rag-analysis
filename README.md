@@ -71,6 +71,10 @@ uv run rag-analysis ingest hybrid
 uv run rag-analysis query naive "how are the positional encodings scaled?"
 uv run rag-analysis query hybrid "how are the positional encodings scaled?"
 
+# run one architecture over a domain's evaluation set and write the result file
+uv run rag-analysis run naive --domain papers
+uv run rag-analysis run hybrid --domain manuals
+
 # drop a collection and start over
 uv run rag-analysis clear rag_naive
 
@@ -131,13 +135,14 @@ the embedding models are all swapped out inside the tests.
 
 | Path | What lives there |
 | --- | --- |
-| `main.py` | CLI: ingest, query, architectures, clear, fetch-corpus, verify-corpus |
+| `main.py` | CLI: ingest, query, run, architectures, clear, fetch-corpus, verify-corpus |
 | `build_index.py` | PDF loading, chunking, embedding, indexing into Qdrant |
 | `corpus/` | The corpus manifest, and fetching and verifying the documents it names |
-| `evaluation/` | The hand-written questions each domain is scored on, and the rules their labels satisfy |
+| `evaluation/` | The hand-written questions each domain is scored on, the rules their labels satisfy, and the run that scores an architecture against them |
 | `data/` | Loading, splitting, and embedding the corpus |
 | `architectures/` | One file per retrieval architecture: the pipeline, and the declaration that registers it |
 | `core/` | The shared pipeline, prompt, and the architecture registry |
+| `results/runs/` | One result file per run: the configuration, the commit, the corpus identifier, per-question results, and aggregates |
 | `vector/` | Qdrant access |
 | `config/` | Configuration, read once at startup |
 | `docs/adr/` | Recorded decisions and the options that lost |

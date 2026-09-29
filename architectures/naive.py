@@ -1,3 +1,4 @@
+from config.params import Params
 from core.base import BaseRAG
 from core.chunk import Chunk
 from core.registry import register
@@ -19,12 +20,12 @@ class NaiveRAG(BaseRAG):
 		super().__init__(llm, embed_model, collection_name)
 		self.vector_store = get_qdrant_client()
 
-	async def retrieve(self, query: str, top_k: int = 5) -> list[Chunk]:
+	async def retrieve(self, query: str, top_k: int = Params.TOP_K) -> list[Chunk]:
 
 		# generate vector embedding for the query string
 		query_embedding = list(self.embed_model.embed([query]))[0]
 
-		# query the Qdrant vector store using similarity top_k=5
+		# query the Qdrant vector store for as many chunks as the frozen depth allows
 		results = self.vector_store.query_points(
 			collection_name=self.collection_name,
 			query=query_embedding,

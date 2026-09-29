@@ -1,5 +1,6 @@
 import argparse
 
+from config.params import Params
 from core.registry import DENSE, SPARSE, UnknownArchitecture, architecture
 from data.embed import get_embed_model, get_sparse_embed_model
 from data.loader import PDFLoader
@@ -38,10 +39,12 @@ def build_index(collection_name: str, vectors: tuple[str, ...] = (DENSE,)):
 		infer_table_structure=True,
 		fallback_strategy='hi_res'
 	)
+	# the chunker settings come from the frozen configuration, so the run file that records them
+	# records what actually cut the corpus rather than a second copy of the same three numbers
 	splitter = PDFSplitter(
-		chunking_strategy='semantic',
-		chunk_size=512,
-		chunk_overlap=128
+		chunking_strategy=Params.CHUNKER_STRATEGY,
+		chunk_size=Params.CHUNK_SIZE,
+		chunk_overlap=Params.CHUNK_OVERLAP
 	)
 
 	# find all pdfs

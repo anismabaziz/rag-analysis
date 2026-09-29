@@ -1,3 +1,4 @@
+from config.params import Params
 from core.base import BaseRAG
 from core.chunk import Chunk
 from core.registry import DENSE, SPARSE, register
@@ -19,7 +20,7 @@ class HybridRAG(BaseRAG):
 		self.client = get_qdrant_client()
 		self.sparse_model = get_sparse_embed_model()
 
-	async def retrieve(self, query: str, top_k: int = 5) -> list[Chunk]:
+	async def retrieve(self, query: str, top_k: int = Params.TOP_K) -> list[Chunk]:
 
 		# generate dense embedding
 		dense_query = list(self.embed_model.embed([query]))[0]

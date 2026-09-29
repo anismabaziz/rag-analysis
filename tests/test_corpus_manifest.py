@@ -17,7 +17,7 @@ from pathlib import Path
 
 import pytest
 
-from corpus.manifest import MANIFEST_PATH, load_manifest
+from corpus.manifest import MANIFEST_PATH, corpus_identifier, load_manifest
 from corpus.populate import Action, populate, verify_corpus
 
 PAPER_IDS = {
@@ -59,6 +59,7 @@ def unreachable(url, destination):
 def manifest_of(tmp_path, entries):
 	"""A manifest written to disk and read back, so every test goes through the real reader."""
 	path = tmp_path / "manifest.json"
+	path.parent.mkdir(parents=True, exist_ok=True)
 	path.write_text(json.dumps({"documents": entries}))
 	return load_manifest(path)
 
@@ -128,6 +129,46 @@ def test_no_corpus_pdf_is_committed():
 	)
 
 	assert [line for line in tracked.stdout.splitlines() if line.endswith(".pdf")] == []
+
+
+def test_the_same_corpus_always_gets_the_same_identifier():
+	assert corpus_identifier(load_manifest()) == corpus_identifier(load_manifest())
+
+
+def test_the_identifier_moves_when_a_document_s_bytes_do(tmp_path):
+	"""The corpus changes without the commit changing, so the identifier is what a result cites."""
+	entries = [entry("a-paper", payload=b"paper bytes")]
+	recording = manifest_of(tmp_path, entries)
+
+	entries[0]["sha256"] = hashlib.sha256(b"a different paper").hexdigest()
+	corrected = manifest_of(tmp_path, entries)
+
+	assert corpus_identifier(recording) != corpus_identifier(corrected)
+
+
+def test_the_identifier_does_not_depend_on_where_the_corpus_was_populated(tmp_path):
+	"""A reader who put the corpus somewhere else has the same corpus and must get the same name."""
+	entries = [entry("a-paper"), entry("a-manual", domain="manuals")]
+
+	assert corpus_identifier(manifest_of(tmp_path, entries)) == corpus_identifier(
+		manifest_of(tmp_path / "elsewhere", entries)
+	)
+
+
+def test_a_path_is_matched_to_a_document_by_its_file_name():
+	"""A retrieved chunk records the path ingestion globbed, which depends on where the run started."""
+	manifest = load_manifest()
+
+	for source in (
+		"./documents/papers/dpr.pdf",
+		"documents/papers/dpr.pdf",
+		"/somewhere/else/documents/papers/dpr.pdf",
+	):
+		assert manifest.document_named_by_file(source) == "dense-passage-retrieval"
+
+
+def test_a_path_the_corpus_does_not_hold_names_no_document():
+	assert load_manifest().document_named_by_file("./documents/papers/stray.pdf") is None
 
 
 def test_populating_the_corpus_installs_every_document_where_ingestion_looks_for_it(tmp_path):

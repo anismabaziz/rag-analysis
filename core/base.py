@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 
 from config.params import Params
 from core.chunk import REFUSAL, Chunk, build_context
-from llama_index.core import PromptTemplate
+from core.prompt import ANSWER_PROMPT
 from llama_index.llms.groq import Groq
 
 
@@ -10,9 +10,13 @@ def get_generation_llm():
 	"""The one generation model every architecture answers with.
 
 	Architectures are only comparable while the generator is held still, so the model is named
-	once here and no architecture chooses its own.
+	once here, with the temperature every run is measured at, and no architecture chooses its own.
 	"""
-	return Groq(model=Params.GENERATION_MODEL, api_key=Params.GROQ_API_KEY)
+	return Groq(
+		model=Params.GENERATION_MODEL,
+		api_key=Params.GROQ_API_KEY,
+		temperature=Params.GENERATION_TEMPERATURE,
+	)
 
 
 class BaseRAG(ABC):
@@ -34,10 +38,13 @@ class BaseRAG(ABC):
 		self.collection_name = collection_name
 
 	@abstractmethod
-	async def retrieve(self, query: str) -> list[Chunk]:
+	async def retrieve(self, query: str, top_k: int = Params.TOP_K) -> list[Chunk]:
 		"""
 		Retrieves scored chunks for the query, each carrying its text and its provenance.
-		To be implemented by subclasses.
+
+		The depth is the frozen one, taken from the configuration rather than chosen here, because
+		a depth an architecture could pick for itself is a second axis varying underneath the one
+		the run is measuring. To be implemented by subclasses.
 		"""
 		pass
 
@@ -46,25 +53,10 @@ class BaseRAG(ABC):
 		"""
 		Queries the LLM using the retrieved context to answer the user question.
 		"""
-		# Step 1: Define prompt template restricting answer to provided context
-		template = PromptTemplate("""
-You are a helpful assistant.
 
-Use ONLY the context below to answer the question. If the context does not contain the
-answer, say so instead of guessing.
-
-Context:
-{context}
-
-Question:
-{query}
-
-Answer:
-""")
-
-		# use the LLM to predict/generate the answer based on the template
+		# use the LLM to predict/generate the answer based on the shared template
 		return await self.llm.apredict(
-				template,
+				ANSWER_PROMPT,
 				context=context,
 				query=query
 		)

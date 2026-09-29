@@ -66,6 +66,22 @@ class Manifest:
 		"""The documents of one domain, which is the unit results are reported for."""
 		return tuple(document for document in self.documents if document.domain == domain)
 
+	def document_named_by_file(self, path: str | Path) -> str | None:
+		"""The id of the document whose file this path is, or nothing when the corpus holds no such file.
+
+		A retrieved chunk records the path ingestion globbed rather than a document id, so this is
+		how a score is attached to provenance. The comparison is on the file name alone, because
+		the directory a reader populated the corpus into is their choice and the path that reached
+		the store differs by a leading `./` and by where the run was launched from.
+		"""
+		name = Path(path).name
+
+		for document in self.documents:
+			if document.filename == name:
+				return document.id
+
+		return None
+
 	def in_domains(self, domains: list[str] | None) -> tuple[Document, ...]:
 		"""The documents of the named domains, or all of them when no domain is named.
 
@@ -80,6 +96,20 @@ class Manifest:
 			raise ValueError(f"no such domain in the manifest: {', '.join(unknown)}")
 
 		return tuple(document for document in self.documents if document.domain in domains)
+
+
+def corpus_identifier(manifest: Manifest) -> str:
+	"""One digest naming the exact bytes the corpus is made of.
+
+	The corpus changes without the commit changing, because the loader is corrected more often
+	than the manifest is edited and because a reader may have populated it from the manifest a
+	while ago. A results file that carried only a commit would claim to describe a corpus nobody
+	could check, so it carries this instead: a digest over every document id and the digest of its
+	bytes, in the manifest's own order, so the identifier moves if and only if the corpus does.
+	"""
+	listing = "\n".join(f"{document.id}:{document.sha256}" for document in manifest.documents)
+
+	return "sha256:" + hashlib.sha256(listing.encode("utf-8")).hexdigest()
 
 
 def sha256_of(path: Path) -> str:
