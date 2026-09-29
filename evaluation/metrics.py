@@ -48,6 +48,7 @@ class Retrieved:
 	page: int | None
 	score: float
 	node_id: str | None
+	text: str = ""
 
 
 def retrieved_from(chunks: list[Chunk], manifest: Manifest) -> list[Retrieved]:
@@ -72,6 +73,7 @@ def retrieved_from(chunks: list[Chunk], manifest: Manifest) -> list[Retrieved]:
 				page=provenance.page,
 				score=chunk.score,
 				node_id=provenance.node_id,
+				text=chunk.text,
 			)
 		)
 

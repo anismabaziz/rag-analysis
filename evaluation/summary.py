@@ -28,7 +28,9 @@ class SummaryRow:
 	"""One line of the table: an architecture measured at one scope.
 
 	`scope` is a domain, or the pooled scope when the numbers are the mean over every scored
-	question of the architecture's domains rather than one domain's.
+	question of the architecture's domains rather than one domain's. Citation accuracy is the
+	mean over the questions whose answers made claims, with the unanswerable slice beside
+	the answerable one, because answering regardless is the failure that stratum exists to show.
 	"""
 
 	architecture: str
@@ -40,6 +42,11 @@ class SummaryRow:
 	reciprocal_rank: float
 	recall_at: dict[str, float] = field(default_factory=dict)
 	ndcg_at: dict[str, float] = field(default_factory=dict)
+	citation_accuracy: float | None = None
+	citation_accuracy_answerable: float | None = None
+	citation_accuracy_unanswerable: float | None = None
+	citation_scored: int = 0
+	citation_unscored: int = 0
 
 
 @dataclass(frozen=True)
@@ -116,9 +123,22 @@ def render_markdown(summary: Summary) -> str:
 	The header names what the numbers trace back to, so a reader can check the frozen
 	configuration from the table rather than taking the project's word for it.
 	"""
+	from evaluation.set import Stratum
+
 	recall_columns = [f"recall@{depth}" for depth in summary.depths]
 	ndcg_columns = [f"ndcg@{depth}" for depth in summary.depths]
-	header = ["architecture", "scope", "questions", "scored", *recall_columns, *ndcg_columns, "mrr"]
+	header = [
+		"architecture",
+		"scope",
+		"questions",
+		"scored",
+		*recall_columns,
+		*ndcg_columns,
+		"mrr",
+		"cite",
+		"cite_answerable",
+		"cite_unanswerable",
+	]
 
 	lines = [
 		"# Retrieval results",
@@ -141,8 +161,19 @@ def render_markdown(summary: Summary) -> str:
 			*(_cell(row.recall_at.get(depth)) for depth in summary.depths),
 			*(_cell(row.ndcg_at.get(depth)) for depth in summary.depths),
 			f"{row.reciprocal_rank:.4f}",
+			_cell(row.citation_accuracy),
+			_cell(row.citation_accuracy_answerable),
+			_cell(row.citation_accuracy_unanswerable),
 		]
 		lines.append("| " + " | ".join(cells) + " |")
+
+	lines.extend(
+		[
+			"",
+			"cite is the share of answer claims one retrieved chunk each supports; "
+			f"cite_unanswerable is the same share over the {Stratum.UNANSWERABLE.value} stratum alone.",
+		]
+	)
 
 	return "\n".join(lines) + "\n"
 
@@ -166,6 +197,11 @@ def _domain_row(run: RunFile) -> SummaryRow:
 		reciprocal_rank=mean(result.reciprocal_rank for result in scored),
 		recall_at=_question_means(scored, "recall_at"),
 		ndcg_at=_question_means(scored, "ndcg_at"),
+		citation_accuracy=_citation_mean(run.results, None),
+		citation_accuracy_answerable=_citation_mean(run.results, False),
+		citation_accuracy_unanswerable=_citation_mean(run.results, True),
+		citation_scored=len([result for result in run.results if result.citation_accuracy is not None]),
+		citation_unscored=len([result for result in run.results if result.citation_accuracy is None]),
 	)
 
 
@@ -177,6 +213,7 @@ def _pooled_row(group: list[RunFile]) -> SummaryRow:
 	fewer, and a hand-edited aggregate cannot survive next to the questions behind it.
 	"""
 	scored = [result for run in group for result in run.results if result.scored]
+	pooled = [result for run in group for result in run.results]
 
 	return SummaryRow(
 		architecture=group[0].architecture,
@@ -188,7 +225,44 @@ def _pooled_row(group: list[RunFile]) -> SummaryRow:
 		reciprocal_rank=mean(result.reciprocal_rank for result in scored),
 		recall_at=_question_means(scored, "recall_at"),
 		ndcg_at=_question_means(scored, "ndcg_at"),
+		citation_accuracy=_citation_mean(pooled, None),
+		citation_accuracy_answerable=_citation_mean(pooled, False),
+		citation_accuracy_unanswerable=_citation_mean(pooled, True),
+		citation_scored=len([result for result in pooled if result.citation_accuracy is not None]),
+		citation_unscored=len([result for result in pooled if result.citation_accuracy is None]),
 	)
+
+
+def _citation_mean(results: list[QuestionResult], unanswerable: bool | None) -> float | None:
+	"""The mean citation accuracy over the questions that made claims, optionally sliced.
+
+	`None` slices nothing, `True` keeps the unanswerable stratum alone, and `False` keeps
+	everything except it, because answering regardless is the failure the slice exists to show.
+	`None` when no question in the slice made a claim, so a refusal reads as unscored.
+
+	Recomputed from each stored answer and the texts of the chunks it was answered with,
+	rather than trusted from the run's aggregates, so a hand-edited aggregate cannot survive
+	next to the questions behind it.
+	"""
+	from core.chunk import Chunk, Provenance
+	from evaluation.citations import citation_accuracy
+	from evaluation.set import Stratum
+
+	if unanswerable is True:
+		kept = [result for result in results if result.stratum is Stratum.UNANSWERABLE]
+	elif unanswerable is False:
+		kept = [result for result in results if result.stratum is not Stratum.UNANSWERABLE]
+	else:
+		kept = list(results)
+
+	measured = []
+	for result in kept:
+		chunks = [Chunk(text=item.text, score=item.score, provenance=Provenance()) for item in result.retrieved]
+		score = citation_accuracy(result.answer, chunks)
+		if score is not None:
+			measured.append(score)
+
+	return sum(measured) / len(measured) if measured else None
 
 
 def _question_means(scored: list[QuestionResult], field: str) -> dict[str, float]:

@@ -27,9 +27,11 @@ from pathlib import Path
 from pydantic import BaseModel, ConfigDict, Field
 
 from config.configuration import Configuration, frozen_configuration
+from core.chunk import REFUSAL, build_context
 from core.commit import current_revision
 from core.registry import architecture
 from corpus.manifest import Manifest, corpus_identifier, load_manifest
+from evaluation.citations import citation_accuracy, claim_supported, split_claims
 from evaluation.metrics import (
 	REPORT_DEPTHS,
 	Retrieved,
@@ -63,6 +65,11 @@ class QuestionResult(BaseModel):
 
 	A question with no locations is recorded with its results and no scores. It is not a zero,
 	because a zero would say the retriever missed when there was nothing to miss.
+
+	The answer is generated from the retrieved chunks and every claim in it is checked
+	against those same chunks, so citation accuracy says whether the answer came from the
+	context it was given. An answer with no claims, which is what a refusal is, carries
+	no citation score rather than a zero.
 	"""
 
 	model_config = ConfigDict(extra="forbid")
@@ -83,6 +90,14 @@ class QuestionResult(BaseModel):
 	)
 	locations: list[LocationResult] = Field(default_factory=list)
 	retrieved: list[Retrieved] = Field(default_factory=list)
+	answer: str = ""
+	claims: list[str] = Field(default_factory=list)
+	claims_supported: int = 0
+	claims_total: int = 0
+	citation_accuracy: float | None = Field(
+		default=None,
+		description="Share of the answer's claims one retrieved chunk each supports, or nothing when it makes none.",
+	)
 
 
 class Aggregates(BaseModel):
@@ -91,6 +106,13 @@ class Aggregates(BaseModel):
 	Reciprocal rank is the mean of each question's reciprocal rank on its own first location, the
 	place the question is named after, which is what keeps a second passage found earlier from
 	counting as an answer to where the question is answered.
+
+	Citation accuracy is the mean over the questions whose answers made claims, including the
+	unanswerable stratum, because answering a question the corpus never covers is the failure
+	the metric exists to show. The unanswerable slice is reported beside the answerable one so
+	a system that answers regardless reads visibly worse. Questions whose answers made no
+	claims, which is what a refusal does, are counted beside the means rather than averaged
+	as zeroes.
 	"""
 
 	model_config = ConfigDict(extra="forbid")
@@ -105,6 +127,26 @@ class Aggregates(BaseModel):
 	)
 	ndcg_at: dict[str, float] = Field(
 		description="Mean discounted gain at each reported depth, over the scored questions only.",
+	)
+	citation_accuracy: float | None = Field(
+		default=None,
+		description="Mean share of supported claims, over the questions whose answers made claims.",
+	)
+	citation_accuracy_answerable: float | None = Field(
+		default=None,
+		description="The same mean over every stratum except unanswerable.",
+	)
+	citation_accuracy_unanswerable: float | None = Field(
+		default=None,
+		description="The same mean over the unanswerable stratum alone.",
+	)
+	citation_scored: int = Field(
+		default=0,
+		description="Questions whose answers made claims and carry a citation score.",
+	)
+	citation_unscored: int = Field(
+		default=0,
+		description="Questions whose answers made no claims and carry none.",
 	)
 
 
@@ -201,7 +243,13 @@ async def _ask_every_question(
 	manifest: Manifest,
 	configuration: Configuration,
 ) -> list[QuestionResult]:
-	"""Retrieve for every question in the set, and score what came back against its labels."""
+	"""Retrieve for every question in the set, answer from what came back, and score both.
+
+	Retrieval is scored against the question's labels and the answer is scored against the
+	chunks it was answered with: each claim counts only when one retrieved chunk holds a
+	supporting span for it. Empty retrieval is never sent to the model; the refusal stands
+	in as the answer, produces no claims, and carries no citation score.
+	"""
 	results = []
 	total = len(evaluation_set.questions)
 
@@ -210,6 +258,9 @@ async def _ask_every_question(
 		retrieved = retrieved_from(chunks, manifest)
 		locations = question.all_locations()
 		depths = [depth for depth in REPORT_DEPTHS if depth <= configuration.retrieval_depth]
+		answer = REFUSAL if not chunks else await pipeline.generate(question.question, build_context(chunks))
+		claims = split_claims(answer)
+		supported = sum(1 for claim in claims if claim_supported(claim, chunks))
 
 		result = QuestionResult(
 			question=question.id,
@@ -233,6 +284,11 @@ async def _ask_every_question(
 				for location in locations
 			],
 			retrieved=retrieved,
+			answer=answer,
+			claims=claims,
+			claims_supported=supported,
+			claims_total=len(claims),
+			citation_accuracy=citation_accuracy(answer, chunks),
 		)
 
 		results.append(result)
@@ -243,10 +299,14 @@ async def _ask_every_question(
 
 def _score_line(result: QuestionResult) -> str:
 	"""How one question scored, for the line the run prints as it goes."""
+	if result.citation_accuracy is None:
+		cited = "citation=n/a"
+	else:
+		cited = f"citation={result.citation_accuracy:.2f}"
 	if not result.scored:
-		return "not scored on retrieval"
+		return f"not scored on retrieval {cited}"
 
-	return f"recall={result.recall:.2f} reciprocal_rank={result.reciprocal_rank:.2f}"
+	return f"recall={result.recall:.2f} reciprocal_rank={result.reciprocal_rank:.2f} {cited}"
 
 
 def _aggregates(results: list[QuestionResult]) -> Aggregates:
@@ -254,10 +314,19 @@ def _aggregates(results: list[QuestionResult]) -> Aggregates:
 
 	Both means are over the scored questions only, and the counts are recorded beside them,
 	because a mean over a pool that silently included the unscored would read as a retrieval
-	score a reader could not account for.
+	score a reader could not account for. Citation accuracy is averaged the same way, over
+	the questions whose answers made claims, with the unanswerable stratum kept as its own
+	slice beside the answerable one.
 	"""
 	scored = [result for result in results if result.scored]
 	count = len(scored)
+	with_claims = [result for result in results if result.citation_accuracy is not None]
+	answerable = [result for result in with_claims if result.stratum is not Stratum.UNANSWERABLE]
+	unanswerable = [result for result in with_claims if result.stratum is Stratum.UNANSWERABLE]
+
+	def _mean_or_nothing(values: list[float | None]) -> float | None:
+		measured = [value for value in values if value is not None]
+		return sum(measured) / len(measured) if measured else None
 
 	return Aggregates(
 		questions=len(results),
@@ -267,6 +336,11 @@ def _aggregates(results: list[QuestionResult]) -> Aggregates:
 		reciprocal_rank=mean(result.reciprocal_rank for result in scored),
 		recall_at=_depth_means(scored, "recall_at"),
 		ndcg_at=_depth_means(scored, "ndcg_at"),
+		citation_accuracy=_mean_or_nothing([result.citation_accuracy for result in with_claims]),
+		citation_accuracy_answerable=_mean_or_nothing([result.citation_accuracy for result in answerable]),
+		citation_accuracy_unanswerable=_mean_or_nothing([result.citation_accuracy for result in unanswerable]),
+		citation_scored=len(with_claims),
+		citation_unscored=len(results) - len(with_claims),
 	)
 
 
@@ -316,10 +390,26 @@ def report(run: RunFile, path: Path) -> None:
 	for reported in sorted(aggregates.ndcg_at, key=int):
 		print(f"[RUN] ndcg@{reported} {aggregates.ndcg_at[reported]:.4f}")
 	print(f"[RUN] reciprocal rank@{depth} {aggregates.reciprocal_rank:.4f}")
+	print(f"[RUN] {_citation_line(aggregates)}")
 	if aggregates.unscored:
 		print(f"[RUN] {aggregates.unscored} questions name no place to look in and are not scored on retrieval")
+	if aggregates.citation_unscored:
+		print(f"[RUN] {aggregates.citation_unscored} questions made no claims and are not scored on citation")
 	if run.commit.sha is None:
 		print("[RUN] no commit was found for this working tree, so this run cannot be traced to one")
 	elif run.commit.dirty:
 		print(f"[RUN] the tree had uncommitted changes at {run.commit.sha}, so the commit alone does not reproduce it")
 	print(f"[RUN] wrote {path}")
+
+
+def _citation_line(aggregates: Aggregates) -> str:
+	"""One line for the citation means, with the unanswerable slice beside the rest."""
+	def _cell(value: float | None) -> str:
+		return f"{value:.4f}" if value is not None else "n/a"
+
+	return (
+		f"citation {_cell(aggregates.citation_accuracy)} "
+		f"(answerable {_cell(aggregates.citation_accuracy_answerable)}, "
+		f"unanswerable {_cell(aggregates.citation_accuracy_unanswerable)}) "
+		f"over {aggregates.citation_scored} questions with claims"
+	)
