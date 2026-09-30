@@ -23,17 +23,30 @@
     }
   },
   "spot_check": {
-    "by": "not yet checked: these are the answers still to be read against the source manuals by someone other than the author",
-    "on": "2026-09-27",
+    "by": "an assistant reading the source PDFs, not the maintainer who wrote the questions: each of the 21 gold answers was located verbatim in the document it names, confirmed to be printed inside the section heading it is labelled with, and read against the question it answers. A machine check rather than a database engineer's judgement, recorded as such so nobody later reads it as an expert sign-off",
+    "on": "2026-09-30",
     "answers": [
       "manuals-pg-01",
       "manuals-pg-02",
+      "manuals-pg-03",
       "manuals-pg-04",
+      "manuals-pg-05",
+      "manuals-pg-06",
       "manuals-pg-07",
+      "manuals-pg-08",
+      "manuals-pg-09",
+      "manuals-pg-10",
+      "manuals-pg-11",
+      "manuals-my-01",
       "manuals-my-02",
       "manuals-my-03",
       "manuals-my-04",
-      "manuals-my-06"
+      "manuals-my-05",
+      "manuals-my-06",
+      "manuals-my-07",
+      "manuals-my-09",
+      "manuals-my-10",
+      "manuals-my-12"
     ]
   },
   "questions": [
