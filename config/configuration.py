@@ -14,7 +14,7 @@ from pydantic import BaseModel, ConfigDict
 
 from config.params import Params
 from core.prompt import answer_prompt, prompt_fingerprint
-from data.embed import dense_encoder, sparse_encoder
+from data.embed import dense_encoder, rerank_encoder, sparse_encoder
 
 
 class Encoder(BaseModel):
@@ -57,13 +57,16 @@ class Configuration(BaseModel):
 	generation_temperature: float
 	dense_encoder: Encoder
 	sparse_encoder: Encoder
+	rerank_model: Encoder
 	retrieval_depth: int
+	rerank_candidates: int
 	chunker: Chunker
 
 
 def frozen_configuration() -> Configuration:
 	"""The configuration every run is measured at, read from the one place each value is named."""
 	dense, sparse = dense_encoder(), sparse_encoder()
+	rerank = rerank_encoder()
 
 	return Configuration(
 		prompt=answer_prompt(),
@@ -72,7 +75,9 @@ def frozen_configuration() -> Configuration:
 		generation_temperature=Params.GENERATION_TEMPERATURE,
 		dense_encoder=Encoder(name=dense.name, revision=dense.revision),
 		sparse_encoder=Encoder(name=sparse.name, revision=sparse.revision),
+		rerank_model=Encoder(name=rerank.name, revision=rerank.revision),
 		retrieval_depth=Params.TOP_K,
+		rerank_candidates=Params.RERANK_CANDIDATES,
 		chunker=Chunker(
 			strategy=Params.CHUNKER_STRATEGY,
 			size=Params.CHUNK_SIZE,

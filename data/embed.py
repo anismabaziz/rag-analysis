@@ -14,11 +14,14 @@ from pathlib import Path
 
 from config.params import Params
 from fastembed import SparseTextEmbedding, TextEmbedding
+from fastembed.rerank.cross_encoder import TextCrossEncoder
 
 # The name fastembed serves each of the project's models from, which is not always the name the
 # run refers to it by: a model published for one library is often re-hosted for another.
 DENSE_SOURCE_REPOSITORY = "qdrant/all-MiniLM-L6-v2-onnx"
 SPARSE_SOURCE_REPOSITORY = "Qdrant/all_miniLM_L6_v2_with_attentions"
+# The reranker is served under its own repository name, which is the name the run records.
+RERANK_SOURCE_REPOSITORY = "Xenova/ms-marco-MiniLM-L-6-v2"
 
 
 @dataclass(frozen=True)
@@ -37,6 +40,10 @@ def get_sparse_embed_model():
   return SparseTextEmbedding(model_name=Params.SPARSE_EMBEDDING_MODEL)
 
 
+def get_rerank_model():
+  return TextCrossEncoder(model_name=Params.RERANK_MODEL)
+
+
 def dense_encoder() -> Encoder:
 	"""The dense encoder, as a run file records it."""
 	return _encoder(Params.DENSE_EMBEDDING_MODEL, DENSE_SOURCE_REPOSITORY)
@@ -45,6 +52,11 @@ def dense_encoder() -> Encoder:
 def sparse_encoder() -> Encoder:
 	"""The sparse encoder, as a run file records it."""
 	return _encoder(Params.SPARSE_EMBEDDING_MODEL, SPARSE_SOURCE_REPOSITORY)
+
+
+def rerank_encoder() -> Encoder:
+	"""The cross-encoder behind the rerank architecture, as a run file records it."""
+	return _encoder(Params.RERANK_MODEL, RERANK_SOURCE_REPOSITORY)
 
 
 def _encoder(name: str, repository: str) -> Encoder:

@@ -17,6 +17,7 @@ import pytest
 
 from architectures.hybrid import HybridRAG
 from architectures.naive import NaiveRAG
+from architectures.rerank import RerankRAG
 from architectures.sparse import SparseRAG
 from core import registry
 
@@ -86,7 +87,7 @@ def no_store(monkeypatch):
 
 def test_every_architecture_is_registered_by_declaration():
 	"""Nothing lists architectures anymore, so these are the only place the names exist."""
-	assert {architecture.name for architecture in registry.all_architectures()} == {"naive", "sparse", "hybrid"}
+	assert {architecture.name for architecture in registry.all_architectures()} == {"naive", "sparse", "hybrid", "rerank"}
 
 
 def test_listing_prints_every_registered_architecture(capsys):
@@ -131,7 +132,7 @@ def test_ingestion_reads_the_collection_the_architecture_declares(no_store):
 def test_querying_reads_the_pipeline_the_architecture_declares(monkeypatch):
 	monkeypatch.setattr(registry, "get_generation_llm", lambda: "llm")
 	monkeypatch.setattr(registry, "get_embed_model", lambda: "encoder")
-	pipelines = (("naive", NaiveRAG), ("sparse", SparseRAG), ("hybrid", HybridRAG))
+	pipelines = (("naive", NaiveRAG), ("sparse", SparseRAG), ("hybrid", HybridRAG), ("rerank", RerankRAG))
 
 	assert {name for name, _ in pipelines} == {a.name for a in registry.all_architectures()}
 	for architecture, expected in pipelines:
@@ -147,6 +148,7 @@ def test_every_architecture_is_ingested_into_a_collection_of_its_own():
 	declared = {a.name: (a.collection, a.vectors) for a in registry.all_architectures()}
 
 	assert declared["sparse"] == ("rag_sparse", (registry.SPARSE,))
+	assert declared["rerank"] == ("rag_rerank", (registry.DENSE, registry.SPARSE))
 	assert len({collection for collection, _ in declared.values()}) == len(declared)
 
 

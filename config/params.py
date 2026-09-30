@@ -31,6 +31,16 @@ class Params:
   # and leave the comparison meaning nothing.
   TOP_K = 5
 
+  # How wide the rerank architecture's first stage retrieves before the cross-encoder
+  # narrows it back to the depth above. Wider than the committed depth on purpose: the
+  # reranker can only promote what the first stage fetched. Recorded in the run
+  # configuration like every other frozen value, so a reader can check it from a result file.
+  RERANK_CANDIDATES = 20
+
+  # The cross-encoder that orders the rerank architecture's candidates. Named once here,
+  # like the dense and sparse encoders, so the run file cannot disagree about which model did it.
+  RERANK_MODEL = "Xenova/ms-marco-MiniLM-L-6-v2"
+
   # How the corpus is cut into chunks, which decides what a retrieval can return at all.
   CHUNKER_STRATEGY = "semantic"
   CHUNK_SIZE = 512
