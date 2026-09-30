@@ -14,30 +14,51 @@ class PDFSplitter:
   Bridge between your PDFLoader output and LlamaIndex's native chunking.
   Preserves all metadata (page, section, type) while leveraging LlamaIndex's
   semantic chunking capabilities.
+
+  Every strategy is sized from one `chunk_size`. Fixed-size cuts at it, semantic cuts
+  at meaning boundaries around it, and hierarchical derives its levels from it, so the
+  size a run file records is the size that actually cut the corpus rather than a
+  nominal number the strategy ignores.
   """
+
+  # How the levels of a hierarchical split relate to each other. A parent is this many
+  # times the declared chunk size, and the leaf is this many times smaller, so one
+  # declared size fixes every level rather than three unrelated defaults.
+  HIERARCHICAL_PARENT_FACTOR = 4
+  HIERARCHICAL_LEAF_FACTOR = 4
 
   def __init__(
       self,
       chunking_strategy = "semantic",
       embedding_model = "sentence-transformers/all-MiniLM-L6-v2",
       semantic_threshold: int = 95,
-      hierarchical_chunk_sizes: List[int] = [2048, 512, 128],
       chunk_size: int = 512,
       chunk_overlap: int = 128
       ):
-    
+
     # setup chunk params
     self.chunking_strategy = chunking_strategy
     self.chunk_size = chunk_size
     self.chunk_overlap = chunk_overlap
-    
+
     # setup embeddings
     self.embed_model = HuggingFaceEmbedding(model_name=embedding_model)
-    
+
     # initialize the appropriate node parser
-    self.node_parser = self._create_node_parser(
-        semantic_threshold, hierarchical_chunk_sizes
-    )
+    self.node_parser = self._create_node_parser(semantic_threshold)
+
+
+  def hierarchical_sizes(self) -> List[int]:
+    """The levels a hierarchical split is cut at, derived from the declared chunk size.
+
+    Reported so a run file can state the parent size it indexed alongside the child
+    size, which is the number that decides how much context a retrieved chunk can carry.
+    """
+    return [
+      self.chunk_size * self.HIERARCHICAL_PARENT_FACTOR,
+      self.chunk_size,
+      max(1, self.chunk_size // self.HIERARCHICAL_LEAF_FACTOR),
+    ]
 
 
   def process(self, elements: List[Dict]):
@@ -53,7 +74,7 @@ class PDFSplitter:
 
 
 
-  def _create_node_parser(self, semantic_threshold: int, hierarchical_chunk_sizes: List[int]) -> NodeParser:
+  def _create_node_parser(self, semantic_threshold: int) -> NodeParser:
     """
     Creates Llama-index node parser based on a certain strategy
     """
@@ -68,7 +89,7 @@ class PDFSplitter:
     
     if self.chunking_strategy == "hierarchical":
       return HierarchicalNodeParser.from_defaults(
-        chunk_sizes=hierarchical_chunk_sizes,
+        chunk_sizes=self.hierarchical_sizes(),
         chunk_overlap=self.chunk_overlap,
         include_metadata=True
       )

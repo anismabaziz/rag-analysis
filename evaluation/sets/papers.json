@@ -1,0 +1,354 @@
+{
+  "domain": "papers",
+  "strata": {
+    "identifier_heavy": {
+      "definition": "The question names a rare string from the source: a model, a dataset, an option name, a number, a symbol. Lexical matching is expected to do well on these, and a retriever that keeps identifiers apart is expected to beat one that embeds the question and hopes. The shares match the manuals domain so the two are comparable.",
+      "share": 0.44,
+      "count": 14
+    },
+    "paraphrase": {
+      "definition": "The question asks about the same content as a passage without reusing that passage's wording. No rare string carries the question to its answer, so a retriever has to match meaning rather than tokens. This is the share the claim expects dense retrieval to win.",
+      "share": 0.31,
+      "count": 10
+    },
+    "multi_hop": {
+      "definition": "The question cannot be answered from one location: two or more passages have to be combined. Each question lists the locations it needs, starting with its own, because a retriever that returns one of the two has not answered it. Every extra location is a section no other question is filed under, so one retrieved passage cannot count for two questions.",
+      "share": 0.125,
+      "count": 4
+    },
+    "unanswerable": {
+      "definition": "The question has no correct answer anywhere in the domain, so a system that answers it confidently is visibly wrong. Each question names nothing, and carries the string a correct answer would have to name so the corpus can be checked for support. These are what make citation accuracy mean something: without them a fabricated citation still lands on a real document.",
+      "share": 0.125,
+      "count": 4
+    }
+  },
+  "spot_check": {
+    "by": "the project maintainer, reading the source PDFs",
+    "on": "2026-09-27",
+    "answers": [
+      "papers-attention-01",
+      "papers-attention-04",
+      "papers-dpr-02",
+      "papers-dpr-03",
+      "papers-rag-02",
+      "papers-lost-02",
+      "papers-m3-02",
+      "papers-ladr-01"
+    ]
+  },
+  "questions": [
+    {
+      "id": "papers-attention-01",
+      "question": "How many parallel attention heads does the base Transformer use?",
+      "stratum": "identifier_heavy",
+      "document": "attention-is-all-you-need",
+      "section": "3.2.2 Multi-Head Attention",
+      "extractive": true,
+      "gold_answer": "h = 8 parallel attention layers"
+    },
+    {
+      "id": "papers-attention-02",
+      "question": "How many warmup steps does the learning rate schedule use?",
+      "stratum": "identifier_heavy",
+      "document": "attention-is-all-you-need",
+      "section": "5.3 Optimizer",
+      "extractive": true,
+      "gold_answer": "warmup_steps = 4000"
+    },
+    {
+      "id": "papers-attention-03",
+      "question": "What dropout rate does the base model use during training?",
+      "stratum": "identifier_heavy",
+      "document": "attention-is-all-you-need",
+      "section": "5.4 Regularization",
+      "extractive": true,
+      "gold_answer": "Pdrop = 0.1"
+    },
+    {
+      "id": "papers-attention-04",
+      "question": "What is done to the softmax input so that a decoder position cannot read words it has not produced yet?",
+      "stratum": "paraphrase",
+      "document": "attention-is-all-you-need",
+      "section": "3.2.3 Applications of Attention in our Model",
+      "extractive": true,
+      "gold_answer": "masking out (setting to −∞) all values in the input of the softmax"
+    },
+    {
+      "id": "papers-attention-05",
+      "question": "Why did the authors keep the fixed sine and cosine position signal rather than a trainable one, given that both scored about the same?",
+      "stratum": "paraphrase",
+      "document": "attention-is-all-you-need",
+      "section": "3.5 Positional Encoding",
+      "extractive": false,
+      "gold_answer": null
+    },
+    {
+      "id": "papers-dpr-01",
+      "question": "How many passages does the passage collection of the retriever end up with?",
+      "stratum": "identifier_heavy",
+      "document": "dense-passage-retrieval",
+      "section": "4.1 Wikipedia Data Pre-processing",
+      "extractive": true,
+      "gold_answer": "21,015,324 passages"
+    },
+    {
+      "id": "papers-dpr-02",
+      "question": "What are the top-20 retrieval accuracies of the dense retriever and of BM25 on Natural Questions?",
+      "stratum": "identifier_heavy",
+      "document": "dense-passage-retrieval",
+      "section": "5.1 Main Results",
+      "extractive": true,
+      "gold_answer": "78.4% vs. 59.1% for top-20 accuracy on Natural Questions"
+    },
+    {
+      "id": "papers-dpr-03",
+      "question": "Which two kinds of wrong passage does the best configuration train against?",
+      "stratum": "identifier_heavy",
+      "document": "dense-passage-retrieval",
+      "section": "3.2 Training",
+      "extractive": true,
+      "gold_answer": "gold passages from the same mini-batch and one BM25 negative passage"
+    },
+    {
+      "id": "papers-dpr-04",
+      "question": "Why can the passage side of the pair not be turned into the query side of the comparison at search time?",
+      "stratum": "paraphrase",
+      "document": "dense-passage-retrieval",
+      "section": "3.1 Overview",
+      "extractive": false,
+      "gold_answer": null
+    },
+    {
+      "id": "papers-rag-01",
+      "question": "How many parameters does the generator have?",
+      "stratum": "identifier_heavy",
+      "document": "rag-for-knowledge-intensive-nlp-tasks",
+      "section": "2.3 Generator: BART",
+      "extractive": true,
+      "gold_answer": "a pre-trained seq2seq transformer [58] with 400M parameters"
+    },
+    {
+      "id": "papers-rag-02",
+      "question": "What is the name given to the cheaper decoding approximation that skips the extra forward passes?",
+      "stratum": "identifier_heavy",
+      "document": "rag-for-knowledge-intensive-nlp-tasks",
+      "section": "2.5 Decoding",
+      "extractive": true,
+      "gold_answer": "Fast Decoding"
+    },
+    {
+      "id": "papers-rag-03",
+      "question": "What does the model that picks one passage for the whole reply give up, compared with the one allowed to switch passages partway through?",
+      "stratum": "paraphrase",
+      "document": "rag-for-knowledge-intensive-nlp-tasks",
+      "section": "2.1 Models",
+      "extractive": false,
+      "gold_answer": null
+    },
+    {
+      "id": "papers-rag-04",
+      "question": "Why can writing an answer out from scratch beat copying a span out of a retrieved passage?",
+      "stratum": "paraphrase",
+      "document": "rag-for-knowledge-intensive-nlp-tasks",
+      "section": "4.1 Open-domain Question Answering",
+      "extractive": false,
+      "gold_answer": null
+    },
+    {
+      "id": "papers-lost-01",
+      "question": "How many queries does the multi-document question answering task use?",
+      "stratum": "identifier_heavy",
+      "document": "lost-in-the-middle",
+      "section": "2.1 Experimental Setup",
+      "extractive": true,
+      "gold_answer": "2655 queries"
+    },
+    {
+      "id": "papers-lost-02",
+      "question": "How many key-value pairs are in the input contexts of the synthetic retrieval task?",
+      "stratum": "identifier_heavy",
+      "document": "lost-in-the-middle",
+      "section": "3.2 Results and Discussion",
+      "extractive": true,
+      "gold_answer": "75, 140, and 300 key-value pairs"
+    },
+    {
+      "id": "papers-lost-03",
+      "question": "What shape does a model's accuracy take as the one useful document is moved through the prompt from the front to the back?",
+      "stratum": "paraphrase",
+      "document": "lost-in-the-middle",
+      "section": "4.3 Effect of Instruction Fine-Tuning",
+      "extractive": true,
+      "gold_answer": "Both models have a U-shaped performance curve"
+    },
+    {
+      "id": "papers-lost-04",
+      "question": "Why might a model that reads the whole pile before writing anything cope better with a long prompt full of retrieved documents than one that writes as it reads?",
+      "stratum": "paraphrase",
+      "document": "lost-in-the-middle",
+      "section": "4.1 Effect of Model Architecture",
+      "extractive": false,
+      "gold_answer": null
+    },
+    {
+      "id": "papers-m3-01",
+      "question": "How many text pairs of unsupervised data went into pretraining?",
+      "stratum": "identifier_heavy",
+      "document": "bge-m3",
+      "section": "3.1 Data Curation",
+      "extractive": true,
+      "gold_answer": "1.2 billion"
+    },
+    {
+      "id": "papers-m3-02",
+      "question": "In the paper's multi-lingual retrieval evaluation, how many candidates does the multi-vector head re-rank?",
+      "stratum": "identifier_heavy",
+      "document": "bge-m3",
+      "section": "4.1 Multi-Lingual Retrieval",
+      "extractive": true,
+      "gold_answer": "top-200"
+    },
+    {
+      "id": "papers-m3-03",
+      "question": "Why does the word-overlap head of this model do badly at cross-lingual search even though it still beats plain BM25?",
+      "stratum": "paraphrase",
+      "document": "bge-m3",
+      "section": "4.2 Cross-Lingual Retrieval",
+      "extractive": false,
+      "gold_answer": null
+    },
+    {
+      "id": "papers-m3-04",
+      "question": "What goes wrong when the three retrieval heads are trained side by side on their own objectives, and what do the weights in the combined score stand for?",
+      "stratum": "paraphrase",
+      "document": "bge-m3",
+      "section": "3.3 Self-Knowledge Distillation",
+      "extractive": false,
+      "gold_answer": null
+    },
+    {
+      "id": "papers-ladr-01",
+      "question": "How many nearby documents is each document linked to in the proximity graph?",
+      "stratum": "identifier_heavy",
+      "document": "lexically-accelerated-dense-retrieval",
+      "section": "3 LADR",
+      "extractive": true,
+      "gold_answer": "128 closest documents"
+    },
+    {
+      "id": "papers-ladr-02",
+      "question": "How many queries are in the TREC 2020 Deep Learning passage set?",
+      "stratum": "identifier_heavy",
+      "document": "lexically-accelerated-dense-retrieval",
+      "section": "4.1 Datasets and Measures",
+      "extractive": true,
+      "gold_answer": "54 queries"
+    },
+    {
+      "id": "papers-ladr-03",
+      "question": "Why is it not affordable to know each document's exact nearest neighbours before searching with this method?",
+      "stratum": "paraphrase",
+      "document": "lexically-accelerated-dense-retrieval",
+      "section": "5.4 RQ5: Document Proximity Sources",
+      "extractive": false,
+      "gold_answer": null
+    },
+    {
+      "id": "papers-multi-hop-01",
+      "question": "The base model is described by the hardware it was trained on, and a separate small model shows the same architecture generalising to parsing. How many GPUs and how much wall-clock time did the base translation model take, and what F1 does the parsing model reach?",
+      "stratum": "multi_hop",
+      "document": "attention-is-all-you-need",
+      "section": "5.2 Hardware and Schedule",
+      "extractive": false,
+      "gold_answer": null,
+      "locations": [
+        { "document": "attention-is-all-you-need", "section": "5.2 Hardware and Schedule" },
+        { "document": "attention-is-all-you-need", "section": "6.3 English Constituency Parsing" }
+      ]
+    },
+    {
+      "id": "papers-multi-hop-02",
+      "question": "RAG fine-tunes one half of the DPR retriever and leaves the other half alone. Which half does it leave alone, and how large does DPR say the collection behind that half is?",
+      "stratum": "multi_hop",
+      "document": "rag-for-knowledge-intensive-nlp-tasks",
+      "section": "2.4 Training",
+      "extractive": false,
+      "gold_answer": null,
+      "locations": [
+        { "document": "rag-for-knowledge-intensive-nlp-tasks", "section": "2.4 Training" },
+        { "document": "dense-passage-retrieval", "section": "3 Dense Passage Retriever (DPR)" }
+      ]
+    },
+    {
+      "id": "papers-multi-hop-03",
+      "question": "The paper compares its U-shaped accuracy curve to a named effect from memory research, then tries one change to how the prompt is laid out. What is the effect called, and what change does the paper try?",
+
+      "stratum": "multi_hop",
+      "document": "lost-in-the-middle",
+      "section": "6.3 The Serial-Position Effect",
+      "extractive": false,
+      "gold_answer": null,
+      "locations": [
+        { "document": "lost-in-the-middle", "section": "6.3 The Serial-Position Effect" },
+        { "document": "lost-in-the-middle", "section": "4.2 Effect of Query-Aware Contextualization" }
+      ]
+    },
+    {
+      "id": "papers-multi-hop-04",
+      "question": "On the long-document benchmark, which of the three retrieval heads does best, and where does the paper say the lexical head's term weights come from?",
+      "stratum": "multi_hop",
+      "document": "bge-m3",
+      "section": "4.3 Multilingual Long-Doc Retrieval",
+      "extractive": false,
+      "gold_answer": null,
+      "locations": [
+        { "document": "bge-m3", "section": "4.3 Multilingual Long-Doc Retrieval" },
+        { "document": "bge-m3", "section": "3.2 Hybrid Retrieval" }
+      ]
+    },
+    {
+      "id": "papers-unanswerable-01",
+      "question": "The BGE-M3 paper reports one retrieval score that pools many datasets into a single number. Which benchmark suite does that score come from?",
+      "stratum": "unanswerable",
+      "document": null,
+      "section": null,
+      "extractive": false,
+      "gold_answer": null,
+      "expected_behavior": "Say that no paper in the corpus reports such an aggregate, and name no document and no section.",
+      "absent_probe": "MTEB"
+    },
+    {
+      "id": "papers-unanswerable-02",
+      "question": "The dense retriever that the RAG and LADR papers both build on is released as a checkpoint with a particular name. What is that name?",
+      "stratum": "unanswerable",
+      "document": null,
+      "section": null,
+      "extractive": false,
+      "gold_answer": null,
+      "expected_behavior": "Say that none of the papers gives the checkpoint a name, and name no document and no section.",
+      "absent_probe": "psgs_w100"
+    },
+    {
+      "id": "papers-unanswerable-03",
+      "question": "One of the papers in this collection was written for retrieving photographs by their captions. Which is it, and which dataset does it evaluate on?",
+      "stratum": "unanswerable",
+      "document": null,
+      "section": null,
+      "extractive": false,
+      "gold_answer": null,
+      "expected_behavior": "Say that every paper here is about text retrieval, and name no document and no section.",
+      "absent_probe": "Flickr30k"
+    },
+    {
+      "id": "papers-unanswerable-04",
+      "question": "One of the papers in this collection shares an author with the original BERT paper. Which is it, and what is the arXiv identifier of that BERT paper?",
+      "stratum": "unanswerable",
+      "document": null,
+      "section": null,
+      "extractive": false,
+      "gold_answer": null,
+      "expected_behavior": "Say that the corpus holds no BERT paper, so it names no author to match and no identifier to give, and name no document and no section.",
+      "absent_probe": "1810.04805"
+    }
+  ]
+}

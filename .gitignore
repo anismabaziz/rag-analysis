@@ -9,9 +9,17 @@ wheels/
 # Virtual environments
 .venv
 
-
 # secrets
 .env
+.env.*
+!.env.example
 
-# test files
-*.txt
+# The corpus is a committed manifest, not committed documents. The PDFs under ./documents are
+# fetched and checked against their digest, and are far too large to keep in the repository.
+documents/**/*.pdf
+
+# results are committed, so nothing else is ignored by extension here
+
+# pytest and ruff caches
+.pytest_cache/
+.ruff_cache/

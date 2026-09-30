@@ -1,7 +1,15 @@
+from config.params import Params
 from core.base import BaseRAG
-from vector.store import get_qdrant_client
+from core.chunk import Chunk
+from core.registry import register
+from vector.store import chunks_from_result, get_qdrant_client
 
 
+@register(
+	name="naive",
+	description="Dense vectors only, ranked by cosine similarity.",
+	collection="rag_naive",
+)
 class NaiveRAG(BaseRAG):
 	"""
 	NaiveRAG implements a standard dense retrieval RAG pipeline.
@@ -9,16 +17,15 @@ class NaiveRAG(BaseRAG):
 	"""
 
 	def __init__(self, llm, embed_model, collection_name):
-		super().__init__(llm, embed_model)
+		super().__init__(llm, embed_model, collection_name)
 		self.vector_store = get_qdrant_client()
-		self.collection_name = collection_name
 
-	async def retrieve(self, query: str, top_k: int = 5):
+	async def retrieve(self, query: str, top_k: int = Params.TOP_K) -> list[Chunk]:
 
 		# generate vector embedding for the query string
 		query_embedding = list(self.embed_model.embed([query]))[0]
 
-		# query the Qdrant vector store using similarity top_k=5
+		# query the Qdrant vector store for as many chunks as the frozen depth allows
 		results = self.vector_store.query_points(
 			collection_name=self.collection_name,
 			query=query_embedding,
@@ -26,7 +33,4 @@ class NaiveRAG(BaseRAG):
 			limit=top_k
 		)
 
-		
-		nodes = [point.payload['text'] for point in results.points]
-
-		return nodes or []
+		return chunks_from_result(results)

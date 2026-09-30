@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+# A new push makes the run it supersedes on the same branch irrelevant. A pull request gets its
+# own group, so the push run and the pull request run do not cancel each other.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+# Checking out, installing, linting, and testing all read the repository and nothing else.
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Lint + tests
+    runs-on: ubuntu-latest
+    # The suite parses a PDF end to end and reads two corpus documents with pypdf, which is
+    # minutes rather than seconds on a shared runner.
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@e58605a9b6da7c637471fab8847a5e5a6b8df081 # v5
+        with:
+          enable-cache: true
+          # The floor the project declares in pyproject.toml. One leg only: the comparison the
+          # project exists to produce is between retrieval architectures, not between Python
+          # versions, and a second leg would double the slowest job to say nothing more.
+          python-version: "3.12"
+
+      # --frozen installs uv.lock as committed and fails when it disagrees with pyproject.toml,
+      # so a dependency change that skips the lockfile cannot reach the suite. Plain `uv sync`
+      # would quietly re-resolve, which is how a build starts testing something other than what
+      # ships.
+      - name: Install
+        run: uv sync --frozen --dev
+
+      - name: Lint
+        run: uv run ruff check .
+
+      # The corpus is not in the repository, and the tests that check the hand-written gold
+      # answers against their sources skip when it is missing. Fetching the papers turns those
+      # skips into checks. Only that domain: arXiv serves one immutable PDF per id, while the
+      # manuals are reissued with point releases, and a build that fails because upstream
+      # regenerated a PDF is a build nobody trusts. Needs no service and no key, but it does
+      # need arXiv to answer, and a red build from here is a fetch to read in the log rather
+      # than a test to go and fix.
+      - name: Fetch the papers corpus
+        run: uv run rag-analysis fetch-corpus --domain papers
+
+      - name: Test
+        run: uv run pytest -q

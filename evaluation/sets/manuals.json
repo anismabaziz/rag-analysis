@@ -1,0 +1,366 @@
+{
+  "domain": "manuals",
+  "strata": {
+    "identifier_heavy": {
+      "definition": "The question names a rare string from the source: a parameter name, an error code, a function, an option, a keyword. The manuals are the register where this stratum is easiest to write honestly, because the string being asked about is usually the label the entry itself is filed under. The shares match the papers domain so the two are comparable.",
+      "share": 0.44,
+      "count": 14
+    },
+    "paraphrase": {
+      "definition": "The question asks about the same content as an entry without reusing that entry's wording. No rare string carries the question to its answer, so a retriever has to match meaning rather than tokens. This is the share the claim expects dense retrieval to win.",
+      "share": 0.31,
+      "count": 10
+    },
+    "multi_hop": {
+      "definition": "The question cannot be answered from one location: two or more passages have to be combined. Each question lists the locations it needs, starting with its own, because a retriever that returns one of the two has not answered it. Every extra location is a section no other question is filed under, so one retrieved passage cannot count for two questions.",
+      "share": 0.125,
+      "count": 4
+    },
+    "unanswerable": {
+      "definition": "The question has no correct answer anywhere in the domain, so a system that answers it confidently is visibly wrong. Each question names nothing, and carries the string a correct answer would have to name so the corpus can be checked for support. Two manuals of several thousand pages each is a large enough corpus that these are written about software neither manual documents.",
+      "share": 0.125,
+      "count": 4
+    }
+  },
+  "spot_check": {
+    "by": "an assistant reading the source PDFs, not the maintainer who wrote the questions: each of the 21 gold answers was located verbatim in the document it names, confirmed to be printed inside the section heading it is labelled with, and read against the question it answers. A machine check rather than a database engineer's judgement, recorded as such so nobody later reads it as an expert sign-off",
+    "on": "2026-09-30",
+    "answers": [
+      "manuals-pg-01",
+      "manuals-pg-02",
+      "manuals-pg-03",
+      "manuals-pg-04",
+      "manuals-pg-05",
+      "manuals-pg-06",
+      "manuals-pg-07",
+      "manuals-pg-08",
+      "manuals-pg-09",
+      "manuals-pg-10",
+      "manuals-pg-11",
+      "manuals-my-01",
+      "manuals-my-02",
+      "manuals-my-03",
+      "manuals-my-04",
+      "manuals-my-05",
+      "manuals-my-06",
+      "manuals-my-07",
+      "manuals-my-09",
+      "manuals-my-10",
+      "manuals-my-12"
+    ]
+  },
+  "questions": [
+    {
+      "id": "manuals-pg-01",
+      "question": "What is the default value of pg_stat_statements.max, and when can it be changed?",
+      "stratum": "identifier_heavy",
+      "document": "postgresql-16-documentation",
+      "section": "F.32.4. Configuration Parameters",
+      "extractive": true,
+      "gold_answer": "The default value is 5000. This parameter can only be set at server start."
+    },
+    {
+      "id": "manuals-pg-02",
+      "question": "What similarity threshold does pg_trgm use by default for the % operator?",
+      "stratum": "identifier_heavy",
+      "document": "postgresql-16-documentation",
+      "section": "F.35.3. GUC Parameters",
+      "extractive": true,
+      "gold_answer": "Sets the current similarity threshold that is used by the % operator. The threshold must be between 0 and 1 (default is 0.3)."
+    },
+    {
+      "id": "manuals-pg-03",
+      "question": "Which characters does pg_trgm leave out when it builds the trigrams of a string?",
+      "stratum": "identifier_heavy",
+      "document": "postgresql-16-documentation",
+      "section": "F.35.1. Trigram (or Trigraph) Concepts",
+      "extractive": true,
+      "gold_answer": "pg_trgm ignores non-word characters (non-alphanumerics) when extracting trigrams from a string"
+    },
+    {
+      "id": "manuals-pg-04",
+      "question": "What range and precision does the double precision type give you?",
+      "stratum": "identifier_heavy",
+      "document": "postgresql-16-documentation",
+      "section": "8.1.3. Floating-Point Types",
+      "extractive": true,
+      "gold_answer": "The double precision type has a range of around 1E-307 to 1E+308 with a precision of at least 15 digits."
+    },
+    {
+      "id": "manuals-pg-05",
+      "question": "Which parameter has to be set on a standby server for it to follow the timeline change that a failover produces?",
+      "stratum": "identifier_heavy",
+      "document": "postgresql-16-documentation",
+      "section": "27.2.4. Setting Up a Standby Server",
+      "extractive": true,
+      "gold_answer": "make sure that recovery_target_timeline is set to latest (the default)"
+    },
+    {
+      "id": "manuals-pg-06",
+      "question": "Which parameter caps how much WAL a replication slot is allowed to hold on to?",
+      "stratum": "identifier_heavy",
+      "document": "postgresql-16-documentation",
+      "section": "27.2.6. Replication Slots",
+      "extractive": true,
+      "gold_answer": "max_slot_wal_keep_size limits the size of WAL files retained by replication slots"
+    },
+    {
+      "id": "manuals-pg-07",
+      "question": "What values can the pg_replication_slots.slot_type column hold?",
+      "stratum": "identifier_heavy",
+      "document": "postgresql-16-documentation",
+      "section": "54.19. pg_replication_slots",
+      "extractive": true,
+      "gold_answer": "The slot type: physical or logical"
+    },
+    {
+      "id": "manuals-pg-08",
+      "question": "A row is not allowed to grow past the size of one page. What happens to a field value that is far too big to fit?",
+      "stratum": "paraphrase",
+      "document": "postgresql-16-documentation",
+      "section": "73.2. TOAST",
+      "extractive": true,
+      "gold_answer": "it is not possible to store very large field values directly"
+    },
+    {
+      "id": "manuals-pg-09",
+      "question": "A transaction keeps seeing the same rows however many statements it runs. Why is that, and what does the application have to be ready to handle?",
+      "stratum": "paraphrase",
+      "document": "postgresql-16-documentation",
+      "section": "13.2.2. Repeatable Read Isolation Level",
+      "extractive": true,
+      "gold_answer": "This level is different from Read Committed in that a query in a repeatable read transaction sees a snapshot as of the start of the first non-transaction-control statement in the transaction, not as of the start of the current statement within the transaction."
+    },
+    {
+      "id": "manuals-pg-10",
+      "question": "A separate process writes dirty buffers out ahead of the checkpoint. What does that buy, and what does it cost?",
+      "stratum": "paraphrase",
+      "document": "postgresql-16-documentation",
+      "section": "20.4.5. Background Writer",
+      "extractive": true,
+      "gold_answer": "This reduces the likelihood that server processes handling user queries will be unable to find clean buffers and have to write dirty buffers themselves."
+    },
+    {
+      "id": "manuals-pg-11",
+      "question": "How can a client that has no SSL support of its own still reach a PostgreSQL server over an encrypted connection?",
+      "stratum": "paraphrase",
+      "document": "postgresql-16-documentation",
+      "section": "19.11. Secure TCP/IP Connections with SSH Tunnels",
+      "extractive": true,
+      "gold_answer": "It is possible to use SSH to encrypt the network connection between clients and a PostgreSQL server. Done properly, this provides an adequately secure network connection, even for non-SSL-capable clients."
+    },
+    {
+      "id": "manuals-pg-12",
+      "question": "The same aggregate can behave as a windowed calculation or as a plain one, depending only on how it is written. What decides which?",
+      "stratum": "paraphrase",
+      "document": "postgresql-16-documentation",
+      "section": "9.22. Window Functions",
+      "extractive": false,
+      "gold_answer": null
+    },
+    {
+      "id": "manuals-my-01",
+      "question": "How many bytes at most does a single character of the utf8mb4 character set need?",
+      "stratum": "identifier_heavy",
+      "document": "mysql-9-3-reference-manual",
+      "section": "12.9.1 The utf8mb4 Character Set (4-Byte UTF-8 Unicode Encoding)",
+      "extractive": true,
+      "gold_answer": "Requires a maximum of four bytes per multibyte character."
+    },
+    {
+      "id": "manuals-my-02",
+      "question": "At what value of innodb_force_recovery can data files be permanently damaged?",
+      "stratum": "identifier_heavy",
+      "document": "mysql-9-3-reference-manual",
+      "section": "17.20.3 Forcing InnoDB Recovery",
+      "extractive": true,
+      "gold_answer": "Values of 4 or greater can permanently corrupt data files."
+    },
+    {
+      "id": "manuals-my-03",
+      "question": "Which error is returned when a statement tries to change data inside a transaction opened with START TRANSACTION READ ONLY?",
+      "stratum": "identifier_heavy",
+      "document": "mysql-9-3-reference-manual",
+      "section": "10.5.3 Optimizing InnoDB Read-Only Transactions",
+      "extractive": true,
+      "gold_answer": "ERROR 1792 (25006): Cannot execute statement in a READ ONLY transaction."
+    },
+    {
+      "id": "manuals-my-04",
+      "question": "Which authentication plugin is the default in MySQL 9.3, and which one is no longer available?",
+      "stratum": "identifier_heavy",
+      "document": "mysql-9-3-reference-manual",
+      "section": "8.4.1.1 Caching SHA-2 Pluggable Authentication",
+      "extractive": true,
+      "gold_answer": "In MySQL 9.3, caching_sha2_password is the default authentication plugin; mysql_native_password is no longer available."
+    },
+    {
+      "id": "manuals-my-05",
+      "question": "How many consecutive failed connection attempts is an account allowed before the server starts adding a delay?",
+      "stratum": "identifier_heavy",
+      "document": "mysql-9-3-reference-manual",
+      "section": "8.4.2.2 Connection Control Component Configuration",
+      "extractive": true,
+      "gold_answer": "The number of consecutive failed connection attempts permitted to accounts before the server adds a delay for subsequent connection attempts."
+    },
+    {
+      "id": "manuals-my-06",
+      "question": "Which CHANGE REPLICATION FILTER option rewrites one database name as another on a replica?",
+      "stratum": "identifier_heavy",
+      "document": "mysql-9-3-reference-manual",
+      "section": "15.4.2 SQL Statements for Controlling Replica Servers",
+      "extractive": true,
+      "gold_answer": "REPLICATE_REWRITE_DB = (db_pair_list)"
+    },
+    {
+      "id": "manuals-my-07",
+      "question": "Which variable switches the doublewrite buffer off, and what does the manual advise before you do?",
+      "stratum": "identifier_heavy",
+      "document": "mysql-9-3-reference-manual",
+      "section": "17.6.4 Doublewrite Buffer",
+      "extractive": true,
+      "gold_answer": "To disable the doublewrite buffer, set innodb_doublewrite to OFF."
+    },
+    {
+      "id": "manuals-my-08",
+      "question": "A site has to satisfy a named compliance standard for how its encryption keys are held. Why is a plain file on the server not enough for that?",
+      "stratum": "paraphrase",
+      "document": "mysql-9-3-reference-manual",
+      "section": "8.4.5.4 Using the component_keyring_file File-Based Keyring Component",
+      "extractive": false,
+      "gold_answer": null
+    },
+    {
+      "id": "manuals-my-09",
+      "question": "What has to be switched on before the backup is taken if the backup is ever to be used to recover to a point in time?",
+      "stratum": "paraphrase",
+      "document": "mysql-9-3-reference-manual",
+      "section": "17.18.2 InnoDB Recovery",
+      "extractive": true,
+      "gold_answer": "you must run MySQL server with binary logging enabled, even before taking the backup"
+    },
+    {
+      "id": "manuals-my-10",
+      "question": "What does adding a frame clause to a windowed calculation let you do that the partition on its own cannot?",
+      "stratum": "paraphrase",
+      "document": "mysql-9-3-reference-manual",
+      "section": "14.20.3 Window Function Frame Specification",
+      "extractive": true,
+      "gold_answer": "A frame is a subset of the current partition and the frame clause specifies how to define the subset."
+    },
+    {
+      "id": "manuals-my-11",
+      "question": "Where do you look to see what the server is doing at this instant, and where do you look to measure why it is slow?",
+      "stratum": "paraphrase",
+      "document": "mysql-9-3-reference-manual",
+      "section": "10.13.3 Measuring Performance with performance_schema",
+      "extractive": false,
+      "gold_answer": null
+    },
+    {
+      "id": "manuals-my-12",
+      "question": "Why can a table declared with the old three-byte character set refuse a character the server is perfectly able to encode?",
+      "stratum": "paraphrase",
+      "document": "mysql-9-3-reference-manual",
+      "section": "12.9.8 Converting Between 3-Byte and 4-Byte Unicode Character Sets",
+      "extractive": true,
+      "gold_answer": "utf8mb3 supports only characters in the Basic Multilingual Plane (BMP). utf8mb4 additionally supports supplementary characters that lie outside the BMP."
+    },
+    {
+      "id": "manuals-multi-hop-01",
+      "question": "Both manuals tell you what a standby is doing. Which PostgreSQL function reports the last WAL location the standby has replayed, and which MySQL statement shows the replication threads?",
+      "stratum": "multi_hop",
+      "document": "postgresql-16-documentation",
+      "section": "27.2.5.2. Monitoring",
+      "extractive": false,
+      "gold_answer": null,
+      "locations": [
+        { "document": "postgresql-16-documentation", "section": "27.2.5.2. Monitoring" },
+        { "document": "mysql-9-3-reference-manual", "section": "19.2.3.1 Monitoring Replication Main Threads" }
+      ]
+    },
+    {
+      "id": "manuals-multi-hop-02",
+      "question": "One extension scores how alike two strings are. Which function returns that score, and which index types make it fast over a column?",
+      "stratum": "multi_hop",
+      "document": "postgresql-16-documentation",
+      "section": "F.35.2. Functions and Operators",
+      "extractive": false,
+      "gold_answer": null,
+      "locations": [
+        { "document": "postgresql-16-documentation", "section": "F.35.2. Functions and Operators" },
+        { "document": "postgresql-16-documentation", "section": "F.35.4. Index Support" }
+      ]
+    },
+    {
+      "id": "manuals-multi-hop-03",
+      "question": "InnoDB records every change somewhere before the data file is touched. Which log is that, and which statement creates the tables its pages end up in?",
+      "stratum": "multi_hop",
+      "document": "mysql-9-3-reference-manual",
+      "section": "17.6.5 Redo Log",
+      "extractive": false,
+      "gold_answer": null,
+      "locations": [
+        { "document": "mysql-9-3-reference-manual", "section": "17.6.5 Redo Log" },
+        { "document": "mysql-9-3-reference-manual", "section": "17.6.1 Tables" }
+      ]
+    },
+    {
+      "id": "manuals-multi-hop-04",
+      "question": "MySQL 9.3 ships two authentication plugins that both hash with SHA-256. Which one is deprecated, and which plugin covers the case where the client has no TLS and the password goes over the wire in the clear?",
+      "stratum": "multi_hop",
+      "document": "mysql-9-3-reference-manual",
+      "section": "8.4.1.2 SHA-256 Pluggable Authentication",
+      "extractive": false,
+      "gold_answer": null,
+      "locations": [
+        { "document": "mysql-9-3-reference-manual", "section": "8.4.1.2 SHA-256 Pluggable Authentication" },
+        { "document": "mysql-9-3-reference-manual", "section": "8.4.1.3 Client-Side Cleartext Pluggable Authentication" }
+      ]
+    },
+    {
+      "id": "manuals-unanswerable-01",
+      "question": "Which extension gives PostgreSQL 16 a column type you can store vector embeddings in, and which index type does that extension need for a nearest-neighbour search?",
+      "stratum": "unanswerable",
+      "document": null,
+      "section": null,
+      "extractive": false,
+      "gold_answer": null,
+      "expected_behavior": "Say that this manual documents no column type for vectors, and name no document and no section.",
+      "absent_probe": "pgvector"
+    },
+    {
+      "id": "manuals-unanswerable-02",
+      "question": "How do you get changes out of a running MySQL server and into a NoSQL store? Which store does the manual name, and which command starts the flow?",
+      "stratum": "unanswerable",
+      "document": null,
+      "section": null,
+      "extractive": false,
+      "gold_answer": null,
+      "expected_behavior": "Say that the manual names no such destination, and name no document and no section.",
+      "absent_probe": "mongodb"
+    },
+    {
+      "id": "manuals-unanswerable-03",
+      "question": "Which public benchmark suite should be used to compare the two retrieval architectures in this repository, and which of its tasks does it score?",
+      "stratum": "unanswerable",
+      "document": null,
+      "section": null,
+      "extractive": false,
+      "gold_answer": null,
+      "expected_behavior": "Say that neither manual documents a retrieval benchmark, and name no document and no section.",
+      "absent_probe": "MTEB"
+    },
+    {
+      "id": "manuals-unanswerable-04",
+      "question": "How do you keep a pool of PostgreSQL backends already started so a web application stops paying to open a session per request, and what do you call the tool?",
+      "stratum": "unanswerable",
+      "document": null,
+      "section": null,
+      "extractive": false,
+      "gold_answer": null,
+      "expected_behavior": "Say that the manual documents connection handling but no such pooler, and name no document and no section.",
+      "absent_probe": "pgbouncer"
+    }
+  ]
+}

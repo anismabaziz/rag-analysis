@@ -1,3 +1,7 @@
+import argparse
+
+from config.configuration import Chunker
+from core.registry import DENSE, SPARSE, UnknownArchitecture, architecture
 from data.embed import get_embed_model, get_sparse_embed_model
 from data.loader import PDFLoader
 from data.splitter import PDFSplitter
@@ -6,11 +10,19 @@ from qdrant_client import models
 from glob import glob
 
 
-def build_index(collection_name: str, enable_hybrid: bool):
+
+def build_index(
+	collection_name: str,
+	vectors: tuple[str, ...] = (DENSE,),
+	chunker: Chunker | None = None,
+):
 	"""
 	Clears the existing Qdrant collection to prevent contamination, 
-	loads raw documents, splits them into text nodes, embeds them, 
-	and indexes them into the Qdrant vector store.
+	loads raw documents, splits them into text nodes, embeds them under the vectors the
+	architecture declares, and indexes them into the Qdrant vector store.
+
+	The chunker is the one the architecture declares, so the four retrieval architectures
+	keep cutting the corpus the committed way while a chunking variant cuts it its own way.
 	"""
 
 	# delete existing collection to avoid duplicated or contaminated points
@@ -20,12 +32,13 @@ def build_index(collection_name: str, enable_hybrid: bool):
 	except Exception as e:
 			print(f"[INDEX] warning: could not reset collection: {e}")
 	qdrant_client = get_qdrant_client()
-	create_collection(qdrant_client, collection_name, enable_hybrid)
+	create_collection(qdrant_client, collection_name, vectors)
 
 
 	# initialize vector store and embedding models
 	print("[INDEX] Loading the embedding model & vector store...")
-	embedding_model = get_embed_model()
+	embedding_model = get_embed_model() if DENSE in vectors else None
+	sparse_model = get_sparse_embed_model() if SPARSE in vectors else None
 
 	# initialize loader and splitter
 	print("[INDEX] loading documents...")
@@ -33,10 +46,12 @@ def build_index(collection_name: str, enable_hybrid: bool):
 		infer_table_structure=True,
 		fallback_strategy='hi_res'
 	)
+	# the chunker is the one the architecture declares, so the run file that records it records
+	# what actually cut the corpus rather than a second copy of the same three numbers
 	splitter = PDFSplitter(
-		chunking_strategy='semantic',
-		chunk_size=512,
-		chunk_overlap=128
+		chunking_strategy=chunker.strategy,
+		chunk_size=chunker.size,
+		chunk_overlap=chunker.overlap
 	)
 
 	# find all pdfs
@@ -58,38 +73,20 @@ def build_index(collection_name: str, enable_hybrid: bool):
 
 		for node in nodes:
 
-			# generate dense embeddings
-			dense_embedding = list(embedding_model.embed([node['text']]))[0]
+			# embed the chunk under each vector this architecture retrieves on
+			point_vector = {
+				name: embed_vector(name, node['text'], embedding_model, sparse_model)
+				for name in vectors
+			}
 
-			# create point
-			point = None
-			if enable_hybrid:
-				# generate sparse embeddings
-				sparse_embedding = create_sparse_vector(node['text'])
-
-				point = models.PointStruct(
-					id=node['node_id'],
-					vector= {
-						'dense': dense_embedding.tolist(),
-						'sparse': sparse_embedding,
-					},
-					payload= {
-						'text': node['text'],
-						'metadata': node['metadata']
-					}
-				)
-			else:
-
-				point = models.PointStruct(
-					id=node['node_id'],
-					vector= {
-						'dense': dense_embedding.tolist(),
-					},
-					payload= {
-						'text': node['text'],
-						'metadata': node['metadata']
-					}
-				)
+			point = models.PointStruct(
+				id=node['node_id'],
+				vector=point_vector,
+				payload={
+					'text': node['text'],
+					'metadata': node['metadata']
+				}
+			)
 
 			# add source file
 			point.payload['metadata']['source_file'] = pdf_path
@@ -111,12 +108,19 @@ def build_index(collection_name: str, enable_hybrid: bool):
 	return points
 
 
-def create_sparse_vector(text: str):
-	"""
-	Creates a sparse vector from text using SPLADE
-	"""
+def embed_vector(name: str, text: str, embedding_model, sparse_model):
+	"""One chunk as the named vector, so an architecture is written and queried under the same
+	names rather than under a flag meaning roughly that."""
+	if name == SPARSE:
+		return create_sparse_vector(text, sparse_model)
 
-	embedding_model = get_sparse_embed_model()
+	return list(embedding_model.embed([text]))[0].tolist()
+
+
+def create_sparse_vector(text: str, embedding_model):
+	"""
+	Creates a sparse vector from text using BM42
+	"""
 	embeddings = list(embedding_model.embed([text]))[0]
 
 	sparse_vector = models.SparseVector(
@@ -127,6 +131,29 @@ def create_sparse_vector(text: str):
 	return sparse_vector
 
 
+def main():
+	"""
+	Command line entry point so ingestion can be run without the top-level CLI.
+	"""
+	parser = argparse.ArgumentParser(
+		description="Ingest the PDFs under ./documents for one registered architecture."
+	)
+	parser.add_argument(
+		"--architecture",
+		type=str,
+		required=True,
+		help="Name of a registered architecture. Its collection is replaced, so a rerun never mixes corpora."
+	)
+
+	args = parser.parse_args()
+
+	try:
+		ingested_for = architecture(args.architecture)
+	except UnknownArchitecture as error:
+		parser.error(str(error))
+
+	ingested_for.ingest()
+
 
 if __name__ == "__main__":
-	build_index()
+	main()
