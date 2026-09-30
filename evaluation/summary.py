@@ -21,6 +21,7 @@ from evaluation.citations import citation_accuracy
 from evaluation.exact_match import exact_match_score
 from evaluation.metrics import mean, mean_or_nothing, percentile
 from evaluation.run import RESULTS_DIR, QuestionResult, RunFile, load_run_file
+from evaluation.table import cell, configuration_differences, question_means
 
 # The scope of a row built from every domain's scored questions rather than one domain's.
 POOLED_SCOPE = "pooled"
@@ -94,6 +95,29 @@ def load_runs(results_dir: Path = RESULTS_DIR) -> list[RunFile]:
 		raise FileNotFoundError(f"no run files in {results_dir}: run an architecture first")
 
 	return [load_run_file(path) for path in paths]
+
+
+def load_committed_runs(results_dir: Path = RESULTS_DIR) -> list[RunFile]:
+	"""The run files measured at the committed configuration, in a stable order.
+
+	A run against a chunking variant is left out rather than refused, because the two
+	kinds of run answer different questions and both belong in the repository. This table
+	is the retrieval comparison at one chunker, so a variant row in it would be
+	comparing a retriever against a chunker.
+	"""
+	paths = sorted(Path(results_dir).rglob("*.json"))
+	if not paths:
+		raise FileNotFoundError(f"no run files in {results_dir}: run an architecture first")
+
+	committed = [load_run_file(path) for path in paths]
+	kept = [run for run in committed if run.configuration.chunker.is_committed]
+	if not kept:
+		raise ValueError(
+			f"every run in {results_dir} was measured against a chunking variant, "
+			"and none against the committed configuration"
+		)
+
+	return kept
 
 
 def summarize(runs: list[RunFile]) -> Summary:
@@ -187,21 +211,21 @@ def render_markdown(summary: Summary) -> str:
 			row.scope,
 			str(row.questions),
 			str(row.scored),
-			*(_cell(row.recall_at.get(depth)) for depth in summary.depths),
-			*(_cell(row.ndcg_at.get(depth)) for depth in summary.depths),
+			*(cell(row.recall_at.get(depth)) for depth in summary.depths),
+			*(cell(row.ndcg_at.get(depth)) for depth in summary.depths),
 			f"{row.reciprocal_rank:.4f}",
-			_cell(row.citation_accuracy),
-			_cell(row.citation_accuracy_answerable),
-			_cell(row.citation_accuracy_unanswerable),
-			_cell(row.exact_match),
+			cell(row.citation_accuracy),
+			cell(row.citation_accuracy_answerable),
+			cell(row.citation_accuracy_unanswerable),
+			cell(row.exact_match),
 			str(row.exact_match_scored),
-			_cell(row.citation_accuracy_extractive),
+			cell(row.citation_accuracy_extractive),
 			f"{row.retrieval_latency_p50_s:.4f}",
 			f"{row.retrieval_latency_p95_s:.4f}",
-			_cell(row.generation_latency_p50_s),
-			_cell(row.generation_latency_p95_s),
+			cell(row.generation_latency_p50_s),
+			cell(row.generation_latency_p95_s),
 			str(row.total_tokens),
-			_cell(row.total_tokens_mean),
+			cell(row.total_tokens_mean),
 		]
 		lines.append("| " + " | ".join(cells) + " |")
 
@@ -415,15 +439,7 @@ def _question_means(scored: list[QuestionResult], field: str) -> dict[str, float
 	The depths are the ones the questions recorded, not a list kept here, so a summary built
 	from run files can never disagree with the files about which depths exist.
 	"""
-	depths = sorted(
-		{depth for result in scored for depth in (getattr(result, field) or {})},
-		key=int,
-	)
-
-	return {
-		depth: mean(getattr(result, field).get(depth) for result in scored if getattr(result, field))
-		for depth in depths
-	}
+	return question_means(scored, field)
 
 
 def _check_isolation(runs: list[RunFile]) -> None:
@@ -436,29 +452,9 @@ def _check_isolation(runs: list[RunFile]) -> None:
 	first = runs[0].configuration.model_dump()
 
 	for run in runs[1:]:
-		differences = _differences(first, run.configuration.model_dump())
+		differences = configuration_differences(first, run.configuration.model_dump())
 		if differences:
 			raise ValueError(
 				f"{run.architecture} on {run.domain} was measured at a different configuration: "
 				f"{', '.join(differences)}. Re-run every architecture at the committed configuration."
 			)
-
-
-def _differences(first: dict, second: dict, prefix: str = "") -> list[str]:
-	"""The dotted paths where two recorded configurations disagree."""
-	found = []
-
-	for key in sorted(set(first) | set(second)):
-		path = f"{prefix}{key}"
-		left, right = first.get(key), second.get(key)
-		if isinstance(left, dict) and isinstance(right, dict):
-			found.extend(_differences(left, right, f"{path}."))
-		elif left != right:
-			found.append(path)
-
-	return found
-
-
-def _cell(value: float | None) -> str:
-	"""One metric as the table shows it, or a dash when the run never recorded that depth."""
-	return f"{value:.4f}" if value is not None else "-"

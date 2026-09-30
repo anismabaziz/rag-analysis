@@ -12,7 +12,7 @@ incomparable, and the run would be recording its own isolation rather than demon
 
 from pydantic import BaseModel, ConfigDict
 
-from config.params import Params
+from config.params import HIERARCHICAL, HIERARCHICAL_PARENT_FACTOR, Params
 from core.prompt import answer_prompt, prompt_fingerprint
 from data.embed import dense_encoder, rerank_encoder, sparse_encoder
 
@@ -32,13 +32,45 @@ class Encoder(BaseModel):
 
 
 class Chunker(BaseModel):
-	"""How the corpus was cut into chunks, which decides what retrieval can return at all."""
+	"""How the corpus was cut into chunks, which decides what retrieval can return at all.
+
+	`parent_size` is the size a hierarchical strategy indexed whole sections at, and is
+	nothing for the strategies that cut into one size. It is recorded because a strategy
+	indexing parents alongside children can return a whole section where another returns
+	a slice, and that is the difference an answer-quality figure would have to state.
+
+	`is_committed` says whether this is the chunker every run is measured at. A run file
+	recorded against a variant says so, which is what keeps the two kinds of run from
+	being compared as if they shared a setup.
+	"""
 
 	model_config = ConfigDict(extra="forbid")
 
 	strategy: str
 	size: int
 	overlap: int
+	parent_size: int | None = None
+	is_committed: bool = True
+
+	@classmethod
+	def committed(cls) -> "Chunker":
+		"""The chunker every run is measured at, read from the one place it is named."""
+		return cls(
+			strategy=Params.CHUNKER_STRATEGY,
+			size=Params.CHUNK_SIZE,
+			overlap=Params.CHUNK_OVERLAP,
+		)
+
+	@classmethod
+	def variant(cls, strategy: str, size: int, overlap: int) -> "Chunker":
+		"""A chunker that replaces the committed one, as a chunking comparison needs."""
+		return cls(
+			strategy=strategy,
+			size=size,
+			overlap=overlap,
+			parent_size=HIERARCHICAL_PARENT_FACTOR * size if strategy == HIERARCHICAL else None,
+			is_committed=False,
+		)
 
 
 class Configuration(BaseModel):
@@ -63,8 +95,13 @@ class Configuration(BaseModel):
 	chunker: Chunker
 
 
-def frozen_configuration() -> Configuration:
-	"""The configuration every run is measured at, read from the one place each value is named."""
+def frozen_configuration(chunker: Chunker | None = None) -> Configuration:
+	"""The configuration every run is measured at, read from the one place each value is named.
+
+	A chunker passed in is what the run records, because a chunking variant is measured at
+	the strategy it declares rather than the committed one. Left out, the committed chunker
+	is recorded, which is what every retrieval architecture is measured at.
+	"""
 	dense, sparse = dense_encoder(), sparse_encoder()
 	rerank = rerank_encoder()
 
@@ -78,9 +115,5 @@ def frozen_configuration() -> Configuration:
 		rerank_model=Encoder(name=rerank.name, revision=rerank.revision),
 		retrieval_depth=Params.TOP_K,
 		rerank_candidates=Params.RERANK_CANDIDATES,
-		chunker=Chunker(
-			strategy=Params.CHUNKER_STRATEGY,
-			size=Params.CHUNK_SIZE,
-			overlap=Params.CHUNK_OVERLAP,
-		),
+		chunker=chunker or Chunker.committed(),
 	)

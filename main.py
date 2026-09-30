@@ -90,6 +90,22 @@ async def main():
 		help="Write the markdown table to this file as well as printing it",
 	)
 
+	# summarize-chunking command
+	chunking_parser = subparsers.add_parser(
+		"summarize-chunking",
+		help="Read every run file and print the retrieval-only chunking comparison table"
+	)
+	chunking_parser.add_argument(
+		"--results-dir",
+		default=None,
+		help="Where the run files live. Defaults to results/runs/",
+	)
+	chunking_parser.add_argument(
+		"--out",
+		default=None,
+		help="Write the markdown table to this file as well as printing it",
+	)
+
 	# clear command
 	clear_parser = subparsers.add_parser(
 		"clear",
@@ -145,6 +161,11 @@ async def main():
 
 		summarize_command(args, parser)
 
+	elif args.command == "summarize-chunking":
+		print("[CLI] Summarizing the chunking comparison...")
+
+		summarize_chunking_command(args, parser)
+
 	elif args.command == "clear":
 		print("[CLI] Clearing vector store...")
 
@@ -193,19 +214,43 @@ async def run_command(args, parser):
 
 
 def summarize_command(args, parser):
-	"""Print the pooled and per-domain retrieval table over every run file, and file it if asked.
+	"""Print the pooled and per-domain retrieval table over the run files, and file it if asked.
 
-	The table is generated from the run files on every invocation, so it can never drift from
-	what the runs recorded the way a hand-written table would. Runs measured at different
-	configurations are refused rather than blended, because such a row would compare setups
-	instead of retrievers.
+	Runs measured against a chunker other than the committed one are left out, because
+	this table compares retrievers at one chunker and belongs in the chunking comparison.
+	Runs measured at different committed configurations are refused rather than blended,
+	because such a row would compare setups instead of retrievers.
 	"""
-	from evaluation.summary import load_runs, render_markdown, summarize
+	from evaluation.summary import load_committed_runs, render_markdown, summarize
 
+	render_table(args, parser, load_committed_runs, summarize, render_markdown)
+
+
+def summarize_chunking_command(args, parser):
+	"""Print the retrieval-only chunking comparison over the run files, and file it if asked.
+
+	The table holds retrieval metrics alone, with the token budget stated, because
+	whole sections and variable semantic lengths mean the generator would not read the
+	same context. Runs differing beyond the chunker are refused rather than blended,
+	because such a row would compare setups instead of chunkers.
+	"""
+	from evaluation.chunking import load_chunking_runs, render_chunking_markdown, summarize_chunking
+
+	render_table(args, parser, load_chunking_runs, summarize_chunking, render_chunking_markdown)
+
+
+def render_table(args, parser, load, summarize, render):
+	"""Read the run files, render one table over them, and print it or file it as asked.
+
+	Both tables are read, summarized, and written the same way, and a table is generated
+	on every invocation rather than kept as a document, so it can never drift from the
+	run files it was read from. A directory that cannot be read is a usage error naming
+	what was wrong, not a half-printed table.
+	"""
 	results_dir = Path(args.results_dir) if args.results_dir else RESULTS_DIR
 
 	try:
-		table = render_markdown(summarize(load_runs(results_dir)))
+		table = render(summarize(load(results_dir)))
 	except (FileNotFoundError, ValueError) as error:
 		parser.error(str(error))
 

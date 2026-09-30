@@ -1,6 +1,6 @@
 import argparse
 
-from config.params import Params
+from config.configuration import Chunker
 from core.registry import DENSE, SPARSE, UnknownArchitecture, architecture
 from data.embed import get_embed_model, get_sparse_embed_model
 from data.loader import PDFLoader
@@ -11,11 +11,18 @@ from glob import glob
 
 
 
-def build_index(collection_name: str, vectors: tuple[str, ...] = (DENSE,)):
+def build_index(
+	collection_name: str,
+	vectors: tuple[str, ...] = (DENSE,),
+	chunker: Chunker | None = None,
+):
 	"""
 	Clears the existing Qdrant collection to prevent contamination, 
 	loads raw documents, splits them into text nodes, embeds them under the vectors the
 	architecture declares, and indexes them into the Qdrant vector store.
+
+	The chunker is the one the architecture declares, so the four retrieval architectures
+	keep cutting the corpus the committed way while a chunking variant cuts it its own way.
 	"""
 
 	# delete existing collection to avoid duplicated or contaminated points
@@ -39,12 +46,12 @@ def build_index(collection_name: str, vectors: tuple[str, ...] = (DENSE,)):
 		infer_table_structure=True,
 		fallback_strategy='hi_res'
 	)
-	# the chunker settings come from the frozen configuration, so the run file that records them
-	# records what actually cut the corpus rather than a second copy of the same three numbers
+	# the chunker is the one the architecture declares, so the run file that records it records
+	# what actually cut the corpus rather than a second copy of the same three numbers
 	splitter = PDFSplitter(
-		chunking_strategy=Params.CHUNKER_STRATEGY,
-		chunk_size=Params.CHUNK_SIZE,
-		chunk_overlap=Params.CHUNK_OVERLAP
+		chunking_strategy=chunker.strategy,
+		chunk_size=chunker.size,
+		chunk_overlap=chunker.overlap
 	)
 
 	# find all pdfs

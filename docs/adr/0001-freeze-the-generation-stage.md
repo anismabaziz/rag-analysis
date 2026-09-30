@@ -5,6 +5,10 @@ Every architecture shares one prompt, one generation model, one temperature (0),
 and its revision, `top_k`, and temperature, so the isolation is verifiable from the output file
 rather than asserted in prose.
 
+The chunking comparison varies the chunker and reports retrieval metrics only. It is recorded in
+[0006](0006-compare-chunking-on-retrieval-only.md), and the reasoning below still governs the
+retrieval comparison this decision is about.
+
 ## Considered Options
 
 Tuning the prompt per architecture was rejected. It would likely raise every architecture's

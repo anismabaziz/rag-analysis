@@ -45,3 +45,15 @@ class Params:
   CHUNKER_STRATEGY = "semantic"
   CHUNK_SIZE = 512
   CHUNK_OVERLAP = 128
+
+# The strategies a chunking comparison runs. Named once so a variant, the record of it, and
+# the table over it cannot disagree about what the options are.
+FIXED = "fixed"
+SEMANTIC = "semantic"
+HIERARCHICAL = "hierarchical"
+CHUNKING_STRATEGIES = (FIXED, SEMANTIC, HIERARCHICAL)
+
+# How much larger than its children a hierarchical strategy cuts a whole section. A parent
+# chunked at four times the child size holds the section the child was cut from, and a run
+# file records that size so the context a retrieved chunk can carry is visible.
+HIERARCHICAL_PARENT_FACTOR = 4

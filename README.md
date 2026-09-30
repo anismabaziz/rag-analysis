@@ -30,9 +30,47 @@ the sparse signal doing the work or the fusion doing it, and the table would not
 `hybrid` indexes a dense vector (all-MiniLM-L6-v2) alongside a BM42 sparse vector for the same
 chunk, then fuses two ranked candidate lists with reciprocal rank fusion.
 
+`rerank` does the same over a wider candidate set and orders the survivors with a cross-encoder.
+
 Each is ingested into its own Qdrant collection, so a rerun never mixes corpora and one
-architecture can never retrieve the other's points. Generation is frozen to one model
+architecture can never retrieve another's points. Generation is frozen to one model
 (`llama-3.3-70b-versatile`) at temperature 0 with a single shared prompt, for the same reason.
+
+Three more, `chunk-fixed`, `chunk-semantic`, and `chunk-hierarchical`, are the chunking
+comparison and are not part of the retrieval table. They differ from `naive` in one thing only:
+how the corpus was cut before indexing.
+
+## Chunking
+
+How the corpus is cut decides what retrieval can return at all, so the three strategies are
+compared on their own. `chunk-fixed` cuts sentence-sized pieces, `chunk-semantic` cuts at
+meaning boundaries, and `chunk-hierarchical` indexes whole sections alongside their slices. All
+three retrieve with the same dense retriever at the same depth, so the chunker is the only axis
+that varies.
+
+The comparison is on retrieval metrics only. A hierarchical chunk can be a whole section where
+another strategy returns a slice, and semantic splits come out at different lengths than fixed
+ones, so the generator would not read the same context either way. A single answer-quality figure
+across the three would be a measurement of how much text retrieval returned, not of chunking. Any
+answer-quality figure reported across strategies states its token matching explicitly.
+
+```bash
+uv run rag-analysis ingest chunk-fixed
+uv run rag-analysis ingest chunk-semantic
+uv run rag-analysis ingest chunk-hierarchical
+
+uv run rag-analysis run chunk-fixed --domain papers
+uv run rag-analysis run chunk-semantic --domain papers
+uv run rag-analysis run chunk-hierarchical --domain papers
+
+uv run rag-analysis summarize-chunking
+uv run rag-analysis summarize-chunking --out results/chunking.md
+```
+
+The table states the token budget, measured from the retrieved text rather than taken from the
+nominal chunk size, and says whether it came out matched. The main `summarize` table leaves these
+runs out, because a row spanning two chunkers would be comparing setups rather than retrievers.
+The reasoning is in [docs/adr/0006](docs/adr/0006-compare-chunking-on-retrieval-only.md).
 
 ## Setup
 
@@ -88,6 +126,9 @@ uv run rag-analysis run naive --domain papers --cache-dir /tmp/responses
 # read every run file back as one pooled and per-domain retrieval table
 uv run rag-analysis summarize
 uv run rag-analysis summarize --out results/summary.md
+
+# read the chunking comparison, retrieval metrics only
+uv run rag-analysis summarize-chunking --out results/chunking.md
 
 # drop a collection and start over
 uv run rag-analysis clear rag_naive
@@ -168,7 +209,7 @@ cache, so a test run never writes into the committed one.
 
 | Path | What lives there |
 | --- | --- |
-| `main.py` | CLI: ingest, query, run, summarize, architectures, clear, fetch-corpus, verify-corpus |
+| `main.py` | CLI: ingest, query, run, summarize, summarize-chunking, architectures, clear, fetch-corpus, verify-corpus |
 | `build_index.py` | PDF loading, chunking, embedding, indexing into Qdrant |
 | `corpus/` | The corpus manifest, and fetching and verifying the documents it names |
 | `evaluation/` | The hand-written questions each domain is scored on, the rules their labels satisfy, and the run that scores an architecture against them |

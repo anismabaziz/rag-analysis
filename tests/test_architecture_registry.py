@@ -19,6 +19,9 @@ from architectures.hybrid import HybridRAG
 from architectures.naive import NaiveRAG
 from architectures.rerank import RerankRAG
 from architectures.sparse import SparseRAG
+from architectures.chunk_fixed import ChunkFixedRAG
+from architectures.chunk_semantic import ChunkSemanticRAG
+from architectures.chunk_hierarchical import ChunkHierarchicalRAG
 from core import registry
 
 PYPROJECT = Path(__file__).resolve().parent.parent / "pyproject.toml"
@@ -81,13 +84,24 @@ def declared_architecture(tmp_path, monkeypatch):
 def no_store(monkeypatch):
 	"""Records anything that would reach the store, so a rejected name can be shown to stop short."""
 	ingested = []
-	monkeypatch.setattr("build_index.build_index", lambda collection, vectors: ingested.append((collection, vectors)))
+	monkeypatch.setattr(
+		"build_index.build_index",
+		lambda collection, vectors, **kwargs: ingested.append((collection, vectors)),
+	)
 	return ingested
 
 
 def test_every_architecture_is_registered_by_declaration():
 	"""Nothing lists architectures anymore, so these are the only place the names exist."""
-	assert {architecture.name for architecture in registry.all_architectures()} == {"naive", "sparse", "hybrid", "rerank"}
+	assert {architecture.name for architecture in registry.all_architectures()} == {
+		"naive",
+		"sparse",
+		"hybrid",
+		"rerank",
+		"chunk-fixed",
+		"chunk-semantic",
+		"chunk-hierarchical",
+	}
 
 
 def test_listing_prints_every_registered_architecture(capsys):
@@ -132,7 +146,15 @@ def test_ingestion_reads_the_collection_the_architecture_declares(no_store):
 def test_querying_reads_the_pipeline_the_architecture_declares(monkeypatch):
 	monkeypatch.setattr(registry, "get_generation_llm", lambda: "llm")
 	monkeypatch.setattr(registry, "get_embed_model", lambda: "encoder")
-	pipelines = (("naive", NaiveRAG), ("sparse", SparseRAG), ("hybrid", HybridRAG), ("rerank", RerankRAG))
+	pipelines = (
+		("naive", NaiveRAG),
+		("sparse", SparseRAG),
+		("hybrid", HybridRAG),
+		("rerank", RerankRAG),
+		("chunk-fixed", ChunkFixedRAG),
+		("chunk-semantic", ChunkSemanticRAG),
+		("chunk-hierarchical", ChunkHierarchicalRAG),
+	)
 
 	assert {name for name, _ in pipelines} == {a.name for a in registry.all_architectures()}
 	for architecture, expected in pipelines:

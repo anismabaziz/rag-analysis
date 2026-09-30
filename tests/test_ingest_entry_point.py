@@ -28,7 +28,10 @@ class CliUnderTest:
 def ingested(monkeypatch):
 	"""Every ingestion any command asked for, in the form it asked for it."""
 	recorded = []
-	monkeypatch.setattr("build_index.build_index", lambda collection, vectors: recorded.append((collection, vectors)))
+	monkeypatch.setattr(
+		"build_index.build_index",
+		lambda collection, vectors, **kwargs: recorded.append((collection, vectors)),
+	)
 	return recorded
 
 

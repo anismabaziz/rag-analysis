@@ -303,7 +303,7 @@ async def run_evaluation(
 	registered = architecture(architecture_name)
 	manifest = load_manifest()
 	evaluation_set = load_evaluation_set(domain, manifest=manifest)
-	configuration = frozen_configuration()
+	configuration = frozen_configuration(registered.resolved_chunker())
 	revision = current_revision(root)
 
 	pipeline = registered.build()

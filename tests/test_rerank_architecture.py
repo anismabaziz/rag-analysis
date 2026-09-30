@@ -118,7 +118,8 @@ def test_rerank_is_registered_with_its_own_collection_and_hybrid_vectors():
 def test_rerank_is_ingestible_without_a_dispatcher_edit(monkeypatch):
 	ingested = []
 	monkeypatch.setattr(
-		"build_index.build_index", lambda collection, vectors: ingested.append((collection, vectors))
+		"build_index.build_index",
+		lambda collection, vectors, **kwargs: ingested.append((collection, vectors)),
 	)
 
 	registry.architecture("rerank").ingest()

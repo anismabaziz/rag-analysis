@@ -60,15 +60,24 @@ def run_over_results(tmp_path, monkeypatch, architecture, domain, chunks_for):
 	)
 
 
+def retrieval_architectures():
+	"""The architectures the main table compares: the ones measured at the committed chunker.
+
+	Chunking variants declare their own chunker, so they are compared in the
+	retrieval-only chunking table instead of appearing here.
+	"""
+	return [registered for registered in registry.all_architectures() if registered.chunker is None]
+
+
 def every_architecture_two_domains(tmp_path, monkeypatch):
-	"""One run of each registered architecture over each domain, written where runs are written.
+	"""One run of each retrieval architecture over each domain, written where runs are written.
 
 	Dense finds the passages and the rest find nothing, so the rows differ rather than repeating.
 	"""
 	finders = {"naive": found_everywhere}
 
 	for domain in ("papers", "manuals"):
-		for registered in registry.all_architectures():
+		for registered in retrieval_architectures():
 			run_over_results(
 				tmp_path, monkeypatch, registered.name, domain, finders.get(registered.name, found_nothing)
 			)
@@ -82,10 +91,10 @@ def test_every_architecture_is_compared_in_one_table(tmp_path, monkeypatch, offl
 	The sparse architecture is in the table because without it a gain over dense could be the
 	sparse signal alone, and no row would say which of the two parts did the work.
 	"""
-	from evaluation.summary import load_runs, render_markdown, summarize
+	from evaluation.summary import load_committed_runs, render_markdown, summarize
 
-	registered_names = {registered.name for registered in registry.all_architectures()}
-	table = render_markdown(summarize(load_runs(every_architecture_two_domains(tmp_path, monkeypatch))))
+	registered_names = {registered.name for registered in retrieval_architectures()}
+	table = render_markdown(summarize(load_committed_runs(every_architecture_two_domains(tmp_path, monkeypatch))))
 
 	assert "sparse" in registered_names
 	for name in registered_names:
@@ -93,9 +102,9 @@ def test_every_architecture_is_compared_in_one_table(tmp_path, monkeypatch, offl
 
 
 def test_the_sparse_architecture_is_reported_pooled_and_per_domain(tmp_path, monkeypatch, offline):
-	from evaluation.summary import load_runs, summarize
+	from evaluation.summary import load_committed_runs, summarize
 
-	summary = summarize(load_runs(every_architecture_two_domains(tmp_path, monkeypatch)))
+	summary = summarize(load_committed_runs(every_architecture_two_domains(tmp_path, monkeypatch)))
 	scopes = {row.scope for row in summary.rows if row.architecture == "sparse"}
 
 	assert scopes == {"papers", "manuals", "pooled"}
@@ -104,10 +113,10 @@ def test_the_sparse_architecture_is_reported_pooled_and_per_domain(tmp_path, mon
 def test_every_metric_is_reported_pooled_and_per_domain(tmp_path, monkeypatch, offline):
 	"""A pooled average alone would hide the boundary the claim is about, so each domain gets
 	its own row and the pool gets one computed over every scored question."""
-	from evaluation.summary import load_runs, render_markdown, summarize
+	from evaluation.summary import load_committed_runs, render_markdown, summarize
 
 	runs = every_architecture_two_domains(tmp_path, monkeypatch)
-	table = render_markdown(summarize(load_runs(runs)))
+	table = render_markdown(summarize(load_committed_runs(runs)))
 
 	assert "| papers |" in table
 	assert "| manuals |" in table
@@ -119,10 +128,10 @@ def test_every_metric_is_reported_pooled_and_per_domain(tmp_path, monkeypatch, o
 def test_the_pooled_row_is_the_mean_over_every_scored_question(tmp_path, monkeypatch, offline):
 	"""The pool is questions, not a mean of domain means: every scored per-question result
 	counts once, however uneven the domains are."""
-	from evaluation.summary import load_runs, summarize
+	from evaluation.summary import load_committed_runs, summarize
 
 	runs = every_architecture_two_domains(tmp_path, monkeypatch)
-	summary = summarize(load_runs(runs))
+	summary = summarize(load_committed_runs(runs))
 
 	naive_files = [load_run_file(path) for path in run_files(runs) if path.name.startswith("naive-")]
 	scored = [result for run in naive_files for result in run.results if result.scored]
@@ -138,12 +147,12 @@ def test_the_pooled_row_is_the_mean_over_every_scored_question(tmp_path, monkeyp
 def test_the_table_is_generated_from_the_files_not_written_by_hand(tmp_path, monkeypatch, offline):
 	"""Changing what a run file records changes what the table shows, because the table is a
 	reading of the files rather than a document of its own."""
-	from evaluation.summary import load_runs, summarize
+	from evaluation.summary import load_committed_runs, summarize
 
 	runs = every_architecture_two_domains(tmp_path, monkeypatch)
 
 	def pooled_recall_at_1():
-		summary = summarize(load_runs(runs))
+		summary = summarize(load_committed_runs(runs))
 		return next(
 			row for row in summary.rows if row.architecture == "naive" and row.scope == "pooled"
 		)
@@ -166,7 +175,7 @@ def test_the_table_is_generated_from_the_files_not_written_by_hand(tmp_path, mon
 def test_runs_measured_at_different_configurations_are_refused(tmp_path, monkeypatch, offline):
 	"""Blending two configurations into one row would compare two setups instead of two
 	retrievers, so the summary stops rather than averaging over the difference."""
-	from evaluation.summary import load_runs, summarize
+	from evaluation.summary import load_committed_runs, summarize
 
 	runs = every_architecture_two_domains(tmp_path, monkeypatch)
 	target = next(path for path in run_files(runs) if path.name.startswith("hybrid-"))
@@ -175,15 +184,15 @@ def test_runs_measured_at_different_configurations_are_refused(tmp_path, monkeyp
 	target.write_text(json.dumps(recorded))
 
 	with pytest.raises(ValueError, match="retrieval_depth"):
-		summarize(load_runs(runs))
+		summarize(load_committed_runs(runs))
 
 
 def test_summarizing_with_no_run_files_says_so(tmp_path):
 	"""An empty table would read as a measured zero, so no files is an error instead."""
-	from evaluation.summary import load_runs
+	from evaluation.summary import load_committed_runs
 
 	with pytest.raises(FileNotFoundError, match="no run files"):
-		load_runs(tmp_path / "empty")
+		load_committed_runs(tmp_path / "empty")
 
 
 def test_the_summarize_command_writes_the_table_a_reader_asked_for(tmp_path, monkeypatch, capsys, offline):
@@ -205,6 +214,6 @@ def test_the_summarize_command_writes_the_table_a_reader_asked_for(tmp_path, mon
 
 	assert table.startswith("# Retrieval results")
 	assert table in reported
-	for name in (registered.name for registered in registry.all_architectures()):
+	for name in (registered.name for registered in retrieval_architectures()):
 		assert f"| {name} |" in table
 	assert "| pooled |" in table
