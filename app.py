@@ -230,13 +230,18 @@ with results_tab:
             f"/ {summary.generation_model} / depth {summary.retrieval_depth}"
         )
         st.caption("chunk-fixed, chunk-semantic, and chunk-hierarchical are naive dense retrieval. Only the chunking differs.")
+        deepest = summary.depths[-1]
+        st.caption(
+            f"Recall is read at depth {deepest}, the committed depth every architecture "
+            "retrieves at, so the rows compare rankings rather than context lengths."
+        )
         rows = [
             {
                 "architecture": row.architecture,
                 "scope": row.scope,
                 "questions": row.questions,
                 "scored": row.scored,
-                "recall": round(row.recall, 4),
+                f"recall@{deepest}": round(row.recall_at.get(deepest, 0.0), 4),
                 "mrr": round(row.reciprocal_rank, 4),
                 "cite": round(row.citation_accuracy, 4)
                 if row.citation_accuracy is not None

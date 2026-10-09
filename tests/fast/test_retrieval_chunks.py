@@ -181,6 +181,20 @@ def test_sparse_retrieval_asks_the_store_for_a_sparse_vector_and_nothing_else(
     assert "prefetch" not in asked
 
 
+def test_hybrid_retrieval_keeps_the_committed_depth_despite_the_fused_union(
+    monkeypatch,
+):
+    """RRF unions both prefetch lists, so without a truncation the pipeline hands back up to
+    twice the depth: a longer generation context and recall measured deeper than every other
+    architecture. The fusion keeps its ordering and drops everything past the depth."""
+    points = [indexed_point(0.9 - index * 0.1, text=f"chunk {index}") for index in range(8)]
+    architecture = architecture_with_points(HybridRAG, points, monkeypatch)
+
+    chunks = asyncio.run(architecture.retrieve("anything", top_k=5))
+
+    assert [chunk.text for chunk in chunks] == [f"chunk {index}" for index in range(5)]
+
+
 def test_retrieval_preserves_the_order_the_store_ranked_the_chunks(monkeypatch):
     points = [
         indexed_point(0.1, text="lower ranked"),

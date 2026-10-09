@@ -44,4 +44,8 @@ class HybridRAG(BaseRAG):
             query=models.FusionQuery(fusion=models.Fusion.RRF),
         )
 
-        return chunks_from_result(results)
+        # The fused ranking unions both prefetch lists, so without this the pipeline hands
+        # back up to twice the committed depth: a longer generation context and recall
+        # measured at a deeper rank than every other architecture. The depth is the same
+        # for all of them, so the fusion keeps its ordering and drops everything past it.
+        return chunks_from_result(results)[:top_k]
