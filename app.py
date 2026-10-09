@@ -21,7 +21,13 @@ from config.params import Params
 from core.chunk import REFUSAL, build_context
 from core.registry import all_architectures, architecture
 from evaluation.cache import CACHE_DIR, generate_with_cache
-from evaluation.summary import load_committed_runs, load_runs, summarize
+from evaluation.set import Stratum
+from evaluation.summary import (
+    POOLED_SCOPE,
+    load_committed_runs,
+    load_runs,
+    summarize,
+)
 from vector.store import collection_points, get_qdrant_client
 
 st.set_page_config(page_title="RAG analysis", layout="wide")
@@ -225,6 +231,13 @@ with results_tab:
             f"No run files yet: {error}. Run `uv run rag-analysis run hybrid --domain papers` first."
         )
     else:
+        st.subheader("Which retriever finds the answer?")
+        st.caption(
+            "One run per architecture over the same 32 papers questions, generation frozen, "
+            "so gaps come from retrieval alone. The claim under test: hybrid leads on "
+            "identifier-heavy questions (rare names, numbers, symbols) and trails dense-only "
+            "on paraphrased ones. Read recall@5 and mrr per slice, not the pooled average."
+        )
         st.caption(
             f"{len(summary.files)} runs at {', '.join(summary.commits)} "
             f"/ {summary.generation_model} / depth {summary.retrieval_depth}"
@@ -235,20 +248,24 @@ with results_tab:
             f"Recall is read at depth {deepest}, the committed depth every architecture "
             "retrieves at, so the rows compare rankings rather than context lengths."
         )
+        by_scope = {(row.architecture, row.scope): row for row in summary.rows}
+        identifiers = f"{POOLED_SCOPE}:{Stratum.IDENTIFIER_HEAVY.value}"
+        paraphrase = f"{POOLED_SCOPE}:{Stratum.PARAPHRASE.value}"
         rows = [
             {
-                "architecture": row.architecture,
-                "scope": row.scope,
-                "questions": row.questions,
-                "scored": row.scored,
-                f"recall@{deepest}": round(row.recall_at.get(deepest, 0.0), 4),
-                "mrr": round(row.reciprocal_rank, 4),
-                "cite": round(row.citation_accuracy, 4)
-                if row.citation_accuracy is not None
-                else None,
-                "retrieval_p50_s": round(row.retrieval_latency_p50_s, 4),
+                "architecture": name,
+                f"recall@{deepest}": round(
+                    by_scope[(name, POOLED_SCOPE)].recall_at.get(deepest, 0.0), 4
+                ),
+                f"identifiers recall@{deepest}": round(
+                    by_scope[(name, identifiers)].recall_at.get(deepest, 0.0), 4
+                ),
+                f"paraphrase recall@{deepest}": round(
+                    by_scope[(name, paraphrase)].recall_at.get(deepest, 0.0), 4
+                ),
+                "mrr": round(by_scope[(name, POOLED_SCOPE)].reciprocal_rank, 4),
             }
-            for row in summary.rows
+            for name in sorted({row.architecture for row in summary.rows})
         ]
         st.dataframe(rows, use_container_width=True)
         scopes = sorted({run.domain for run in runs})
