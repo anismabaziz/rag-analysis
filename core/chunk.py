@@ -18,55 +18,61 @@ UNKNOWN_SOURCE = "unknown source"
 
 @dataclass(frozen=True)
 class Provenance:
-	"""Where a chunk came from, enough to point a reader at the source.
+    """Where a chunk came from, enough to point a reader at the source.
 
-	A chunk can span pages, so `page` is the first page it appears on.
-	"""
+    A chunk can span pages, so `page` is the first page it appears on.
+    """
 
-	source: str | None = None
-	section: str | None = None
-	page: int | None = None
-	node_id: str | None = None
+    source: str | None = None
+    section: str | None = None
+    page: int | None = None
+    node_id: str | None = None
 
 
 @dataclass(frozen=True)
 class Chunk:
-	"""A retrieved span of text with the score that selected it and where it lives."""
+    """A retrieved span of text with the score that selected it and where it lives."""
 
-	text: str
-	score: float
-	provenance: Provenance
+    text: str
+    score: float
+    provenance: Provenance
 
-	def citation(self) -> str:
-		"""A one-line handle for this chunk, for prompts and for reporting."""
-		source = self.provenance.source or UNKNOWN_SOURCE
-		locator = ", ".join(
-			part
-			for part in (
-				f"section {self.provenance.section}" if self.provenance.section else None,
-				f"page {self.provenance.page}" if self.provenance.page is not None else None,
-			)
-			if part
-		)
-		return f"{source} ({locator})" if locator else source
+    def citation(self) -> str:
+        """A one-line handle for this chunk, for prompts and for reporting."""
+        source = self.provenance.source or UNKNOWN_SOURCE
+        locator = ", ".join(
+            part
+            for part in (
+                f"section {self.provenance.section}"
+                if self.provenance.section
+                else None,
+                f"page {self.provenance.page}"
+                if self.provenance.page is not None
+                else None,
+            )
+            if part
+        )
+        return f"{source} ({locator})" if locator else source
 
-	def report_line(self) -> str:
-		"""How this chunk appears in a dumped query, score and provenance first."""
-		return f"score={self.score:.4f} {self.citation()} node={self.provenance.node_id}"
+    def report_line(self) -> str:
+        """How this chunk appears in a dumped query, score and provenance first."""
+        return (
+            f"score={self.score:.4f} {self.citation()} node={self.provenance.node_id}"
+        )
 
 
 def build_context(chunks: list[Chunk]) -> str:
-	"""Assemble retrieved chunks into the single context block every architecture prompts with.
+    """Assemble retrieved chunks into the single context block every architecture prompts with.
 
-	Empty retrieval produces the refusal rather than an empty string, so a run that retrieved
-	nothing is visible in its own output instead of looking like a run whose question happened
-	to need no context.
-	"""
-	if not chunks:
-		return REFUSAL
+    Empty retrieval produces the refusal rather than an empty string, so a run that retrieved
+    nothing is visible in its own output instead of looking like a run whose question happened
+    to need no context.
+    """
+    if not chunks:
+        return REFUSAL
 
-	blocks = [
-		f"[{index}] ({chunk.citation()})\n{chunk.text}"
-		for index, chunk in enumerate(chunks, start=1)
-	]
-	return "\n\n".join(blocks)
+    blocks = [
+        f"[{index}] ({chunk.citation()})\n{chunk.text}"
+        for index, chunk in enumerate(chunks, start=1)
+    ]
+    return "\n\n".join(blocks)

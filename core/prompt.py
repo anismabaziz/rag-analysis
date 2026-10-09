@@ -32,10 +32,10 @@ Answer:
 
 
 def answer_prompt() -> str:
-	"""The prompt as text, which is what a result file records."""
-	return ANSWER_PROMPT.template
+    """The prompt as text, which is what a result file records."""
+    return ANSWER_PROMPT.template
 
 
 def prompt_fingerprint() -> str:
-	"""The sha256 of the prompt, so two runs can be compared without reading it twice."""
-	return "sha256:" + hashlib.sha256(answer_prompt().encode("utf-8")).hexdigest()
+    """The sha256 of the prompt, so two runs can be compared without reading it twice."""
+    return "sha256:" + hashlib.sha256(answer_prompt().encode("utf-8")).hexdigest()

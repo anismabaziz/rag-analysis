@@ -36,17 +36,17 @@ from evaluation.citations import citation_accuracy, claim_supported, split_claim
 from evaluation.cost import estimate_tokens, rendered_prompt
 from evaluation.exact_match import exact_match_score
 from evaluation.metrics import (
-	REPORT_DEPTHS,
-	Retrieved,
-	locate,
-	mean,
-	mean_or_nothing,
-	ndcg_at,
-	percentile,
-	recall,
-	recall_at,
-	reciprocal_rank,
-	retrieved_from,
+    REPORT_DEPTHS,
+    Retrieved,
+    locate,
+    mean,
+    mean_or_nothing,
+    ndcg_at,
+    percentile,
+    recall,
+    recall_at,
+    reciprocal_rank,
+    retrieved_from,
 )
 from evaluation.set import EvaluationSet, Stratum, load_evaluation_set
 
@@ -56,568 +56,628 @@ RESULTS_DIR = Path("results/runs")
 
 
 class LocationResult(BaseModel):
-	"""One place a question is answered from, and where in the results it turned up."""
+    """One place a question is answered from, and where in the results it turned up."""
 
-	model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="forbid")
 
-	document: str
-	section: str
-	rank: int | None = Field(description="Where it was retrieved, or nothing if it was not.")
+    document: str
+    section: str
+    rank: int | None = Field(
+        description="Where it was retrieved, or nothing if it was not."
+    )
 
 
 class QuestionResult(BaseModel):
-	"""What one question retrieved and what that is worth.
+    """What one question retrieved and what that is worth.
 
-	A question with no locations is recorded with its results and no scores. It is not a zero,
-	because a zero would say the retriever missed when there was nothing to miss.
+    A question with no locations is recorded with its results and no scores. It is not a zero,
+    because a zero would say the retriever missed when there was nothing to miss.
 
-	The answer is generated from the retrieved chunks and every claim in it is checked
-	against those same chunks, so citation accuracy says whether the answer came from the
-	context it was given. An answer with no claims, which is what a refusal is, carries
-	no citation score rather than a zero.
-	"""
+    The answer is generated from the retrieved chunks and every claim in it is checked
+    against those same chunks, so citation accuracy says whether the answer came from the
+    context it was given. An answer with no claims, which is what a refusal is, carries
+    no citation score rather than a zero.
+    """
 
-	model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="forbid")
 
-	question: str
-	stratum: Stratum
-	scored: bool
-	unscored_reason: str | None = None
-	recall: float | None = None
-	reciprocal_rank: float | None = None
-	recall_at: dict[str, float] | None = Field(
-		default=None,
-		description="Recall read off the one retrieval at each reported depth, keyed by depth.",
-	)
-	ndcg_at: dict[str, float] | None = Field(
-		default=None,
-		description="Discounted gain read off the one retrieval at each reported depth, keyed by depth.",
-	)
-	locations: list[LocationResult] = Field(default_factory=list)
-	retrieved: list[Retrieved] = Field(default_factory=list)
-	answer: str = ""
-	claims: list[str] = Field(default_factory=list)
-	claims_supported: int = 0
-	claims_total: int = 0
-	citation_accuracy: float | None = Field(
-		default=None,
-		description="Share of the answer's claims one retrieved chunk each supports, or nothing when it makes none.",
-	)
-	extractive: bool = Field(
-		default=False,
-		description="Whether the question carries a gold span to match exactly.",
-	)
-	gold_answer: str | None = Field(
-		default=None,
-		description="The short span copied from the source, present on extractive questions only.",
-	)
-	exact_match: float | None = Field(
-		default=None,
-		description="One for an exact match on an extractive question, zero for a miss, nothing when not extractive.",
-	)
-	retrieval_latency_s: float = Field(
-		default=0.0,
-		description="Seconds the retrieval call took for this question.",
-	)
-	generation_latency_s: float | None = Field(
-		default=None,
-		description="Seconds the generation call took, or nothing when empty retrieval never reached the model.",
-	)
-	prompt_tokens: int | None = Field(
-		default=None,
-		description="Words in the rendered prompt, or nothing when nothing was generated.",
-	)
-	completion_tokens: int | None = Field(
-		default=None,
-		description="Words in the generated answer, or nothing when nothing was generated.",
-	)
-	total_tokens: int | None = Field(
-		default=None,
-		description="Prompt plus completion words, or nothing when nothing was generated.",
-	)
+    question: str
+    stratum: Stratum
+    scored: bool
+    unscored_reason: str | None = None
+    recall: float | None = None
+    reciprocal_rank: float | None = None
+    recall_at: dict[str, float] | None = Field(
+        default=None,
+        description="Recall read off the one retrieval at each reported depth, keyed by depth.",
+    )
+    ndcg_at: dict[str, float] | None = Field(
+        default=None,
+        description="Discounted gain read off the one retrieval at each reported depth, keyed by depth.",
+    )
+    locations: list[LocationResult] = Field(default_factory=list)
+    retrieved: list[Retrieved] = Field(default_factory=list)
+    answer: str = ""
+    claims: list[str] = Field(default_factory=list)
+    claims_supported: int = 0
+    claims_total: int = 0
+    citation_accuracy: float | None = Field(
+        default=None,
+        description="Share of the answer's claims one retrieved chunk each supports, or nothing when it makes none.",
+    )
+    extractive: bool = Field(
+        default=False,
+        description="Whether the question carries a gold span to match exactly.",
+    )
+    gold_answer: str | None = Field(
+        default=None,
+        description="The short span copied from the source, present on extractive questions only.",
+    )
+    exact_match: float | None = Field(
+        default=None,
+        description="One for an exact match on an extractive question, zero for a miss, nothing when not extractive.",
+    )
+    retrieval_latency_s: float = Field(
+        default=0.0,
+        description="Seconds the retrieval call took for this question.",
+    )
+    generation_latency_s: float | None = Field(
+        default=None,
+        description="Seconds the generation call took, or nothing when empty retrieval never reached the model.",
+    )
+    prompt_tokens: int | None = Field(
+        default=None,
+        description="Words in the rendered prompt, or nothing when nothing was generated.",
+    )
+    completion_tokens: int | None = Field(
+        default=None,
+        description="Words in the generated answer, or nothing when nothing was generated.",
+    )
+    total_tokens: int | None = Field(
+        default=None,
+        description="Prompt plus completion words, or nothing when nothing was generated.",
+    )
 
 
 class Aggregates(BaseModel):
-	"""The numbers over the questions a run could score, and how many it could not.
+    """The numbers over the questions a run could score, and how many it could not.
 
-	Reciprocal rank is the mean of each question's reciprocal rank on its own first location, the
-	place the question is named after, which is what keeps a second passage found earlier from
-	counting as an answer to where the question is answered.
+    Reciprocal rank is the mean of each question's reciprocal rank on its own first location, the
+    place the question is named after, which is what keeps a second passage found earlier from
+    counting as an answer to where the question is answered.
 
-	Citation accuracy is the mean over the questions whose answers made claims, including the
-	unanswerable stratum, because answering a question the corpus never covers is the failure
-	the metric exists to show. The unanswerable slice is reported beside the answerable one so
-	a system that answers regardless reads visibly worse. Questions whose answers made no
-	claims, which is what a refusal does, are counted beside the means rather than averaged
-	as zeroes.
-	"""
+    Citation accuracy is the mean over the questions whose answers made claims, including the
+    unanswerable stratum, because answering a question the corpus never covers is the failure
+    the metric exists to show. The unanswerable slice is reported beside the answerable one so
+    a system that answers regardless reads visibly worse. Questions whose answers made no
+    claims, which is what a refusal does, are counted beside the means rather than averaged
+    as zeroes.
+    """
 
-	model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="forbid")
 
-	questions: int
-	scored: int
-	unscored: int
-	recall: float
-	reciprocal_rank: float
-	recall_at: dict[str, float] = Field(
-		description="Mean recall at each reported depth, over the scored questions only.",
-	)
-	ndcg_at: dict[str, float] = Field(
-		description="Mean discounted gain at each reported depth, over the scored questions only.",
-	)
-	citation_accuracy: float | None = Field(
-		default=None,
-		description="Mean share of supported claims, over the questions whose answers made claims.",
-	)
-	citation_accuracy_answerable: float | None = Field(
-		default=None,
-		description="The same mean over every stratum except unanswerable.",
-	)
-	citation_accuracy_unanswerable: float | None = Field(
-		default=None,
-		description="The same mean over the unanswerable stratum alone.",
-	)
-	citation_scored: int = Field(
-		default=0,
-		description="Questions whose answers made claims and carry a citation score.",
-	)
-	citation_unscored: int = Field(
-		default=0,
-		description="Questions whose answers made no claims and carry none.",
-	)
-	exact_match: float | None = Field(
-		default=None,
-		description="Mean exact match over the extractive questions.",
-	)
-	exact_match_scored: int = Field(
-		default=0,
-		description="Extractive questions carrying an exact-match score.",
-	)
-	exact_match_unscored: int = Field(
-		default=0,
-		description="Non-extractive questions carrying no exact-match score.",
-	)
-	citation_accuracy_extractive: float | None = Field(
-		default=None,
-		description="Mean citation accuracy over the extractive questions whose answers made claims.",
-	)
-	citation_extractive_scored: int = Field(
-		default=0,
-		description="Extractive questions whose answers made claims and carry a citation score.",
-	)
-	retrieval_latency_p50_s: float = Field(
-		default=0.0,
-		description="Median retrieval seconds over this run's questions.",
-	)
-	retrieval_latency_p95_s: float = Field(
-		default=0.0,
-		description="95th percentile retrieval seconds over this run's questions.",
-	)
-	generation_latency_p50_s: float | None = Field(
-		default=None,
-		description="Median generation seconds over this run's generated answers, or nothing when it generated none.",
-	)
-	generation_latency_p95_s: float | None = Field(
-		default=None,
-		description="95th percentile generation seconds over this run's generated answers, or nothing when it generated none.",
-	)
-	prompt_tokens_mean: float | None = Field(
-		default=None,
-		description="Mean prompt words over this run's generated answers.",
-	)
-	completion_tokens_mean: float | None = Field(
-		default=None,
-		description="Mean completion words over this run's generated answers.",
-	)
-	total_tokens_mean: float | None = Field(
-		default=None,
-		description="Mean prompt-plus-completion words over this run's generated answers.",
-	)
-	total_tokens: int = Field(
-		default=0,
-		description="Prompt-plus-completion words summed over this run's generated answers.",
-	)
-	generation_count: int = Field(
-		default=0,
-		description="Questions whose retrieval reached the model and were counted for cost.",
-	)
+    questions: int
+    scored: int
+    unscored: int
+    recall: float
+    reciprocal_rank: float
+    recall_at: dict[str, float] = Field(
+        description="Mean recall at each reported depth, over the scored questions only.",
+    )
+    ndcg_at: dict[str, float] = Field(
+        description="Mean discounted gain at each reported depth, over the scored questions only.",
+    )
+    citation_accuracy: float | None = Field(
+        default=None,
+        description="Mean share of supported claims, over the questions whose answers made claims.",
+    )
+    citation_accuracy_answerable: float | None = Field(
+        default=None,
+        description="The same mean over every stratum except unanswerable.",
+    )
+    citation_accuracy_unanswerable: float | None = Field(
+        default=None,
+        description="The same mean over the unanswerable stratum alone.",
+    )
+    citation_scored: int = Field(
+        default=0,
+        description="Questions whose answers made claims and carry a citation score.",
+    )
+    citation_unscored: int = Field(
+        default=0,
+        description="Questions whose answers made no claims and carry none.",
+    )
+    exact_match: float | None = Field(
+        default=None,
+        description="Mean exact match over the extractive questions.",
+    )
+    exact_match_scored: int = Field(
+        default=0,
+        description="Extractive questions carrying an exact-match score.",
+    )
+    exact_match_unscored: int = Field(
+        default=0,
+        description="Non-extractive questions carrying no exact-match score.",
+    )
+    citation_accuracy_extractive: float | None = Field(
+        default=None,
+        description="Mean citation accuracy over the extractive questions whose answers made claims.",
+    )
+    citation_extractive_scored: int = Field(
+        default=0,
+        description="Extractive questions whose answers made claims and carry a citation score.",
+    )
+    retrieval_latency_p50_s: float = Field(
+        default=0.0,
+        description="Median retrieval seconds over this run's questions.",
+    )
+    retrieval_latency_p95_s: float = Field(
+        default=0.0,
+        description="95th percentile retrieval seconds over this run's questions.",
+    )
+    generation_latency_p50_s: float | None = Field(
+        default=None,
+        description="Median generation seconds over this run's generated answers, or nothing when it generated none.",
+    )
+    generation_latency_p95_s: float | None = Field(
+        default=None,
+        description="95th percentile generation seconds over this run's generated answers, or nothing when it generated none.",
+    )
+    prompt_tokens_mean: float | None = Field(
+        default=None,
+        description="Mean prompt words over this run's generated answers.",
+    )
+    completion_tokens_mean: float | None = Field(
+        default=None,
+        description="Mean completion words over this run's generated answers.",
+    )
+    total_tokens_mean: float | None = Field(
+        default=None,
+        description="Mean prompt-plus-completion words over this run's generated answers.",
+    )
+    total_tokens: int = Field(
+        default=0,
+        description="Prompt-plus-completion words summed over this run's generated answers.",
+    )
+    generation_count: int = Field(
+        default=0,
+        description="Questions whose retrieval reached the model and were counted for cost.",
+    )
 
 
 class CorpusRecord(BaseModel):
-	"""The corpus a run was measured against, by digest rather than by directory."""
+    """The corpus a run was measured against, by digest rather than by directory."""
 
-	model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="forbid")
 
-	identifier: str
-	domain: str
-	documents: list[str]
+    identifier: str
+    domain: str
+    documents: list[str]
 
-	def short(self) -> str:
-		"""The digest as it appears in a file's name, or a word when there is no corpus."""
-		return self.identifier.split(":", 1)[1][:12] if ":" in self.identifier else "uncorpus"
+    def short(self) -> str:
+        """The digest as it appears in a file's name, or a word when there is no corpus."""
+        return (
+            self.identifier.split(":", 1)[1][:12]
+            if ":" in self.identifier
+            else "uncorpus"
+        )
 
 
 class RevisionRecord(BaseModel):
-	"""The commit a run was made at, and whether the tree was clean when it was."""
+    """The commit a run was made at, and whether the tree was clean when it was."""
 
-	model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="forbid")
 
-	sha: str | None
-	dirty: bool | None
+    sha: str | None
+    dirty: bool | None
 
-	def short(self) -> str:
-		"""The commit as it appears in a file's name, or a word when there is no commit."""
-		return self.sha[:12] if self.sha else "uncommitted"
+    def short(self) -> str:
+        """The commit as it appears in a file's name, or a word when there is no commit."""
+        return self.sha[:12] if self.sha else "uncommitted"
 
 
 class RunFile(BaseModel):
-	"""One run, written to disk: what was asked, what was measured, and under what configuration."""
+    """One run, written to disk: what was asked, what was measured, and under what configuration."""
 
-	model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="forbid")
 
-	architecture: str
-	collection: str
-	domain: str
-	commit: RevisionRecord
-	corpus: CorpusRecord
-	configuration: Configuration
-	results: list[QuestionResult]
-	aggregates: Aggregates
+    architecture: str
+    collection: str
+    domain: str
+    commit: RevisionRecord
+    corpus: CorpusRecord
+    configuration: Configuration
+    results: list[QuestionResult]
+    aggregates: Aggregates
 
 
 async def run_evaluation(
-	architecture_name: str,
-	domain: str,
-	results_dir: Path = RESULTS_DIR,
-	root: Path = Path("."),
-	cache_dir: Path = CACHE_DIR,
+    architecture_name: str,
+    domain: str,
+    results_dir: Path = RESULTS_DIR,
+    root: Path = Path("."),
+    cache_dir: Path = CACHE_DIR,
 ) -> RunFile:
-	"""Run one architecture over one domain's evaluation set, and write the file recording it.
+    """Run one architecture over one domain's evaluation set, and write the file recording it.
 
-	The architecture is resolved and the evaluation set is read and checked before anything is
-	built or contacted, so a name that does not exist or a set whose labels do not hold costs a
-	run nothing. Generated answers are read from the response cache when an identical prompt,
-	model, temperature, query, and context was answered before, so a repeated run is free and
-	identical; anything else asks the model once and writes what it said.
-	"""
-	registered = architecture(architecture_name)
-	manifest = load_manifest()
-	evaluation_set = load_evaluation_set(domain, manifest=manifest)
-	configuration = frozen_configuration(registered.resolved_chunker())
-	revision = current_revision(root)
+    The architecture is resolved and the evaluation set is read and checked before anything is
+    built or contacted, so a name that does not exist or a set whose labels do not hold costs a
+    run nothing. Generated answers are read from the response cache when an identical prompt,
+    model, temperature, query, and context was answered before, so a repeated run is free and
+    identical; anything else asks the model once and writes what it said.
+    """
+    registered = architecture(architecture_name)
+    manifest = load_manifest()
+    evaluation_set = load_evaluation_set(domain, manifest=manifest)
+    configuration = frozen_configuration(registered.resolved_chunker())
+    revision = current_revision(root)
 
-	pipeline = registered.build()
-	results = await _ask_every_question(pipeline, evaluation_set, manifest, configuration, cache_dir)
+    pipeline = registered.build()
+    results = await _ask_every_question(
+        pipeline, evaluation_set, manifest, configuration, cache_dir
+    )
 
-	run = RunFile(
-		architecture=registered.name,
-		collection=registered.collection,
-		domain=domain,
-		commit=RevisionRecord(sha=revision.sha, dirty=revision.dirty),
-		corpus=CorpusRecord(
-			identifier=corpus_identifier(manifest),
-			domain=domain,
-			documents=[document.id for document in manifest.in_domain(domain)],
-		),
-		configuration=configuration,
-		results=results,
-		aggregates=_aggregates(results),
-	)
+    run = RunFile(
+        architecture=registered.name,
+        collection=registered.collection,
+        domain=domain,
+        commit=RevisionRecord(sha=revision.sha, dirty=revision.dirty),
+        corpus=CorpusRecord(
+            identifier=corpus_identifier(manifest),
+            domain=domain,
+            documents=[document.id for document in manifest.in_domain(domain)],
+        ),
+        configuration=configuration,
+        results=results,
+        aggregates=_aggregates(results),
+    )
 
-	path = run_path(results_dir, run)
-	path.parent.mkdir(parents=True, exist_ok=True)
-	path.write_text(run.model_dump_json(indent=2) + "\n")
+    path = run_path(results_dir, run)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(run.model_dump_json(indent=2) + "\n")
 
-	report(run, path)
+    report(run, path)
 
-	return run
+    return run
 
 
 async def _ask_every_question(
-	pipeline,
-	evaluation_set: EvaluationSet,
-	manifest: Manifest,
-	configuration: Configuration,
-	cache_dir: Path = CACHE_DIR,
+    pipeline,
+    evaluation_set: EvaluationSet,
+    manifest: Manifest,
+    configuration: Configuration,
+    cache_dir: Path = CACHE_DIR,
 ) -> list[QuestionResult]:
-	"""Retrieve for every question in the set, answer from what came back, and score both.
+    """Retrieve for every question in the set, answer from what came back, and score both.
 
-	Retrieval is scored against the question's labels and the answer is scored against the
-	chunks it was answered with: each claim counts only when one retrieved chunk holds a
-	supporting span for it. Empty retrieval is never sent to the model; the refusal stands
-	in as the answer, produces no claims, and carries no citation score.
+    Retrieval is scored against the question's labels and the answer is scored against the
+    chunks it was answered with: each claim counts only when one retrieved chunk holds a
+    supporting span for it. Empty retrieval is never sent to the model; the refusal stands
+    in as the answer, produces no claims, and carries no citation score.
 
-	Non-empty retrieval answers through the response cache, so a repeated run returns the same
-	answer without calling the model again.
+    Non-empty retrieval answers through the response cache, so a repeated run returns the same
+    answer without calling the model again.
 
-	Each stage is timed on its own, so a reader comparing architectures can see whether a
-	quality gain moved retrieval or generation. Token cost is counted from the rendered
-	prompt and the answer, deterministically and without calling anything, so the same
-	run always reports the same cost.
-	"""
-	import time
+    Each stage is timed on its own, so a reader comparing architectures can see whether a
+    quality gain moved retrieval or generation. Token cost is counted from the rendered
+    prompt and the answer, deterministically and without calling anything, so the same
+    run always reports the same cost.
+    """
+    import time
 
-	results = []
-	total = len(evaluation_set.questions)
+    results = []
+    total = len(evaluation_set.questions)
 
-	for number, question in enumerate(evaluation_set.questions, start=1):
-		started = time.perf_counter()
-		chunks = await pipeline.retrieve(question.question, top_k=configuration.retrieval_depth)
-		retrieval_latency = time.perf_counter() - started
-		retrieved = retrieved_from(chunks, manifest)
-		locations = question.all_locations()
-		depths = [depth for depth in REPORT_DEPTHS if depth <= configuration.retrieval_depth]
-		if not chunks:
-			answer = REFUSAL
-			generation_latency = None
-			prompt_tokens = None
-			completion_tokens = None
-			total_question_tokens = None
-		else:
-			context = build_context(chunks)
-			started = time.perf_counter()
-			answer = await generate_with_cache(
-				pipeline, configuration, question.question, context, cache_dir
-			)
-			generation_latency = time.perf_counter() - started
-			prompt_tokens = estimate_tokens(
-				rendered_prompt(configuration.prompt, context, question.question)
-			)
-			completion_tokens = estimate_tokens(answer)
-			total_question_tokens = prompt_tokens + completion_tokens
-		claims = split_claims(answer)
-		supported = sum(1 for claim in claims if claim_supported(claim, chunks))
+    for number, question in enumerate(evaluation_set.questions, start=1):
+        started = time.perf_counter()
+        chunks = await pipeline.retrieve(
+            question.question, top_k=configuration.retrieval_depth
+        )
+        retrieval_latency = time.perf_counter() - started
+        retrieved = retrieved_from(chunks, manifest)
+        locations = question.all_locations()
+        depths = [
+            depth for depth in REPORT_DEPTHS if depth <= configuration.retrieval_depth
+        ]
+        if not chunks:
+            answer = REFUSAL
+            generation_latency = None
+            prompt_tokens = None
+            completion_tokens = None
+            total_question_tokens = None
+        else:
+            context = build_context(chunks)
+            started = time.perf_counter()
+            answer = await generate_with_cache(
+                pipeline, configuration, question.question, context, cache_dir
+            )
+            generation_latency = time.perf_counter() - started
+            prompt_tokens = estimate_tokens(
+                rendered_prompt(configuration.prompt, context, question.question)
+            )
+            completion_tokens = estimate_tokens(answer)
+            total_question_tokens = prompt_tokens + completion_tokens
+        claims = split_claims(answer)
+        supported = sum(1 for claim in claims if claim_supported(claim, chunks))
 
-		result = QuestionResult(
-			question=question.id,
-			stratum=question.stratum,
-			scored=bool(locations),
-			unscored_reason=None if locations else "names no place in the corpus to look in",
-			recall=recall(retrieved, locations) if locations else None,
-			reciprocal_rank=reciprocal_rank(retrieved, locations[0]) if locations else None,
-			recall_at={str(depth): recall_at(retrieved, locations, depth) for depth in depths}
-			if locations
-			else None,
-			ndcg_at={str(depth): ndcg_at(retrieved, locations, depth) for depth in depths}
-			if locations
-			else None,
-			locations=[
-				LocationResult(
-					document=location.document,
-					section=location.section,
-					rank=locate(retrieved, location),
-				)
-				for location in locations
-			],
-			retrieved=retrieved,
-			answer=answer,
-			claims=claims,
-			claims_supported=supported,
-			claims_total=len(claims),
-			citation_accuracy=citation_accuracy(answer, chunks),
-			extractive=question.extractive,
-			gold_answer=question.gold_answer,
-			exact_match=exact_match_score(answer, question.gold_answer, question.extractive),
-			retrieval_latency_s=retrieval_latency,
-			generation_latency_s=generation_latency,
-			prompt_tokens=prompt_tokens,
-			completion_tokens=completion_tokens,
-			total_tokens=total_question_tokens,
-		)
+        result = QuestionResult(
+            question=question.id,
+            stratum=question.stratum,
+            scored=bool(locations),
+            unscored_reason=None
+            if locations
+            else "names no place in the corpus to look in",
+            recall=recall(retrieved, locations) if locations else None,
+            reciprocal_rank=reciprocal_rank(retrieved, locations[0])
+            if locations
+            else None,
+            recall_at={
+                str(depth): recall_at(retrieved, locations, depth) for depth in depths
+            }
+            if locations
+            else None,
+            ndcg_at={
+                str(depth): ndcg_at(retrieved, locations, depth) for depth in depths
+            }
+            if locations
+            else None,
+            locations=[
+                LocationResult(
+                    document=location.document,
+                    section=location.section,
+                    rank=locate(retrieved, location),
+                )
+                for location in locations
+            ],
+            retrieved=retrieved,
+            answer=answer,
+            claims=claims,
+            claims_supported=supported,
+            claims_total=len(claims),
+            citation_accuracy=citation_accuracy(answer, chunks),
+            extractive=question.extractive,
+            gold_answer=question.gold_answer,
+            exact_match=exact_match_score(
+                answer, question.gold_answer, question.extractive
+            ),
+            retrieval_latency_s=retrieval_latency,
+            generation_latency_s=generation_latency,
+            prompt_tokens=prompt_tokens,
+            completion_tokens=completion_tokens,
+            total_tokens=total_question_tokens,
+        )
 
-		results.append(result)
-		print(f"[RUN] {number}/{total} {question.id} {_score_line(result)}")
+        results.append(result)
+        print(f"[RUN] {number}/{total} {question.id} {_score_line(result)}")
 
-	return results
+    return results
 
 
 def _score_line(result: QuestionResult) -> str:
-	"""How one question scored, for the line the run prints as it goes."""
-	if result.citation_accuracy is None:
-		cited = "citation=n/a"
-	else:
-		cited = f"citation={result.citation_accuracy:.2f}"
-	if result.exact_match is None:
-		matched = "exact_match=n/a"
-	else:
-		matched = f"exact_match={result.exact_match:.2f}"
-	if not result.scored:
-		return f"not scored on retrieval {cited} {matched}"
+    """How one question scored, for the line the run prints as it goes."""
+    if result.citation_accuracy is None:
+        cited = "citation=n/a"
+    else:
+        cited = f"citation={result.citation_accuracy:.2f}"
+    if result.exact_match is None:
+        matched = "exact_match=n/a"
+    else:
+        matched = f"exact_match={result.exact_match:.2f}"
+    if not result.scored:
+        return f"not scored on retrieval {cited} {matched}"
 
-	return f"recall={result.recall:.2f} reciprocal_rank={result.reciprocal_rank:.2f} {cited} {matched}"
+    return f"recall={result.recall:.2f} reciprocal_rank={result.reciprocal_rank:.2f} {cited} {matched}"
 
 
 def _aggregates(results: list[QuestionResult]) -> Aggregates:
-	"""The numbers over the questions that could be scored, and the count that could not.
+    """The numbers over the questions that could be scored, and the count that could not.
 
-	Both means are over the scored questions only, and the counts are recorded beside them,
-	because a mean over a pool that silently included the unscored would read as a retrieval
-	score a reader could not account for. Citation accuracy is averaged the same way, over
-	the questions whose answers made claims, with the unanswerable stratum kept as its own
-	slice beside the answerable one.
+    Both means are over the scored questions only, and the counts are recorded beside them,
+    because a mean over a pool that silently included the unscored would read as a retrieval
+    score a reader could not account for. Citation accuracy is averaged the same way, over
+    the questions whose answers made claims, with the unanswerable stratum kept as its own
+    slice beside the answerable one.
 
-	Latency percentiles are computed from this run's own per-question timings, never by
-	averaging across runs: a median over two runs' medians is not the median of what either
-	run measured. Retrieval covers every question and generation covers only the answers
-	the model was asked for, because empty retrieval never reaches it.
-	"""
-	scored = [result for result in results if result.scored]
-	count = len(scored)
-	with_claims = [result for result in results if result.citation_accuracy is not None]
-	answerable = [result for result in with_claims if result.stratum is not Stratum.UNANSWERABLE]
-	unanswerable = [result for result in with_claims if result.stratum is Stratum.UNANSWERABLE]
-	extractive = [result for result in results if result.exact_match is not None]
-	extractive_with_claims = [result for result in extractive if result.citation_accuracy is not None]
-	retrieval_latencies = [result.retrieval_latency_s for result in results]
-	generation_latencies = [
-		result.generation_latency_s for result in results if result.generation_latency_s is not None
-	]
-	generated = [result for result in results if result.total_tokens is not None]
+    Latency percentiles are computed from this run's own per-question timings, never by
+    averaging across runs: a median over two runs' medians is not the median of what either
+    run measured. Retrieval covers every question and generation covers only the answers
+    the model was asked for, because empty retrieval never reaches it.
+    """
+    scored = [result for result in results if result.scored]
+    count = len(scored)
+    with_claims = [result for result in results if result.citation_accuracy is not None]
+    answerable = [
+        result for result in with_claims if result.stratum is not Stratum.UNANSWERABLE
+    ]
+    unanswerable = [
+        result for result in with_claims if result.stratum is Stratum.UNANSWERABLE
+    ]
+    extractive = [result for result in results if result.exact_match is not None]
+    extractive_with_claims = [
+        result for result in extractive if result.citation_accuracy is not None
+    ]
+    retrieval_latencies = [result.retrieval_latency_s for result in results]
+    generation_latencies = [
+        result.generation_latency_s
+        for result in results
+        if result.generation_latency_s is not None
+    ]
+    generated = [result for result in results if result.total_tokens is not None]
 
-	def _percentile_or_nothing(values: list[float], rank: float) -> float | None:
-		return percentile(values, rank) if values else None
+    def _percentile_or_nothing(values: list[float], rank: float) -> float | None:
+        return percentile(values, rank) if values else None
 
-	return Aggregates(
-		questions=len(results),
-		scored=count,
-		unscored=len(results) - count,
-		recall=mean(result.recall for result in scored),
-		reciprocal_rank=mean(result.reciprocal_rank for result in scored),
-		recall_at=_depth_means(scored, "recall_at"),
-		ndcg_at=_depth_means(scored, "ndcg_at"),
-		citation_accuracy=mean_or_nothing([result.citation_accuracy for result in with_claims]),
-		citation_accuracy_answerable=mean_or_nothing([result.citation_accuracy for result in answerable]),
-		citation_accuracy_unanswerable=mean_or_nothing([result.citation_accuracy for result in unanswerable]),
-		citation_scored=len(with_claims),
-		citation_unscored=len(results) - len(with_claims),
-		exact_match=mean_or_nothing([result.exact_match for result in extractive]),
-		exact_match_scored=len(extractive),
-		exact_match_unscored=len(results) - len(extractive),
-		citation_accuracy_extractive=mean_or_nothing(
-			[result.citation_accuracy for result in extractive_with_claims]
-		),
-		citation_extractive_scored=len(extractive_with_claims),
-		retrieval_latency_p50_s=percentile(retrieval_latencies, 50),
-		retrieval_latency_p95_s=percentile(retrieval_latencies, 95),
-		generation_latency_p50_s=_percentile_or_nothing(generation_latencies, 50),
-		generation_latency_p95_s=_percentile_or_nothing(generation_latencies, 95),
-		prompt_tokens_mean=mean_or_nothing([result.prompt_tokens for result in generated]),
-		completion_tokens_mean=mean_or_nothing([result.completion_tokens for result in generated]),
-		total_tokens_mean=mean_or_nothing([result.total_tokens for result in generated]),
-		total_tokens=sum(result.total_tokens for result in generated if result.total_tokens is not None),
-		generation_count=len(generated),
-	)
+    return Aggregates(
+        questions=len(results),
+        scored=count,
+        unscored=len(results) - count,
+        recall=mean(result.recall for result in scored),
+        reciprocal_rank=mean(result.reciprocal_rank for result in scored),
+        recall_at=_depth_means(scored, "recall_at"),
+        ndcg_at=_depth_means(scored, "ndcg_at"),
+        citation_accuracy=mean_or_nothing(
+            [result.citation_accuracy for result in with_claims]
+        ),
+        citation_accuracy_answerable=mean_or_nothing(
+            [result.citation_accuracy for result in answerable]
+        ),
+        citation_accuracy_unanswerable=mean_or_nothing(
+            [result.citation_accuracy for result in unanswerable]
+        ),
+        citation_scored=len(with_claims),
+        citation_unscored=len(results) - len(with_claims),
+        exact_match=mean_or_nothing([result.exact_match for result in extractive]),
+        exact_match_scored=len(extractive),
+        exact_match_unscored=len(results) - len(extractive),
+        citation_accuracy_extractive=mean_or_nothing(
+            [result.citation_accuracy for result in extractive_with_claims]
+        ),
+        citation_extractive_scored=len(extractive_with_claims),
+        retrieval_latency_p50_s=percentile(retrieval_latencies, 50),
+        retrieval_latency_p95_s=percentile(retrieval_latencies, 95),
+        generation_latency_p50_s=_percentile_or_nothing(generation_latencies, 50),
+        generation_latency_p95_s=_percentile_or_nothing(generation_latencies, 95),
+        prompt_tokens_mean=mean_or_nothing(
+            [result.prompt_tokens for result in generated]
+        ),
+        completion_tokens_mean=mean_or_nothing(
+            [result.completion_tokens for result in generated]
+        ),
+        total_tokens_mean=mean_or_nothing(
+            [result.total_tokens for result in generated]
+        ),
+        total_tokens=sum(
+            result.total_tokens
+            for result in generated
+            if result.total_tokens is not None
+        ),
+        generation_count=len(generated),
+    )
 
 
 def _depth_means(scored: list[QuestionResult], field: str) -> dict[str, float]:
-	"""The mean at each reported depth, over the questions that carry that depth.
+    """The mean at each reported depth, over the questions that carry that depth.
 
-	The depths are the ones the runs recorded, not a list kept here, so a summary built from
-	run files and this aggregate can never disagree about which depths exist.
-	"""
-	depths: list[str] = []
-	for result in scored:
-		for depth in getattr(result, field) or {}:
-			if depth not in depths:
-				depths.append(depth)
+    The depths are the ones the runs recorded, not a list kept here, so a summary built from
+    run files and this aggregate can never disagree about which depths exist.
+    """
+    depths: list[str] = []
+    for result in scored:
+        for depth in getattr(result, field) or {}:
+            if depth not in depths:
+                depths.append(depth)
 
-	return {
-		depth: mean(getattr(result, field).get(depth) for result in scored if getattr(result, field))
-		for depth in depths
-	}
+    return {
+        depth: mean(
+            getattr(result, field).get(depth)
+            for result in scored
+            if getattr(result, field)
+        )
+        for depth in depths
+    }
 
 
 def run_path(results_dir: Path, run: RunFile) -> Path:
-	"""Where a run's file lives, named after the architecture, the domain, the corpus, and the commit.
+    """Where a run's file lives, named after the architecture, the domain, the corpus, and the commit.
 
-	The commit and the corpus are both in the name because together they are what makes two runs
-	different files. A re-run at the same commit against the same corpus is the same run, and it
-	lands on the same path; anything else lands beside it instead of overwriting it.
-	"""
-	name = f"{run.architecture}-{run.commit.short()}-{run.corpus.short()}.json"
+    The commit and the corpus are both in the name because together they are what makes two runs
+    different files. A re-run at the same commit against the same corpus is the same run, and it
+    lands on the same path; anything else lands beside it instead of overwriting it.
+    """
+    name = f"{run.architecture}-{run.commit.short()}-{run.corpus.short()}.json"
 
-	return Path(results_dir) / run.domain / name
+    return Path(results_dir) / run.domain / name
 
 
 def load_run_file(path: Path) -> RunFile:
-	"""A run file read back, checked against the same shape it was written in."""
-	return RunFile.model_validate_json(Path(path).read_text())
+    """A run file read back, checked against the same shape it was written in."""
+    return RunFile.model_validate_json(Path(path).read_text())
 
 
 def report(run: RunFile, path: Path) -> None:
-	"""Say what the run found and where it put it."""
-	depth = run.configuration.retrieval_depth
-	aggregates = run.aggregates
+    """Say what the run found and where it put it."""
+    depth = run.configuration.retrieval_depth
+    aggregates = run.aggregates
 
-	print(f"[RUN] {run.architecture} on {run.domain}: {aggregates.questions} questions, {aggregates.scored} scored")
-	for reported in sorted(aggregates.recall_at, key=int):
-		print(f"[RUN] recall@{reported} {aggregates.recall_at[reported]:.4f}")
-	for reported in sorted(aggregates.ndcg_at, key=int):
-		print(f"[RUN] ndcg@{reported} {aggregates.ndcg_at[reported]:.4f}")
-	print(f"[RUN] reciprocal rank@{depth} {aggregates.reciprocal_rank:.4f}")
-	print(f"[RUN] {_citation_line(aggregates)}")
-	print(f"[RUN] {_exact_line(aggregates)}")
-	print(f"[RUN] {_latency_line(aggregates)}")
-	print(f"[RUN] {_cost_line(aggregates)}")
-	if aggregates.unscored:
-		print(f"[RUN] {aggregates.unscored} questions name no place to look in and are not scored on retrieval")
-	if aggregates.citation_unscored:
-		print(f"[RUN] {aggregates.citation_unscored} questions made no claims and are not scored on citation")
-	if aggregates.exact_match_unscored:
-		print(
-			f"[RUN] {aggregates.exact_match_unscored} questions are not extractive and are not scored on exact match"
-		)
-	if run.commit.sha is None:
-		print("[RUN] no commit was found for this working tree, so this run cannot be traced to one")
-	elif run.commit.dirty:
-		print(f"[RUN] the tree had uncommitted changes at {run.commit.sha}, so the commit alone does not reproduce it")
-	print(f"[RUN] wrote {path}")
+    print(
+        f"[RUN] {run.architecture} on {run.domain}: {aggregates.questions} questions, {aggregates.scored} scored"
+    )
+    for reported in sorted(aggregates.recall_at, key=int):
+        print(f"[RUN] recall@{reported} {aggregates.recall_at[reported]:.4f}")
+    for reported in sorted(aggregates.ndcg_at, key=int):
+        print(f"[RUN] ndcg@{reported} {aggregates.ndcg_at[reported]:.4f}")
+    print(f"[RUN] reciprocal rank@{depth} {aggregates.reciprocal_rank:.4f}")
+    print(f"[RUN] {_citation_line(aggregates)}")
+    print(f"[RUN] {_exact_line(aggregates)}")
+    print(f"[RUN] {_latency_line(aggregates)}")
+    print(f"[RUN] {_cost_line(aggregates)}")
+    if aggregates.unscored:
+        print(
+            f"[RUN] {aggregates.unscored} questions name no place to look in and are not scored on retrieval"
+        )
+    if aggregates.citation_unscored:
+        print(
+            f"[RUN] {aggregates.citation_unscored} questions made no claims and are not scored on citation"
+        )
+    if aggregates.exact_match_unscored:
+        print(
+            f"[RUN] {aggregates.exact_match_unscored} questions are not extractive and are not scored on exact match"
+        )
+    if run.commit.sha is None:
+        print(
+            "[RUN] no commit was found for this working tree, so this run cannot be traced to one"
+        )
+    elif run.commit.dirty:
+        print(
+            f"[RUN] the tree had uncommitted changes at {run.commit.sha}, so the commit alone does not reproduce it"
+        )
+    print(f"[RUN] wrote {path}")
 
 
 def _cell(value: float | None) -> str:
-	"""One mean as a report line shows it, or a word when there was nothing to average."""
-	return f"{value:.4f}" if value is not None else "n/a"
+    """One mean as a report line shows it, or a word when there was nothing to average."""
+    return f"{value:.4f}" if value is not None else "n/a"
 
 
 def _citation_line(aggregates: Aggregates) -> str:
-	"""One line for the citation means, with the unanswerable slice beside the rest."""
-	return (
-		f"citation {_cell(aggregates.citation_accuracy)} "
-		f"(answerable {_cell(aggregates.citation_accuracy_answerable)}, "
-		f"unanswerable {_cell(aggregates.citation_accuracy_unanswerable)}) "
-		f"over {aggregates.citation_scored} questions with claims"
-	)
+    """One line for the citation means, with the unanswerable slice beside the rest."""
+    return (
+        f"citation {_cell(aggregates.citation_accuracy)} "
+        f"(answerable {_cell(aggregates.citation_accuracy_answerable)}, "
+        f"unanswerable {_cell(aggregates.citation_accuracy_unanswerable)}) "
+        f"over {aggregates.citation_scored} questions with claims"
+    )
 
 
 def _exact_line(aggregates: Aggregates) -> str:
-	"""One line for the extractive exact-match mean, beside citation over the same questions."""
-	return (
-		f"exact_match {_cell(aggregates.exact_match)} "
-		f"(citation_on_extractive {_cell(aggregates.citation_accuracy_extractive)}) "
-		f"over {aggregates.exact_match_scored} extractive questions"
-	)
+    """One line for the extractive exact-match mean, beside citation over the same questions."""
+    return (
+        f"exact_match {_cell(aggregates.exact_match)} "
+        f"(citation_on_extractive {_cell(aggregates.citation_accuracy_extractive)}) "
+        f"over {aggregates.exact_match_scored} extractive questions"
+    )
 
 
 def _latency_line(aggregates: Aggregates) -> str:
-	"""One line for the retrieval and generation latency percentiles, kept separate.
+    """One line for the retrieval and generation latency percentiles, kept separate.
 
-	The two stages have different causes, so a reader comparing architectures needs to
-	know which one moved: retrieval time moves with the store and the encoders, and
-	generation time moves with the hosted model and the length of what it was given.
-	"""
-	return (
-		f"retrieval_latency_p50 {_cell(aggregates.retrieval_latency_p50_s)}s "
-		f"p95 {_cell(aggregates.retrieval_latency_p95_s)}s, "
-		f"generation_latency_p50 {_cell(aggregates.generation_latency_p50_s)}s "
-		f"p95 {_cell(aggregates.generation_latency_p95_s)}s"
-	)
+    The two stages have different causes, so a reader comparing architectures needs to
+    know which one moved: retrieval time moves with the store and the encoders, and
+    generation time moves with the hosted model and the length of what it was given.
+    """
+    return (
+        f"retrieval_latency_p50 {_cell(aggregates.retrieval_latency_p50_s)}s "
+        f"p95 {_cell(aggregates.retrieval_latency_p95_s)}s, "
+        f"generation_latency_p50 {_cell(aggregates.generation_latency_p50_s)}s "
+        f"p95 {_cell(aggregates.generation_latency_p95_s)}s"
+    )
 
 
 def _cost_line(aggregates: Aggregates) -> str:
-	"""One line for the generation token cost, so a quality gain can be weighed against price."""
-	return (
-		f"tokens total {aggregates.total_tokens} "
-		f"(prompt_mean {_cell(aggregates.prompt_tokens_mean)}, "
-		f"completion_mean {_cell(aggregates.completion_tokens_mean)}) "
-		f"over {aggregates.generation_count} generated answers"
-	)
+    """One line for the generation token cost, so a quality gain can be weighed against price."""
+    return (
+        f"tokens total {aggregates.total_tokens} "
+        f"(prompt_mean {_cell(aggregates.prompt_tokens_mean)}, "
+        f"completion_mean {_cell(aggregates.completion_tokens_mean)}) "
+        f"over {aggregates.generation_count} generated answers"
+    )

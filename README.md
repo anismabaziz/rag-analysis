@@ -34,7 +34,7 @@ chunk, then fuses two ranked candidate lists with reciprocal rank fusion.
 
 Each is ingested into its own Qdrant collection, so a rerun never mixes corpora and one
 architecture can never retrieve another's points. Generation is frozen to one model
-(`llama-3.3-70b-versatile`) at temperature 0 with a single shared prompt, for the same reason.
+(`qwen/qwen3.8-27b`) at temperature 0 with a single shared prompt, for the same reason.
 
 Three more, `chunk-fixed`, `chunk-semantic`, and `chunk-hierarchical`, are the chunking
 comparison and are not part of the retrieval table. They differ from `naive` in one thing only:
@@ -181,14 +181,13 @@ queried, and listed:
 ```python
 # architectures/sparse.py
 @register(
-	name="sparse",
-	description="BM42 sparse vectors only, ranked by term overlap.",
-	collection="rag_sparse",
-	vectors=(SPARSE,),
+    name="sparse",
+    description="BM42 sparse vectors only, ranked by term overlap.",
+    collection="rag_sparse",
+    vectors=(SPARSE,),
 )
 class SparseRAG(BaseRAG):
-	async def retrieve(self, query: str) -> list[Chunk]:
-		...
+    async def retrieve(self, query: str) -> list[Chunk]: ...
 ```
 
 That is the whole of it. The name, the collection, and the vectors it indexes are what separate

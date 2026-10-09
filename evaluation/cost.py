@@ -11,18 +11,18 @@ back rather than in how it was counted.
 
 
 def estimate_tokens(text: str) -> int:
-	"""The tokens in `text`, counted as whitespace-separated words.
+    """The tokens in `text`, counted as whitespace-separated words.
 
-	Empty text costs nothing. The count is deterministic and needs nothing beyond
-	the text itself, which is what keeps a run's cost reproducible from its file.
-	"""
-	return len(text.split())
+    Empty text costs nothing. The count is deterministic and needs nothing beyond
+    the text itself, which is what keeps a run's cost reproducible from its file.
+    """
+    return len(text.split())
 
 
 def rendered_prompt(prompt_template: str, context: str, query: str) -> str:
-	"""The prompt the model was given, with its context and question filled in.
+    """The prompt the model was given, with its context and question filled in.
 
-	The template is the frozen one the run records, so the count is a reading of
-	the configuration the run was measured at rather than a second copy of it.
-	"""
-	return prompt_template.replace("{context}", context).replace("{query}", query)
+    The template is the frozen one the run records, so the count is a reading of
+    the configuration the run was measured at rather than a second copy of it.
+    """
+    return prompt_template.replace("{context}", context).replace("{query}", query)

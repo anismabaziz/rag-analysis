@@ -26,55 +26,65 @@ RERANK_SOURCE_REPOSITORY = "Xenova/ms-marco-MiniLM-L-6-v2"
 
 @dataclass(frozen=True)
 class Encoder:
-	"""One encoder: what it is called, and the commit of the weights behind the name."""
+    """One encoder: what it is called, and the commit of the weights behind the name."""
 
-	name: str
-	revision: str | None
+    name: str
+    revision: str | None
 
 
 def get_embed_model():
-  return TextEmbedding(model_name=Params.DENSE_EMBEDDING_MODEL)
+    return TextEmbedding(model_name=Params.DENSE_EMBEDDING_MODEL)
 
 
 def get_sparse_embed_model():
-  return SparseTextEmbedding(model_name=Params.SPARSE_EMBEDDING_MODEL)
+    return SparseTextEmbedding(model_name=Params.SPARSE_EMBEDDING_MODEL)
 
 
 def get_rerank_model():
-  return TextCrossEncoder(model_name=Params.RERANK_MODEL)
+    return TextCrossEncoder(model_name=Params.RERANK_MODEL)
 
 
 def dense_encoder() -> Encoder:
-	"""The dense encoder, as a run file records it."""
-	return _encoder(Params.DENSE_EMBEDDING_MODEL, DENSE_SOURCE_REPOSITORY)
+    """The dense encoder, as a run file records it."""
+    return _encoder(Params.DENSE_EMBEDDING_MODEL, DENSE_SOURCE_REPOSITORY)
 
 
 def sparse_encoder() -> Encoder:
-	"""The sparse encoder, as a run file records it."""
-	return _encoder(Params.SPARSE_EMBEDDING_MODEL, SPARSE_SOURCE_REPOSITORY)
+    """The sparse encoder, as a run file records it."""
+    return _encoder(Params.SPARSE_EMBEDDING_MODEL, SPARSE_SOURCE_REPOSITORY)
 
 
 def rerank_encoder() -> Encoder:
-	"""The cross-encoder behind the rerank architecture, as a run file records it."""
-	return _encoder(Params.RERANK_MODEL, RERANK_SOURCE_REPOSITORY)
+    """The cross-encoder behind the rerank architecture, as a run file records it."""
+    return _encoder(Params.RERANK_MODEL, RERANK_SOURCE_REPOSITORY)
 
 
 def _encoder(name: str, repository: str) -> Encoder:
-	"""The encoder of that name, with the revision the local model cache resolved it to.
+    """The encoder of that name, with the revision the local model cache resolved it to.
 
-	The revision is read from disk rather than from the network, so recording it costs a run
-	nothing and a run on a machine where the model was never downloaded records `None` instead of
-	a guess. That is the honest entry: a revision nobody can verify is decoration.
-	"""
-	ref = Path(model_cache_dir()) / f"models--{repository.replace('/', '--')}" / "refs" / "main"
+    The revision is read from disk rather than from the network, so recording it costs a run
+    nothing and a run on a machine where the model was never downloaded records `None` instead of
+    a guess. That is the honest entry: a revision nobody can verify is decoration.
+    """
+    ref = (
+        Path(model_cache_dir())
+        / f"models--{repository.replace('/', '--')}"
+        / "refs"
+        / "main"
+    )
 
-	return Encoder(name=name, revision=ref.read_text().strip() if ref.is_file() else None)
+    return Encoder(
+        name=name, revision=ref.read_text().strip() if ref.is_file() else None
+    )
 
 
 def model_cache_dir() -> Path:
-	"""Where the encoders are cached, which is where a run reads their revisions from.
+    """Where the encoders are cached, which is where a run reads their revisions from.
 
-	This mirrors the path the model library picks, because it is the one place a downloaded
-	encoder's commit is written down. `FASTEMBED_CACHE_PATH` wins, as it does for the library.
-	"""
-	return Path(os.getenv("FASTEMBED_CACHE_PATH") or Path(tempfile.gettempdir()) / "fastembed_cache")
+    This mirrors the path the model library picks, because it is the one place a downloaded
+    encoder's commit is written down. `FASTEMBED_CACHE_PATH` wins, as it does for the library.
+    """
+    return Path(
+        os.getenv("FASTEMBED_CACHE_PATH")
+        or Path(tempfile.gettempdir()) / "fastembed_cache"
+    )

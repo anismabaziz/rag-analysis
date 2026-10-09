@@ -21,36 +21,36 @@ GIT_TIMEOUT_SECONDS = 5
 
 @dataclass(frozen=True)
 class Revision:
-	"""Where a run was made: the commit, and whether the tree had changes the commit did not."""
+    """Where a run was made: the commit, and whether the tree had changes the commit did not."""
 
-	sha: str | None
-	dirty: bool | None
+    sha: str | None
+    dirty: bool | None
 
 
 def current_revision(root: Path = Path(".")) -> Revision:
-	"""The commit the working tree is at, and whether it has changes that commit does not have."""
-	sha = _git(root, "rev-parse", "HEAD")
+    """The commit the working tree is at, and whether it has changes that commit does not have."""
+    sha = _git(root, "rev-parse", "HEAD")
 
-	if sha is None:
-		return Revision(sha=None, dirty=None)
+    if sha is None:
+        return Revision(sha=None, dirty=None)
 
-	changed = _git(root, "status", "--porcelain")
+    changed = _git(root, "status", "--porcelain")
 
-	return Revision(sha=sha, dirty=bool(changed))
+    return Revision(sha=sha, dirty=bool(changed))
 
 
 def _git(root: Path, *arguments: str) -> str | None:
-	"""One git answer, trimmed, or nothing when git could not give one."""
-	try:
-		completed = subprocess.run(
-			["git", *arguments],
-			cwd=root,
-			capture_output=True,
-			text=True,
-			timeout=GIT_TIMEOUT_SECONDS,
-			check=True,
-		)
-	except (OSError, subprocess.SubprocessError):
-		return None
+    """One git answer, trimmed, or nothing when git could not give one."""
+    try:
+        completed = subprocess.run(
+            ["git", *arguments],
+            cwd=root,
+            capture_output=True,
+            text=True,
+            timeout=GIT_TIMEOUT_SECONDS,
+            check=True,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return None
 
-	return completed.stdout.strip() or None
+    return completed.stdout.strip() or None

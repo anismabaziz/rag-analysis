@@ -22,40 +22,40 @@ _EDGE_PUNCTUATION = string.punctuation
 
 
 def normalize_answer(text: str) -> str:
-	"""Both edges stripped of whitespace and punctuation, and nothing else.
+    """Both edges stripped of whitespace and punctuation, and nothing else.
 
-	The strip repeats until the text stops moving, because punctuation and
-	whitespace interleave at the edges: a quoted answer ends in `.'␣␣`, and
-	one strip of each leaves the other behind.
-	"""
-	current = text.strip()
-	previous: str | None = None
-	while current != previous:
-		previous = current
-		current = current.strip(_EDGE_PUNCTUATION).strip()
+    The strip repeats until the text stops moving, because punctuation and
+    whitespace interleave at the edges: a quoted answer ends in `.'␣␣`, and
+    one strip of each leaves the other behind.
+    """
+    current = text.strip()
+    previous: str | None = None
+    while current != previous:
+        previous = current
+        current = current.strip(_EDGE_PUNCTUATION).strip()
 
-	return current
+    return current
 
 
 def exact_match(answer: str, gold: str) -> bool:
-	"""Whether `answer` says exactly the span `gold` prints, edges forgiven.
+    """Whether `answer` says exactly the span `gold` prints, edges forgiven.
 
-	Both sides are normalized the same way, so a trailing period on a
-	generated answer does not fail a span copied without one, while a
-	difference in case or a difference inside the span does.
-	"""
-	return normalize_answer(answer) == normalize_answer(gold)
+    Both sides are normalized the same way, so a trailing period on a
+    generated answer does not fail a span copied without one, while a
+    difference in case or a difference inside the span does.
+    """
+    return normalize_answer(answer) == normalize_answer(gold)
 
 
 def exact_match_score(answer: str, gold: str | None, extractive: bool) -> float | None:
-	"""One extractive question scored: one for a match, zero for a miss.
+    """One extractive question scored: one for a match, zero for a miss.
 
-	`None` when the question is not extractive or carries no span, which is
-	what a non-extractive question does, so the question drops out of the
-	mean instead of reading as a miss. A refusal on an extractive question
-	is a miss rather than unscored, because the span was there to name.
-	"""
-	if not extractive or gold is None:
-		return None
+    `None` when the question is not extractive or carries no span, which is
+    what a non-extractive question does, so the question drops out of the
+    mean instead of reading as a miss. A refusal on an extractive question
+    is a miss rather than unscored, because the span was there to name.
+    """
+    if not extractive or gold is None:
+        return None
 
-	return 1.0 if exact_match(answer, gold) else 0.0
+    return 1.0 if exact_match(answer, gold) else 0.0

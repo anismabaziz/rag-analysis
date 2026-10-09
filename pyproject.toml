@@ -10,15 +10,14 @@ keywords = ["rag", "retrieval", "hybrid-search", "qdrant", "evaluation"]
 requires-python = ">=3.12"
 dependencies = [
     "fastembed>=0.8.0",
-    "groq>=1.4.0",
     "llama-index-core>=0.14.22",
     "llama-index-embeddings-huggingface>=0.7.0",
     "llama-index-llms-groq>=0.5.0",
-    "neo4j>=6.2.0",
     "pydantic>=2.13.4",
     "python-dotenv>=1.2.2",
     "qdrant-client>=1.18.0",
     "sentence-transformers>=5.5.1",
+    "streamlit>=1.65.0",
     "tqdm>=4.67.3",
     "unstructured[pdf]>=0.22.31",
 ]
@@ -50,6 +49,7 @@ only-include = [
 [dependency-groups]
 dev = [
     "check-requirements-txt>=1.4.2",
+    "playwright>=1.63.0",
     "pypdf>=6.12.2",
     "pytest>=8.4.2",
     "pytest-asyncio>=1.2.0",

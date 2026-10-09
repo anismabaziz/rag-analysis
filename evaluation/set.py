@@ -52,37 +52,37 @@ PROPORTION_TOLERANCE = 0.05
 
 
 class Stratum(StrEnum):
-	"""What kind of question a question is, which is what the claim is about.
+    """What kind of question a question is, which is what the claim is about.
 
-	A question that quotes a rare identifier from the source and one that asks about the same
-	content in the asker's own words retrieve differently, and the project's claim is that the
-	difference is not in the average. The strata are therefore written down before any question is,
-	all four of them, so the boundary the results rest on is the boundary that gets measured.
-	"""
+    A question that quotes a rare identifier from the source and one that asks about the same
+    content in the asker's own words retrieve differently, and the project's claim is that the
+    difference is not in the average. The strata are therefore written down before any question is,
+    all four of them, so the boundary the results rest on is the boundary that gets measured.
+    """
 
-	IDENTIFIER_HEAVY = "identifier_heavy"
-	"""Names a rare string from the source: a model, a dataset, a function, a number, a symbol.
+    IDENTIFIER_HEAVY = "identifier_heavy"
+    """Names a rare string from the source: a model, a dataset, a function, a number, a symbol.
 
 	Dense retrieval has to have seen the identifier in a similar context to place it, so these are
 	the questions where lexical matching is expected to earn its place.
 	"""
 
-	PARAPHRASE = "paraphrase"
-	"""Asks about content without reusing the source's own wording.
+    PARAPHRASE = "paraphrase"
+    """Asks about content without reusing the source's own wording.
 
 	The dense side is expected to do better here, and the boundary between the two strata is
 	reported rather than averaged over.
 	"""
 
-	MULTI_HOP = "multi_hop"
-	"""Needs more than one location combined before it can be answered.
+    MULTI_HOP = "multi_hop"
+    """Needs more than one location combined before it can be answered.
 
 	Scored on whether retrieval turns up every location the question names, which is why each of
 	them is written down rather than left implied by the question's wording.
 	"""
 
-	UNANSWERABLE = "unanswerable"
-	"""Has no correct answer anywhere in the domain, so answering it at all is the failure.
+    UNANSWERABLE = "unanswerable"
+    """Has no correct answer anywhere in the domain, so answering it at all is the failure.
 
 	Cheap to write and the only thing that makes citation accuracy mean anything: on a question the
 	corpus does cover, a citation lands on a real document whether or not it supports the answer.
@@ -90,289 +90,318 @@ class Stratum(StrEnum):
 
 
 class StratumShare(BaseModel):
-	"""One stratum's slice of a set: what it means, how much of the set it holds, and how many.
+    """One stratum's slice of a set: what it means, how much of the set it holds, and how many.
 
-	The count and the share are both written down rather than one being derived from the other,
-	because a result table quotes a count and a design decision is a share, and a reader should be
-	able to check each against the questions without counting them.
-	"""
+    The count and the share are both written down rather than one being derived from the other,
+    because a result table quotes a count and a design decision is a share, and a reader should be
+    able to check each against the questions without counting them.
+    """
 
-	model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="forbid")
 
-	definition: str
-	share: float = Field(ge=0.0, le=1.0)
-	count: int = Field(ge=0)
+    definition: str
+    share: float = Field(ge=0.0, le=1.0)
+    count: int = Field(ge=0)
 
 
 class SpotCheck(BaseModel):
-	"""Who read the source a second time, and which answers they read it for.
+    """Who read the source a second time, and which answers they read it for.
 
-	An answer copied out of a source by the same person who wrote the question is one guess with
-	extra steps, so who checked it is part of what a label is worth. It is recorded here, in the set
-	itself, because a note in a commit message is not something a reader of the results can find.
-	"""
+    An answer copied out of a source by the same person who wrote the question is one guess with
+    extra steps, so who checked it is part of what a label is worth. It is recorded here, in the set
+    itself, because a note in a commit message is not something a reader of the results can find.
+    """
 
-	model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="forbid")
 
-	by: str = Field(min_length=1)
-	on: str = Field(min_length=1)
-	answers: list[str] = Field(min_length=1)
+    by: str = Field(min_length=1)
+    on: str = Field(min_length=1)
+    answers: list[str] = Field(min_length=1)
 
 
 class Location(BaseModel):
-	"""One place in the corpus: the document, and the heading inside it a person read the answer off.
+    """One place in the corpus: the document, and the heading inside it a person read the answer off.
 
-	Same label as a question's own place, kept as its own shape so a question that has to combine
-	three places says three of them rather than describing them in prose a test cannot check.
-	"""
+    Same label as a question's own place, kept as its own shape so a question that has to combine
+    three places says three of them rather than describing them in prose a test cannot check.
+    """
 
-	model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
 
-	document: str = Field(min_length=1)
-	section: str = Field(min_length=1)
+    document: str = Field(min_length=1)
+    section: str = Field(min_length=1)
 
 
 class Question(BaseModel):
-	"""One question with the ground truth a scorer needs to check an answer against.
+    """One question with the ground truth a scorer needs to check an answer against.
 
-	`document` is the document-level label and `section` is the finer one. Both are read off the
-	source by a person, and the document label is always present, so a retrieved chunk is judged
-	correct on the document when its section does not match rather than being called wrong. An
-	unanswerable question is the exception: it carries neither, because a place to look is a place
-	an answer might be found.
+    `document` is the document-level label and `section` is the finer one. Both are read off the
+    source by a person, and the document label is always present, so a retrieved chunk is judged
+    correct on the document when its section does not match rather than being called wrong. An
+    unanswerable question is the exception: it carries neither, because a place to look is a place
+    an answer might be found.
 
-	`gold_answer` is a short span copied from the source, present on every extractive question and
-	on no other. Exact match is only meaningful where there is a span to match, and a question that
-	cannot be answered with one says so rather than carrying an answer nobody checked.
+    `gold_answer` is a short span copied from the source, present on every extractive question and
+    on no other. Exact match is only meaningful where there is a span to match, and a question that
+    cannot be answered with one says so rather than carrying an answer nobody checked.
 
-	`locations` and `absent_probe` are the labels the two strata that cannot be scored the usual way
-	carry instead. A multi-hop question repeats its own place as its first location and then lists
-	the rest, so a document-level label still exists and retrieval can be scored on whether every
-	named location was found. An unanswerable question says what a correct system should do and
-	carries the string a correct answer would have to name, which is what lets the corpus be
-	checked for support rather than the author's confidence being taken for it.
-	"""
+    `locations` and `absent_probe` are the labels the two strata that cannot be scored the usual way
+    carry instead. A multi-hop question repeats its own place as its first location and then lists
+    the rest, so a document-level label still exists and retrieval can be scored on whether every
+    named location was found. An unanswerable question says what a correct system should do and
+    carries the string a correct answer would have to name, which is what lets the corpus be
+    checked for support rather than the author's confidence being taken for it.
+    """
 
-	model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
 
-	id: str = Field(min_length=1)
-	question: str = Field(min_length=1)
-	stratum: Stratum
-	document: str | None = Field(default=None, min_length=1)
-	section: str | None = Field(default=None, min_length=1)
-	extractive: bool
-	gold_answer: str | None = None
-	locations: list[Location] | None = None
-	expected_behavior: str | None = Field(default=None, min_length=1)
-	absent_probe: str | None = Field(default=None, min_length=1)
+    id: str = Field(min_length=1)
+    question: str = Field(min_length=1)
+    stratum: Stratum
+    document: str | None = Field(default=None, min_length=1)
+    section: str | None = Field(default=None, min_length=1)
+    extractive: bool
+    gold_answer: str | None = None
+    locations: list[Location] | None = None
+    expected_behavior: str | None = Field(default=None, min_length=1)
+    absent_probe: str | None = Field(default=None, min_length=1)
 
-	@model_validator(mode="after")
-	def check_answer_presence(self) -> "Question":
-		"""Refuse a question whose answer is missing or invented.
+    @model_validator(mode="after")
+    def check_answer_presence(self) -> "Question":
+        """Refuse a question whose answer is missing or invented.
 
-		A gold answer on a non-extractive question is a claim that something short was checked
-		against the source when it was not, which is the one mistake the exact-match score cannot
-		be trusted to reveal later.
-		"""
-		if self.extractive and not self.gold_answer:
-			raise ValueError(f"{self.id} is extractive but carries no gold answer")
+        A gold answer on a non-extractive question is a claim that something short was checked
+        against the source when it was not, which is the one mistake the exact-match score cannot
+        be trusted to reveal later.
+        """
+        if self.extractive and not self.gold_answer:
+            raise ValueError(f"{self.id} is extractive but carries no gold answer")
 
-		if not self.extractive and self.gold_answer:
-			raise ValueError(f"{self.id} is not extractive but carries a gold answer")
+        if not self.extractive and self.gold_answer:
+            raise ValueError(f"{self.id} is not extractive but carries a gold answer")
 
-		return self
+        return self
 
-	@model_validator(mode="after")
-	def check_stratum_labels(self) -> "Question":
-		"""Refuse a question whose labels do not match the kind of question it claims to be.
+    @model_validator(mode="after")
+    def check_stratum_labels(self) -> "Question":
+        """Refuse a question whose labels do not match the kind of question it claims to be.
 
-		The point of the two extra strata is that they cannot be scored the way the other two are.
-		A multi-hop question that does not list its locations is indistinguishable from one that
-		needed only the first, and an unanswerable question carrying a document and a heading is
-		answerable, whatever the author intended when writing it.
-		"""
-		if self.stratum is Stratum.MULTI_HOP:
-			self._check_multi_hop_labels()
-		elif self.stratum is Stratum.UNANSWERABLE:
-			self._check_unanswerable_labels()
-		else:
-			self._check_single_location_labels()
+        The point of the two extra strata is that they cannot be scored the way the other two are.
+        A multi-hop question that does not list its locations is indistinguishable from one that
+        needed only the first, and an unanswerable question carrying a document and a heading is
+        answerable, whatever the author intended when writing it.
+        """
+        if self.stratum is Stratum.MULTI_HOP:
+            self._check_multi_hop_labels()
+        elif self.stratum is Stratum.UNANSWERABLE:
+            self._check_unanswerable_labels()
+        else:
+            self._check_single_location_labels()
 
-		return self
+        return self
 
-	def _check_multi_hop_labels(self) -> None:
-		"""A question that needs two places has to say which, and has to start at its own."""
-		if self.locations is None:
-			raise ValueError(f"{self.id} is multi_hop but names no locations to combine")
+    def _check_multi_hop_labels(self) -> None:
+        """A question that needs two places has to say which, and has to start at its own."""
+        if self.locations is None:
+            raise ValueError(
+                f"{self.id} is multi_hop but names no locations to combine"
+            )
 
-		if len(self.locations) < 2:
-			raise ValueError(f"{self.id} is multi_hop but names one location, which is not a hop")
+        if len(self.locations) < 2:
+            raise ValueError(
+                f"{self.id} is multi_hop but names one location, which is not a hop"
+            )
 
-		if (self.locations[0].document, self.locations[0].section) != (self.document, self.section):
-			raise ValueError(f"{self.id} is multi_hop but does not start at its own document and section")
+        if (self.locations[0].document, self.locations[0].section) != (
+            self.document,
+            self.section,
+        ):
+            raise ValueError(
+                f"{self.id} is multi_hop but does not start at its own document and section"
+            )
 
-		if self.expected_behavior or self.absent_probe:
-			raise ValueError(f"{self.id} is multi_hop but carries an unanswerable question's labels")
+        if self.expected_behavior or self.absent_probe:
+            raise ValueError(
+                f"{self.id} is multi_hop but carries an unanswerable question's labels"
+            )
 
-	def _check_unanswerable_labels(self) -> None:
-		"""A question with no answer has nowhere to point, and has to say what to do instead."""
-		if self.document or self.section or self.locations:
-			raise ValueError(f"{self.id} is unanswerable but names a document and section to look in")
+    def _check_unanswerable_labels(self) -> None:
+        """A question with no answer has nowhere to point, and has to say what to do instead."""
+        if self.document or self.section or self.locations:
+            raise ValueError(
+                f"{self.id} is unanswerable but names a document and section to look in"
+            )
 
-		if not self.expected_behavior:
-			raise ValueError(f"{self.id} says nothing about what a correct system should do instead")
+        if not self.expected_behavior:
+            raise ValueError(
+                f"{self.id} says nothing about what a correct system should do instead"
+            )
 
-		if not self.absent_probe:
-			raise ValueError(f"{self.id} carries no string to check the corpus against")
+        if not self.absent_probe:
+            raise ValueError(f"{self.id} carries no string to check the corpus against")
 
-		if self.extractive:
-			raise ValueError(f"{self.id} is unanswerable but claims to be extractive")
+        if self.extractive:
+            raise ValueError(f"{self.id} is unanswerable but claims to be extractive")
 
-	def _check_single_location_labels(self) -> None:
-		"""A question answered from one place says one place, and nothing of the other two strata."""
-		if not self.document or not self.section:
-			raise ValueError(f"{self.id} names no document and section to answer from")
+    def _check_single_location_labels(self) -> None:
+        """A question answered from one place says one place, and nothing of the other two strata."""
+        if not self.document or not self.section:
+            raise ValueError(f"{self.id} names no document and section to answer from")
 
-		if self.locations is not None:
-			raise ValueError(f"{self.id} is not a multi_hop question but names locations to combine")
+        if self.locations is not None:
+            raise ValueError(
+                f"{self.id} is not a multi_hop question but names locations to combine"
+            )
 
-		if self.expected_behavior or self.absent_probe:
-			raise ValueError(f"{self.id} carries an unanswerable question's labels but is not one")
+        if self.expected_behavior or self.absent_probe:
+            raise ValueError(
+                f"{self.id} carries an unanswerable question's labels but is not one"
+            )
 
-	def all_locations(self) -> list[Location]:
-		"""Every place in the corpus this question is answered from, in the order they matter.
+    def all_locations(self) -> list[Location]:
+        """Every place in the corpus this question is answered from, in the order they matter.
 
-		The question's own document and section come first for a single-location question, and the
-		listed locations for a multi-hop one, which is the same order in both cases.
-		"""
-		if self.locations is not None:
-			return list(self.locations)
+        The question's own document and section come first for a single-location question, and the
+        listed locations for a multi-hop one, which is the same order in both cases.
+        """
+        if self.locations is not None:
+            return list(self.locations)
 
-		if self.document and self.section:
-			return [Location(document=self.document, section=self.section)]
+        if self.document and self.section:
+            return [Location(document=self.document, section=self.section)]
 
-		return []
+        return []
 
 
 class EvaluationSet(BaseModel):
-	"""Every question one domain is scored on, with the strata it declares them under."""
+    """Every question one domain is scored on, with the strata it declares them under."""
 
-	model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="forbid")
 
-	domain: str
-	strata: dict[Stratum, StratumShare]
-	spot_check: SpotCheck
-	questions: list[Question]
+    domain: str
+    strata: dict[Stratum, StratumShare]
+    spot_check: SpotCheck
+    questions: list[Question]
 
-	@model_validator(mode="after")
-	def check_questions(self) -> "EvaluationSet":
-		"""Refuse a set that is empty, or that asks the same thing twice under one name.
+    @model_validator(mode="after")
+    def check_questions(self) -> "EvaluationSet":
+        """Refuse a set that is empty, or that asks the same thing twice under one name.
 
-		Two questions sharing an id would be scored as one, quietly dropping a data point from
-		whichever stratum it was filed under, which is the kind of loss a result table cannot show.
-		"""
-		if not self.questions:
-			raise ValueError(f"the evaluation set for {self.domain} has no questions")
+        Two questions sharing an id would be scored as one, quietly dropping a data point from
+        whichever stratum it was filed under, which is the kind of loss a result table cannot show.
+        """
+        if not self.questions:
+            raise ValueError(f"the evaluation set for {self.domain} has no questions")
 
-		names = [question.id for question in self.questions]
-		duplicated = sorted({name for name in names if names.count(name) > 1})
-		if duplicated:
-			raise ValueError(f"the evaluation set for {self.domain} reuses ids: {', '.join(duplicated)}")
+        names = [question.id for question in self.questions]
+        duplicated = sorted({name for name in names if names.count(name) > 1})
+        if duplicated:
+            raise ValueError(
+                f"the evaluation set for {self.domain} reuses ids: {', '.join(duplicated)}"
+            )
 
-		unknown = sorted(set(self.spot_check.answers) - set(names))
-		if unknown:
-			raise ValueError(f"the spot check names questions that are not in the set: {', '.join(unknown)}")
+        unknown = sorted(set(self.spot_check.answers) - set(names))
+        if unknown:
+            raise ValueError(
+                f"the spot check names questions that are not in the set: {', '.join(unknown)}"
+            )
 
-		return self
+        return self
 
-	@model_validator(mode="after")
-	def check_shares(self) -> "EvaluationSet":
-		"""Refuse a set whose questions no longer match the shares and counts it declares.
+    @model_validator(mode="after")
+    def check_shares(self) -> "EvaluationSet":
+        """Refuse a set whose questions no longer match the shares and counts it declares.
 
-		The shares are the whole point of stratifying: a set that drifted to three quarters one
-		stratum would still produce a score, and the score would describe a different run than the
-		one the file describes.
-		"""
-		if abs(sum(entry.share for entry in self.strata.values()) - 1.0) > 1e-9:
-			raise ValueError(f"the declared strata of {self.domain} do not add up to 1")
+        The shares are the whole point of stratifying: a set that drifted to three quarters one
+        stratum would still produce a score, and the score would describe a different run than the
+        one the file describes.
+        """
+        if abs(sum(entry.share for entry in self.strata.values()) - 1.0) > 1e-9:
+            raise ValueError(f"the declared strata of {self.domain} do not add up to 1")
 
-		total = len(self.questions)
-		counted = self.strata_counts()
+        total = len(self.questions)
+        counted = self.strata_counts()
 
-		for stratum, declared in self.strata.items():
-			share = counted[stratum] / total
+        for stratum, declared in self.strata.items():
+            share = counted[stratum] / total
 
-			if counted[stratum] != declared.count:
-				raise ValueError(
-					f"{self.domain} records {declared.count} {stratum} questions "
-					f"and holds {counted[stratum]}"
-				)
+            if counted[stratum] != declared.count:
+                raise ValueError(
+                    f"{self.domain} records {declared.count} {stratum} questions "
+                    f"and holds {counted[stratum]}"
+                )
 
-			if abs(share - declared.share) > PROPORTION_TOLERANCE:
-				raise ValueError(
-					f"{self.domain} holds {counted[stratum]} of {total} {stratum} questions, "
-					f"which is {share:.2f} against a declared {declared.share:.2f}"
-				)
+            if abs(share - declared.share) > PROPORTION_TOLERANCE:
+                raise ValueError(
+                    f"{self.domain} holds {counted[stratum]} of {total} {stratum} questions, "
+                    f"which is {share:.2f} against a declared {declared.share:.2f}"
+                )
 
-		return self
+        return self
 
-	def strata_counts(self) -> Counter[Stratum]:
-		"""How many questions each stratum holds, which is the count a result table quotes."""
-		return Counter(question.stratum for question in self.questions)
+    def strata_counts(self) -> Counter[Stratum]:
+        """How many questions each stratum holds, which is the count a result table quotes."""
+        return Counter(question.stratum for question in self.questions)
 
-	def documents(self) -> set[str]:
-		"""The corpus documents this set draws its questions from.
+    def documents(self) -> set[str]:
+        """The corpus documents this set draws its questions from.
 
-		A multi-hop question can reach into a second document, so the documents it names count as
-		drawn on as much as its own.
-		"""
-		return {
-			location.document for question in self.questions for location in question.all_locations()
-		}
+        A multi-hop question can reach into a second document, so the documents it names count as
+        drawn on as much as its own.
+        """
+        return {
+            location.document
+            for question in self.questions
+            for location in question.all_locations()
+        }
 
-	def for_stratum(self, stratum: Stratum) -> list[Question]:
-		"""The questions of one stratum, in the order the set files them."""
-		return [question for question in self.questions if question.stratum == stratum]
+    def for_stratum(self, stratum: Stratum) -> list[Question]:
+        """The questions of one stratum, in the order the set files them."""
+        return [question for question in self.questions if question.stratum == stratum]
 
 
-def load_evaluation_set(domain: str, root: Path | None = None, manifest: Manifest | None = None) -> EvaluationSet:
-	"""Read the questions of one domain and check them against its own rules and the corpus.
+def load_evaluation_set(
+    domain: str, root: Path | None = None, manifest: Manifest | None = None
+) -> EvaluationSet:
+    """Read the questions of one domain and check them against its own rules and the corpus.
 
-	Every label is checked against the manifest, so a set naming a document the corpus does not
-	hold fails to load rather than scoring every question in it wrong. The manifest and the
-	directory default to the committed ones, because a set is only meaningful against the corpus
-	it was written for, and both are read when this is called rather than when it is defined so
-	that a run can be pointed at either.
-	"""
-	path = Path(root or SETS_DIR) / f"{domain}{SET_FILE_SUFFIX}"
-	if not path.is_file():
-		raise FileNotFoundError(f"no evaluation set for {domain} at {path}")
+    Every label is checked against the manifest, so a set naming a document the corpus does not
+    hold fails to load rather than scoring every question in it wrong. The manifest and the
+    directory default to the committed ones, because a set is only meaningful against the corpus
+    it was written for, and both are read when this is called rather than when it is defined so
+    that a run can be pointed at either.
+    """
+    path = Path(root or SETS_DIR) / f"{domain}{SET_FILE_SUFFIX}"
+    if not path.is_file():
+        raise FileNotFoundError(f"no evaluation set for {domain} at {path}")
 
-	evaluation_set = EvaluationSet.model_validate(json.loads(path.read_text()))
+    evaluation_set = EvaluationSet.model_validate(json.loads(path.read_text()))
 
-	if evaluation_set.domain != domain:
-		raise ValueError(f"{path} holds the {evaluation_set.domain} set, not {domain}")
+    if evaluation_set.domain != domain:
+        raise ValueError(f"{path} holds the {evaluation_set.domain} set, not {domain}")
 
-	if manifest is None:
-		manifest = load_manifest()
+    if manifest is None:
+        manifest = load_manifest()
 
-	_check_documents(evaluation_set, manifest)
+    _check_documents(evaluation_set, manifest)
 
-	return evaluation_set
+    return evaluation_set
 
 
 def domains() -> tuple[str, ...]:
-	"""Every domain a set exists for, in the order the files are named."""
-	return tuple(sorted(path.stem for path in Path(SETS_DIR).glob(f"*{SET_FILE_SUFFIX}")))
+    """Every domain a set exists for, in the order the files are named."""
+    return tuple(
+        sorted(path.stem for path in Path(SETS_DIR).glob(f"*{SET_FILE_SUFFIX}"))
+    )
 
 
 def _check_documents(evaluation_set: EvaluationSet, manifest: Manifest) -> None:
-	"""Refuse labels naming a document the domain's part of the corpus does not hold."""
-	available = {document.id for document in manifest.in_domain(evaluation_set.domain)}
+    """Refuse labels naming a document the domain's part of the corpus does not hold."""
+    available = {document.id for document in manifest.in_domain(evaluation_set.domain)}
 
-	unknown = sorted(evaluation_set.documents() - available)
-	if unknown:
-		raise ValueError(
-			f"the evaluation set for {evaluation_set.domain} names documents the corpus "
-			f"does not hold: {', '.join(unknown)}"
-		)
+    unknown = sorted(evaluation_set.documents() - available)
+    if unknown:
+        raise ValueError(
+            f"the evaluation set for {evaluation_set.domain} names documents the corpus "
+            f"does not hold: {', '.join(unknown)}"
+        )
