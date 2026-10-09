@@ -117,7 +117,7 @@ def test_every_architecture_is_compared_in_one_table(tmp_path, monkeypatch, offl
 
     assert "sparse" in registered_names
     for name in registered_names:
-        assert table.count(f"| {name} |") == 2, name
+        assert table.count(f"| {name} |") == 6, name
 
 
 def test_the_sparse_architecture_is_reported_pooled_and_per_domain(
@@ -130,7 +130,14 @@ def test_the_sparse_architecture_is_reported_pooled_and_per_domain(
     )
     scopes = {row.scope for row in summary.rows if row.architecture == "sparse"}
 
-    assert scopes == {"papers", "pooled"}
+    assert scopes == {
+        "papers",
+        "papers:identifier_heavy",
+        "papers:paraphrase",
+        "pooled",
+        "pooled:identifier_heavy",
+        "pooled:paraphrase",
+    }
 
 
 def test_every_metric_is_reported_pooled_and_per_domain(tmp_path, monkeypatch, offline):
@@ -145,6 +152,38 @@ def test_every_metric_is_reported_pooled_and_per_domain(tmp_path, monkeypatch, o
     assert "| pooled |" in table
     for metric in ("recall@1", "recall@3", "recall@5", "ndcg@1", "ndcg@3", "ndcg@5"):
         assert metric in table
+
+
+def test_stratum_rows_slice_a_domain_without_averaging_it_away(
+    tmp_path, monkeypatch, offline
+):
+    """The claim is a difference between strata, so each stratum gets rows of its own.
+
+    Identifier-heavy holds 14 questions and paraphrase 10, all scored, and the pooled
+    stratum rows pool those slices rather than averaging the domain rows.
+    """
+    from evaluation.summary import load_committed_runs, render_markdown, summarize
+
+    runs = every_architecture_two_domains(tmp_path, monkeypatch)
+    summary = summarize(load_committed_runs(runs))
+
+    by_scope = {
+        (row.architecture, row.scope): row for row in summary.rows
+    }
+
+    identifier = by_scope[("naive", "papers:identifier_heavy")]
+    assert identifier.questions == 14
+    assert identifier.scored == 14
+
+    paraphrase = by_scope[("naive", "papers:paraphrase")]
+    assert paraphrase.questions == 10
+    assert paraphrase.scored == 10
+
+    pooled_identifier = by_scope[("naive", "pooled:identifier_heavy")]
+    assert pooled_identifier.questions == 14
+    assert pooled_identifier.scored == 14
+
+    assert "papers:identifier_heavy" in render_markdown(summary)
 
 
 def test_the_pooled_row_is_the_mean_over_every_scored_question(

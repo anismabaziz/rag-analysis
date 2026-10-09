@@ -302,8 +302,15 @@ def test_rerank_is_reported_pooled_and_per_domain_alongside_the_others(
     summary = summarize(load_runs(tmp_path / "runs"))
     scopes = {row.scope for row in summary.rows if row.architecture == "rerank"}
 
-    assert scopes == {"papers", "pooled"}
-    assert render_markdown(summary).count("| rerank |") == 2
+    assert scopes == {
+        "papers",
+        "papers:identifier_heavy",
+        "papers:paraphrase",
+        "pooled",
+        "pooled:identifier_heavy",
+        "pooled:paraphrase",
+    }
+    assert render_markdown(summary).count("| rerank |") == 6
 
 
 def test_rerank_summarizes_alongside_hybrid_without_an_isolation_refusal(
@@ -353,7 +360,11 @@ def test_rerank_summarizes_alongside_hybrid_without_an_isolation_refusal(
             row.scope for row in summary.rows if row.architecture == architecture
         } == {
             "papers",
+            "papers:identifier_heavy",
+            "papers:paraphrase",
             "pooled",
+            "pooled:identifier_heavy",
+            "pooled:paraphrase",
         }
 
 

@@ -21,10 +21,17 @@ from evaluation.citations import citation_accuracy
 from evaluation.exact_match import exact_match_score
 from evaluation.metrics import mean, mean_or_nothing, percentile
 from evaluation.run import RESULTS_DIR, QuestionResult, RunFile, load_run_file
+from evaluation.set import Stratum
 from evaluation.table import cell, configuration_differences, question_means
 
 # The scope of a row built from every domain's scored questions rather than one domain's.
 POOLED_SCOPE = "pooled"
+
+# The strata that get their own rows, because the claim under test is a difference between
+# them: hybrid retrieval is expected to beat dense-only on identifier-heavy questions and lose
+# on paraphrased ones. Multi-hop and unanswerable answer different questions (partial recall,
+# refusal), so they stay out of the retrieval comparison rather than being averaged into it.
+STRATUM_SCOPES = (Stratum.IDENTIFIER_HEAVY, Stratum.PARAPHRASE)
 
 
 @dataclass(frozen=True)
@@ -147,7 +154,11 @@ def summarize(runs: list[RunFile]) -> Summary:
         group = groups[key]
         for run in sorted(group, key=lambda run: run.domain):
             rows.append(_domain_row(run))
+            for stratum in STRATUM_SCOPES:
+                rows.append(_stratum_row(run, stratum))
         rows.append(_pooled_row(group))
+        for stratum in STRATUM_SCOPES:
+            rows.append(_pooled_stratum_row(group, stratum))
 
     first = runs[0]
     depths = sorted(
@@ -177,8 +188,6 @@ def render_markdown(summary: Summary) -> str:
     The header names what the numbers trace back to, so a reader can check the frozen
     configuration from the table rather than taking the project's word for it.
     """
-    from evaluation.set import Stratum
-
     recall_columns = [f"recall@{depth}" for depth in summary.depths]
     ndcg_columns = [f"ndcg@{depth}" for depth in summary.depths]
     header = [
@@ -242,6 +251,9 @@ def render_markdown(summary: Summary) -> str:
     lines.extend(
         [
             "",
+            "A scope of papers:identifier_heavy slices a domain to one stratum; "
+            "pooled:identifier_heavy pools that slice across domains. "
+            "The claim is a difference between those slices, so they are rows rather than a footnote.",
             "cite is the share of answer claims one retrieved chunk each supports; "
             f"cite_unanswerable is the same share over the {Stratum.UNANSWERABLE.value} stratum alone.",
             "exact_match is the share of extractive questions whose answer matches the gold span, "
@@ -264,31 +276,19 @@ def _domain_row(run: RunFile) -> SummaryRow:
     next to untouched questions would otherwise survive into the table, and the table would no
     longer be a reading of what the run measured.
     """
-    scored = [result for result in run.results if result.scored]
+    return _row_for(run.architecture, run.domain, run.results)
 
-    return SummaryRow(
-        architecture=run.architecture,
-        scope=run.domain,
-        questions=len(run.results),
-        scored=len(scored),
-        unscored=len(run.results) - len(scored),
-        recall=mean(result.recall for result in scored),
-        reciprocal_rank=mean(result.reciprocal_rank for result in scored),
-        recall_at=_question_means(scored, "recall_at"),
-        ndcg_at=_question_means(scored, "ndcg_at"),
-        citation_accuracy=_citation_mean(run.results, None),
-        citation_accuracy_answerable=_citation_mean(run.results, False),
-        citation_accuracy_unanswerable=_citation_mean(run.results, True),
-        citation_scored=len(
-            [result for result in run.results if result.citation_accuracy is not None]
-        ),
-        citation_unscored=len(
-            [result for result in run.results if result.citation_accuracy is None]
-        ),
-        **_extractive_cells(run.results),
-        **_latency_cells(run.results),
-        **_cost_cells(run.results),
-    )
+
+def _stratum_row(run: RunFile, stratum: Stratum) -> SummaryRow:
+    """One run's row sliced to one stratum, recomputed from the stored per-question results.
+
+    The slice keeps the questions of that stratum only, so the identifier-heavy numbers sit
+    beside the paraphrase ones instead of being averaged away. The scope names the domain and
+    the stratum together, because the same stratum of another domain is a different slice.
+    """
+    kept = [result for result in run.results if result.stratum is stratum]
+
+    return _row_for(run.architecture, f"{run.domain}:{stratum.value}", kept)
 
 
 def _pooled_row(group: list[RunFile]) -> SummaryRow:
@@ -298,31 +298,55 @@ def _pooled_row(group: list[RunFile]) -> SummaryRow:
     domain rows, so a domain with more scored questions moves the pool more than one with
     fewer, and a hand-edited aggregate cannot survive next to the questions behind it.
     """
-    scored = [result for run in group for result in run.results if result.scored]
     pooled = [result for run in group for result in run.results]
 
+    return _row_for(group[0].architecture, POOLED_SCOPE, pooled)
+
+
+def _pooled_stratum_row(group: list[RunFile], stratum: Stratum) -> SummaryRow:
+    """One architecture's stratum pooled across its domains: every such result counted once.
+
+    Recomputed from the stored per-question results rather than averaged from the domain
+    stratum rows, for the same reason the pool is recomputed from the domain rows.
+    """
+    kept = [result for run in group for result in run.results if result.stratum is stratum]
+
+    return _row_for(group[0].architecture, f"{POOLED_SCOPE}:{stratum.value}", kept)
+
+
+def _row_for(
+    architecture: str, scope: str, results: list[QuestionResult]
+) -> SummaryRow:
+    """One row over the given questions, recomputed from what the run files stored.
+
+    One constructor serves domain, stratum, and pooled rows, so the three can never disagree
+    about what a mean is: scored means over the questions that named a place to look, citation
+    over the ones whose answers made claims, exact match over the extractive ones.
+    """
+    scored = [result for result in results if result.scored]
+
     return SummaryRow(
-        architecture=group[0].architecture,
-        scope=POOLED_SCOPE,
-        questions=sum(len(run.results) for run in group),
+        architecture=architecture,
+        scope=scope,
+        questions=len(results),
         scored=len(scored),
-        unscored=sum(len(run.results) for run in group) - len(scored),
+        unscored=len(results) - len(scored),
         recall=mean(result.recall for result in scored),
         reciprocal_rank=mean(result.reciprocal_rank for result in scored),
         recall_at=_question_means(scored, "recall_at"),
         ndcg_at=_question_means(scored, "ndcg_at"),
-        citation_accuracy=_citation_mean(pooled, None),
-        citation_accuracy_answerable=_citation_mean(pooled, False),
-        citation_accuracy_unanswerable=_citation_mean(pooled, True),
+        citation_accuracy=_citation_mean(results, None),
+        citation_accuracy_answerable=_citation_mean(results, False),
+        citation_accuracy_unanswerable=_citation_mean(results, True),
         citation_scored=len(
-            [result for result in pooled if result.citation_accuracy is not None]
+            [result for result in results if result.citation_accuracy is not None]
         ),
         citation_unscored=len(
-            [result for result in pooled if result.citation_accuracy is None]
+            [result for result in results if result.citation_accuracy is None]
         ),
-        **_extractive_cells(pooled),
-        **_latency_cells(pooled),
-        **_cost_cells(pooled),
+        **_extractive_cells(results),
+        **_latency_cells(results),
+        **_cost_cells(results),
     )
 
 

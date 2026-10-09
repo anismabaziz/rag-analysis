@@ -1,0 +1,2863 @@
+{
+  "architecture": "sparse",
+  "collection": "rag_sparse",
+  "domain": "papers",
+  "commit": {
+    "sha": "2a195cdf66b30b95d62ddfd85c1909a31746172e",
+    "dirty": true
+  },
+  "corpus": {
+    "identifier": "sha256:4d4ee4bb36386c91f7118ea16f5f1491acbe34d2770b6b7da122aece313efc08",
+    "domain": "papers",
+    "documents": [
+      "attention-is-all-you-need",
+      "rag-for-knowledge-intensive-nlp-tasks",
+      "dense-passage-retrieval",
+      "lexically-accelerated-dense-retrieval",
+      "lost-in-the-middle",
+      "bge-m3"
+    ]
+  },
+  "configuration": {
+    "prompt": "\nYou are a helpful assistant.\n\nUse ONLY the context below to answer the question. If the context does not contain the\nanswer, say so instead of guessing.\n\nContext:\n{context}\n\nQuestion:\n{query}\n\nAnswer:\n",
+    "prompt_fingerprint": "sha256:351044bda5e768c92fd92ba80abfc2d93179727867ac8b3e652959a76429289a",
+    "generation_model": "qwen/qwen3.8-27b",
+    "generation_temperature": 0.0,
+    "dense_encoder": {
+      "name": "sentence-transformers/all-MiniLM-L6-v2",
+      "revision": "d13954661f83248295ba75c1ed411eef3b7b936e"
+    },
+    "sparse_encoder": {
+      "name": "Qdrant/bm42-all-minilm-l6-v2-attentions",
+      "revision": "e6e0a7e86dfd9b3abe92d5d25abd609aa7b20040"
+    },
+    "rerank_model": {
+      "name": "Xenova/ms-marco-MiniLM-L-6-v2",
+      "revision": null
+    },
+    "retrieval_depth": 5,
+    "rerank_candidates": 20,
+    "chunker": {
+      "strategy": "semantic",
+      "size": 512,
+      "overlap": 128,
+      "parent_size": null,
+      "is_committed": true
+    }
+  },
+  "results": [
+    {
+      "question": "papers-attention-01",
+      "stratum": "identifier_heavy",
+      "scored": true,
+      "unscored_reason": null,
+      "recall": 1.0,
+      "reciprocal_rank": 1.0,
+      "recall_at": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0
+      },
+      "ndcg_at": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0
+      },
+      "locations": [
+        {
+          "document": "attention-is-all-you-need",
+          "section": "3.2.2 Multi-Head Attention",
+          "rank": 1
+        }
+      ],
+      "retrieved": [
+        {
+          "rank": 1,
+          "document": "attention-is-all-you-need",
+          "section": "3.2.3 Applications of Attention in our Model",
+          "page": 5,
+          "score": 0.20117888,
+          "node_id": "545e1e39-11f3-422a-b1ad-4f44058bf53b",
+          "text": "3.2.3 Applications of Attention in our Model\n\nThe Transformer uses multi-head attention in three different ways:\n\n• In \"encoder-decoder attention\" layers, the queries come from the previous decoder layer, and the memory keys and values come from the output of the encoder. This allows every position in the decoder to attend over all positions in the input sequence. This mimics the typical encoder-decoder attention mechanisms in sequence-to-sequence models such as [38, 2, 9].\n\n• The encoder contains self-attention layers. In a self-attention layer all of the keys, values and queries come from the same place, in this case, the output of the previous layer in the encoder. Each position in the encoder can attend to all positions in the previous layer of the encoder.\n\n• Similarly, self-attention layers in the decoder allow each position in the decoder to attend to all positions in the decoder up to and including that position. "
+        },
+        {
+          "rank": 2,
+          "document": "lost-in-the-middle",
+          "section": "6.1 Long-Context Language Models",
+          "page": 10,
+          "score": 0.17383626,
+          "node_id": "77a7d15d-8316-4018-82a7-f8e853186707",
+          "text": "6.1 Long-Context Language Models\n\nThere is much prior work in designing performant language models with cheaper scaling than Transformers in the context length. Many lines of work pursue Transformer variants with attention modifications like recurrence (Dai et al., 2019), factorizing attention into computationally less intensive approximations (Beltagy et al., 2020; Zaheer et al., 2020), or low-rank approximations (Wang et al., 2020; Peng et al., 2021). Dao et al. "
+        },
+        {
+          "rank": 3,
+          "document": "attention-is-all-you-need",
+          "section": "7 Conclusion",
+          "page": 10,
+          "score": 0.17202707,
+          "node_id": "5c061da7-5858-4d17-8621-f15f12a11b7b",
+          "text": "7 Conclusion\n\nIn this work, we presented the Transformer, the first sequence transduction model based entirely on attention, replacing the recurrent layers most commonly used in encoder-decoder architectures with multi-headed self-attention.\n\nFor translation tasks, the Transformer can be trained significantly faster than architectures based on recurrent or convolutional layers. On both WMT 2014 English-to-German and WMT 2014 English-to-French translation tasks, we achieve a new state of the art. In the former task our best model outperforms even all previously reported ensembles.\n\nWe are excited about the future of attention-based models and plan to apply them to other tasks. We plan to extend the Transformer to problems involving input and output modalities other than text and to investigate local, restricted attention mechanisms to efficiently handle large inputs and outputs such as images, audio and video. Making generation less sequential is another research goals of ours.\n\nThe code we used to train and evaluate our models is available at https://github.com/ tensorflow/tensor2tensor.\n\nAcknowledgements We are grateful to Nal Kalchbrenner and Stephan Gouws for their fruitful comments, corrections and inspiration.\n\n"
+        },
+        {
+          "rank": 4,
+          "document": "attention-is-all-you-need",
+          "section": "1 Introduction",
+          "page": 2,
+          "score": 0.17147093,
+          "node_id": "5fa4f444-4f9f-4c5b-8566-302bb98657f6",
+          "text": "The fundamental constraint of sequential computation, however, remains.\n\nAttention mechanisms have become an integral part of compelling sequence modeling and transduction models in various tasks, allowing modeling of dependencies without regard to their distance in the input or output sequences [2, 19]. In all but a few cases [27], however, such attention mechanisms are used in conjunction with a recurrent network.\n\nIn this work we propose the Transformer, a model architecture eschewing recurrence and instead relying entirely on an attention mechanism to draw global dependencies between input and output. The Transformer allows for significantly more parallelization and can reach a new state of the art in translation quality after being trained for as little as twelve hours on eight P100 GPUs."
+        },
+        {
+          "rank": 5,
+          "document": "rag-for-knowledge-intensive-nlp-tasks",
+          "section": "References",
+          "page": 10,
+          "score": 0.16217196,
+          "node_id": "595e5a7c-7705-4fa9-a561-57505c43affd",
+          "text": "URL https://www.aclweb.org/ anthology/P19-1346.\n\n[13] Angela Fan, Claire Gardent, Chloe Braud, and Antoine Bordes. Augmenting transformers with KNN-based composite memory, 2020. URL https://openreview.net/forum?id= H1gx1CNKPH.\n\n[14] Thibault Févry, Livio Baldini Soares, Nicholas FitzGerald, Eunsol Choi, and Tom Kwiatkowski. Entities as experts: Sparse memory access with entity supervision. ArXiv, abs/2004.07202, 2020. "
+        }
+      ],
+      "answer": "The provided context does not contain the answer to how many parallel attention heads the base Transformer uses. The context mentions that the Transformer uses \"multi-head attention\" and \"multi-headed self-attention\" (Context [1] and [3]), but it does not specify the number of heads for the base model.",
+      "claims": [
+        "The provided context does not contain the answer to how many parallel attention heads the base Transformer uses.",
+        "The context mentions that the Transformer uses \"multi-head attention\" and \"multi-headed self-attention\" (Context [1] and [3]), but it does not specify the number of heads for the base model."
+      ],
+      "claims_supported": 0,
+      "claims_total": 2,
+      "citation_accuracy": 0.0,
+      "extractive": true,
+      "gold_answer": "h = 8 parallel attention layers",
+      "exact_match": 0.0,
+      "retrieval_latency_s": 0.03900150000117719,
+      "generation_latency_s": 1.0595311670040246,
+      "prompt_tokens": 645,
+      "completion_tokens": 47,
+      "total_tokens": 692
+    },
+    {
+      "question": "papers-attention-02",
+      "stratum": "identifier_heavy",
+      "scored": true,
+      "unscored_reason": null,
+      "recall": 1.0,
+      "reciprocal_rank": 1.0,
+      "recall_at": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0
+      },
+      "ndcg_at": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0
+      },
+      "locations": [
+        {
+          "document": "attention-is-all-you-need",
+          "section": "5.3 Optimizer",
+          "rank": 1
+        }
+      ],
+      "retrieved": [
+        {
+          "rank": 1,
+          "document": "attention-is-all-you-need",
+          "section": "5.3 Optimizer",
+          "page": 7,
+          "score": 0.2629951,
+          "node_id": "55ecb186-1cb0-45fa-8a51-20cfaaf725c1",
+          "text": "We used warmup_steps = 4000."
+        },
+        {
+          "rank": 2,
+          "document": "attention-is-all-you-need",
+          "section": "5.3 Optimizer",
+          "page": 7,
+          "score": 0.13888383,
+          "node_id": "69e244d8-aab2-46d6-ad64-f42607f6feef",
+          "text": "5.3 Optimizer\n\nWe used the Adam optimizer [20] with β1 = 0.9, β2 = 0.98 and ϵ = 10−9. We varied the learning rate over the course of training, according to the formula:\n\nlrate = d−0.5 model · min(step_num−0.5,step_num · warmup_steps−1.5) (3)\n\nThis corresponds to increasing the learning rate linearly for the first warmup_steps training steps, and decreasing it thereafter proportionally to the inverse square root of the step number. "
+        },
+        {
+          "rank": 3,
+          "document": "bge-m3",
+          "section": "B.1 Experimental Hyperparameters",
+          "page": 14,
+          "score": 0.11960243,
+          "node_id": "e26ad88f-bf9a-4934-b831-52c3a9b7d590",
+          "text": "The data comprises Pile (Gao et al., 2020), Wudao (Yuan et al., 2021), and mC4 (Raffel et al., 2019) datasets. We sampled a total of 184 million text samples from these sources, covering 105 languages. The maximum sequence length is 8192 and the learning rate is 7 × 10−5. The batch size is set to 32 and we accumulate the gradient over 16 steps. Pre-training is conducted on 32 A100(40GB) GPUs for 20,000 steps.\n\nFor the pre-training with the massive unsupervised data, the max length of query and passage is set to 512 and 8192, respectively. The learning rate is 5×10−5, the warmup ratio is 0.1 and the weight\n\ndecay is 0.01. This training process takes 25,000 steps. For training data with different sequence length ranges (e.g., 0-500, 500-1000, etc.), we use different batch sizes. The details are represented in Table 9. The second stage is conducted on 96 A800(80GB) GPUs.\n\nIn the fine-tuning stage, we sample 7 negatives for each query. Refer to Table 9 for the batch size. In the initial phase, we employed approximately 6000 steps to perform warm-up on dense embedding, sparse embedding and multi-vectors. Subsequently, we conducted unified training with selfknowledge distillation. These experiments were carried out on 24 A800(80GB) GPUs."
+        },
+        {
+          "rank": 4,
+          "document": "dense-passage-retrieval",
+          "section": "References",
+          "page": 9,
+          "score": 0.072295845,
+          "node_id": "aeb2641a-7ed1-47cf-87b6-e2b4e645d8b4",
+          "text": "2017. Reading Wikipedia to answer opendomain questions. In Association for Computational Linguistics (ACL), pages 1870–1879.\n\nRajarshi Das, Shehzaad Dhuliawala, Manzil Zaheer, and Andrew McCallum. 2019. Multi-step retrieverreader interaction for scalable open-domain question answering. In International Conference on Learning Representations (ICLR).\n\nScott Deerwester, Susan T Dumais, George W Furnas, Thomas K Landauer, and Richard Harshman. 1990. Indexing by latent semantic analysis. Journal of the American society for information science, 41(6):391–407.\n\nJacob Devlin, Ming-Wei Chang, Kenton Lee, and Kristina Toutanova. "
+        },
+        {
+          "rank": 5,
+          "document": "attention-is-all-you-need",
+          "section": "5.2 Hardware and Schedule",
+          "page": 7,
+          "score": 0.068369865,
+          "node_id": "266e6b2a-2fba-423e-be97-c04f9154b254",
+          "text": "5.2 Hardware and Schedule\n\nWe trained our models on one machine with 8 NVIDIA P100 GPUs. For our base models using the hyperparameters described throughout the paper, each training step took about 0.4 seconds. "
+        }
+      ],
+      "answer": "The learning rate schedule uses 4000 warmup steps.\n\nThis is stated in context [1]: \"We used warmup_steps = 4000.\"",
+      "claims": [
+        "The learning rate schedule uses 4000 warmup steps.",
+        "This is stated in context [1]: \"We used warmup_steps = 4000.\""
+      ],
+      "claims_supported": 0,
+      "claims_total": 2,
+      "citation_accuracy": 0.0,
+      "extractive": true,
+      "gold_answer": "warmup_steps = 4000",
+      "exact_match": 0.0,
+      "retrieval_latency_s": 0.015943250007694587,
+      "generation_latency_s": 0.3626853750029113,
+      "prompt_tokens": 470,
+      "completion_tokens": 19,
+      "total_tokens": 489
+    },
+    {
+      "question": "papers-attention-03",
+      "stratum": "identifier_heavy",
+      "scored": true,
+      "unscored_reason": null,
+      "recall": 1.0,
+      "reciprocal_rank": 1.0,
+      "recall_at": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0
+      },
+      "ndcg_at": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0
+      },
+      "locations": [
+        {
+          "document": "attention-is-all-you-need",
+          "section": "5.4 Regularization",
+          "rank": 1
+        }
+      ],
+      "retrieved": [
+        {
+          "rank": 1,
+          "document": "attention-is-all-you-need",
+          "section": "5.4 Regularization",
+          "page": 8,
+          "score": 0.20453635,
+          "node_id": "5b4e3b6c-31bd-44c7-a7c1-a6a9c5d8a240",
+          "text": "In addition, we apply dropout to the sums of the embeddings and the positional encodings in both the encoder and decoder stacks. For the base model, we use a rate of Pdrop = 0.1.\n\nLabel Smoothing During training, we employed label smoothing of value ϵls = 0.1 [36]. This hurts perplexity, as the model learns to be more unsure, but improves accuracy and BLEU score."
+        },
+        {
+          "rank": 2,
+          "document": "attention-is-all-you-need",
+          "section": "5.2 Hardware and Schedule",
+          "page": 7,
+          "score": 0.1847182,
+          "node_id": "758c21e9-622d-42ef-a440-8c9fbcad3874",
+          "text": "We trained the base models for a total of 100,000 steps or 12 hours. For our big models,(described on the bottom line of table 3), step time was 1.0 seconds. The big models were trained for 300,000 steps (3.5 days)."
+        },
+        {
+          "rank": 3,
+          "document": "attention-is-all-you-need",
+          "section": "5 Training",
+          "page": 7,
+          "score": 0.15636042,
+          "node_id": "8088171e-5ddb-49aa-8643-dfad9af2f119",
+          "text": "5 Training\n\nThis section describes the training regime for our models."
+        },
+        {
+          "rank": 4,
+          "document": "attention-is-all-you-need",
+          "section": "5.2 Hardware and Schedule",
+          "page": 7,
+          "score": 0.13385826,
+          "node_id": "266e6b2a-2fba-423e-be97-c04f9154b254",
+          "text": "5.2 Hardware and Schedule\n\nWe trained our models on one machine with 8 NVIDIA P100 GPUs. For our base models using the hyperparameters described throughout the paper, each training step took about 0.4 seconds. "
+        },
+        {
+          "rank": 5,
+          "document": "rag-for-knowledge-intensive-nlp-tasks",
+          "section": "1 Introduction",
+          "page": 1,
+          "score": 0.1292337,
+          "node_id": "37db861b-e763-414b-8890-ef84a1fae496",
+          "text": "1 Introduction\n\nPre-trained neural language models have been shown to learn a substantial amount of in-depth knowledge from data [47]. They can do so without any access to an external memory, as a parameterized implicit knowledge base [51, 52]. "
+        }
+      ],
+      "answer": "The base model uses a dropout rate of 0.1.\n\nThis is stated in context [1]: \"For the base model, we use a rate of Pdrop = 0.1.\"",
+      "claims": [
+        "The base model uses a dropout rate of 0.1.",
+        "This is stated in context [1]: \"For the base model, we use a rate of Pdrop = 0.1.\""
+      ],
+      "claims_supported": 0,
+      "claims_total": 2,
+      "citation_accuracy": 0.0,
+      "extractive": true,
+      "gold_answer": "Pdrop = 0.1",
+      "exact_match": 0.0,
+      "retrieval_latency_s": 0.021531624981435016,
+      "generation_latency_s": 0.3467549170018174,
+      "prompt_tokens": 268,
+      "completion_tokens": 27,
+      "total_tokens": 295
+    },
+    {
+      "question": "papers-attention-04",
+      "stratum": "paraphrase",
+      "scored": true,
+      "unscored_reason": null,
+      "recall": 1.0,
+      "reciprocal_rank": 1.0,
+      "recall_at": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0
+      },
+      "ndcg_at": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0
+      },
+      "locations": [
+        {
+          "document": "attention-is-all-you-need",
+          "section": "3.2.3 Applications of Attention in our Model",
+          "rank": 1
+        }
+      ],
+      "retrieved": [
+        {
+          "rank": 1,
+          "document": "attention-is-all-you-need",
+          "section": "3.2.3 Applications of Attention in our Model",
+          "page": 5,
+          "score": 0.2150945,
+          "node_id": "ab9c19b8-ad52-415c-8d81-56f656d1a711",
+          "text": "We need to prevent leftward information flow in the decoder to preserve the auto-regressive property. We implement this inside of scaled dot-product attention by masking out (setting to −∞) all values in the input of the softmax which correspond to illegal connections. See Figure 2."
+        },
+        {
+          "rank": 2,
+          "document": "attention-is-all-you-need",
+          "section": "3.4 Embeddings and Softmax",
+          "page": 5,
+          "score": 0.14155135,
+          "node_id": "d7a57002-f363-4caf-955c-5e4dc0dd7b2b",
+          "text": "3.4 Embeddings and Softmax\n\nSimilarly to other sequence transduction models, we use learned embeddings to convert the input tokens and output tokens to vectors of dimension dmodel. We also use the usual learned linear transformation and softmax function to convert the decoder output to predicted next-token probabilities. In our model, we share the same weight matrix between the two embedding layers and the pre-softmax linear transformation, similar to [30]. "
+        },
+        {
+          "rank": 3,
+          "document": "rag-for-knowledge-intensive-nlp-tasks",
+          "section": "2.5 Decoding",
+          "page": 4,
+          "score": 0.1110918,
+          "node_id": "4181c0a5-8778-4123-b9eb-4002902c56c0",
+          "text": "We refer to this decoding procedure as “Fast Decoding.”"
+        },
+        {
+          "rank": 4,
+          "document": "lost-in-the-middle",
+          "section": "Input Context",
+          "page": 4,
+          "score": 0.10955016,
+          "node_id": "63351a78-ed3d-4d88-80cc-b514f9271f6b",
+          "text": "(2023), who compare question answering performance when the relevant paragraph is placed (i) at the beginning of the input or (ii) a random position within the input. They find that encoder-decoder models have significantly higher performance when relevant information is placed at the start of the input context. In contrast, we study finer-grained changes in the position of relevant information."
+        },
+        {
+          "rank": 5,
+          "document": "lost-in-the-middle",
+          "section": "4 Why Are Language Models Not Robust to Changes in the Position of Relevant Information?",
+          "page": 7,
+          "score": 0.1061618,
+          "node_id": "1018663a-72b3-49f9-9de2-4c51fd264c1f",
+          "text": "4 Why Are Language Models Not Robust to Changes in the Position of Relevant Information?\n\nOur multi-document question answering and keyvalue retrieval results show that language models struggle to robustly access and use information in long input contexts, since performance degrades significantly when changing the position of relevant information. To better understand why, we perform some preliminary investigations into the role of model architecture (decoder-only vs. "
+        }
+      ],
+      "answer": "The values in the input of the softmax corresponding to illegal connections are masked out (set to −∞).",
+      "claims": [
+        "The values in the input of the softmax corresponding to illegal connections are masked out (set to −∞)."
+      ],
+      "claims_supported": 0,
+      "claims_total": 1,
+      "citation_accuracy": 0.0,
+      "extractive": true,
+      "gold_answer": "masking out (setting to −∞) all values in the input of the softmax",
+      "exact_match": 0.0,
+      "retrieval_latency_s": 0.01759408402722329,
+      "generation_latency_s": 0.2793957919930108,
+      "prompt_tokens": 354,
+      "completion_tokens": 18,
+      "total_tokens": 372
+    },
+    {
+      "question": "papers-attention-05",
+      "stratum": "paraphrase",
+      "scored": true,
+      "unscored_reason": null,
+      "recall": 1.0,
+      "reciprocal_rank": 1.0,
+      "recall_at": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0
+      },
+      "ndcg_at": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0
+      },
+      "locations": [
+        {
+          "document": "attention-is-all-you-need",
+          "section": "3.5 Positional Encoding",
+          "rank": 1
+        }
+      ],
+      "retrieved": [
+        {
+          "rank": 1,
+          "document": "attention-is-all-you-need",
+          "section": "3.5 Positional Encoding",
+          "page": 6,
+          "score": 0.11327544,
+          "node_id": "7d70e445-9a67-4db4-99b7-ac24d65e79da",
+          "text": "There are many choices of positional encodings, learned and fixed [9].\n\nIn this work, we use sine and cosine functions of different frequencies:\n\nPE(pos,2i) = sin(pos/100002i/dmodel) PE(pos,2i+1) = cos(pos/100002i/dmodel)\n\nwhere pos is the position and i is the dimension. That is, each dimension of the positional encoding corresponds to a sinusoid. The wavelengths form a geometric progression from 2π to 10000 · 2π. We chose this function because we hypothesized it would allow the model to easily learn to attend by relative positions, since for any fixed offset k, PEpos+k can be represented as a linear function of PEpos.\n\nWe also experimented with using learned positional embeddings [9] instead, and found that the two versions produced nearly identical results (see Table 3 row (E)). We chose the sinusoidal version because it may allow the model to extrapolate to sequence lengths longer than the ones encountered during training."
+        },
+        {
+          "rank": 2,
+          "document": "dense-passage-retrieval",
+          "section": "5.2 Ablation Study on Model Training",
+          "page": 5,
+          "score": 0.071496435,
+          "node_id": "92911033-57cc-4162-a5f8-4ad6fee7a13d",
+          "text": "Similarity and loss Besides dot product, cosine and Euclidean L2 distance are also commonly used as decomposable similarity functions. We test these alternatives and ﬁnd that L2 performs comparable to dot product, and both of them are superior to cosine. Similarly, in addition to negative loglikelihood, a popular option for ranking is triplet loss, which compares a positive passage and a negative one directly with respect to a question (Burges et al., 2005). Our experiments show that using triplet loss does not affect the results much. More details can be found in Appendix B.\n\nCross-dataset generalization One interesting question regarding DPR’s discriminative training is how much performance degradation it may suffer from a non-iid setting. In other words, can it still generalize well when directly applied to a different dataset without additional ﬁne-tuning? To test the cross-dataset generalization, we train DPR on Natural Questions only and test it directly on the smaller WebQuestions and CuratedTREC datasets. We ﬁnd that DPR generalizes well, with 3-5 points loss from the best performing ﬁne-tuned model in top-20 retrieval accuracy (69.9/86.3 vs. 75.0/89.1 for WebQuestions and TREC, respectively), while still greatly outperforming the BM25 baseline (55.0/70.9)."
+        },
+        {
+          "rank": 3,
+          "document": "lexically-accelerated-dense-retrieval",
+          "section": "ACM Reference Format:",
+          "page": 1,
+          "score": 0.052665766,
+          "node_id": "6cf56ed3-4a64-4fe0-9b24-e47a46c09419",
+          "text": "ACM Reference Format:\n\nRetrieval approaches that score documents based on learned dense vectors (i.e., dense retrieval) rather than lexical signals (i.e., conventional retrieval) are increasingly popular. Their ability to identify related documents that do not necessarily contain the same terms as those appearing in the user’s query (thereby improving recall) is one of their key advantages. However, to actually achieve these gains, dense retrieval approaches typically require an exhaustive search over the document collection, making them considerably more expensive at query-time than conventional lexical approaches. Several techniques aim to reduce this computational overhead by approximating the results of a full dense retriever. Although these approaches reasonably approximate the top results, they suffer in terms of recall – one of the key advantages of dense retrieval. We introduce ‘LADR’ (Lexically-Accelerated Dense Retrieval), a simpleyet-effective approach that improves the efficiency of existing dense retrieval models without compromising on retrieval effectiveness. LADR uses lexical retrieval techniques to seed a dense retrieval exploration that uses a document proximity graph. Through extensive experiments, we find that LADR establishes a new dense retrieval effectiveness-efficiency Pareto frontier among approximate 𝑘 nearest neighbor techniques. When tuned to take around 8ms per query in retrieval latency on our hardware, LADR consistently achieves both precision and recall that are on par with an exhaustive search on standard benchmarks. Importantly, LADR accomplishes this using only a single CPU – no hardware accelerators such as GPUs – which reduces the deployment cost of dense retrieval systems.\n\nHrishikesh Kulkarni, Sean MacAvaney, Nazli Goharian, and Ophir Frieder. 2023. Lexically-Accelerated Dense Retrieval. In Proceedings of the 46th International ACM SIGIR Conference on Research and Development in Information Retrieval (SIGIR ’23), July 23–27, 2023, Taipei, Taiwan. ACM, New York, NY, USA, 11 pages. "
+        },
+        {
+          "rank": 4,
+          "document": "attention-is-all-you-need",
+          "section": "5.4 Regularization",
+          "page": 8,
+          "score": 0.049422663,
+          "node_id": "5b4e3b6c-31bd-44c7-a7c1-a6a9c5d8a240",
+          "text": "In addition, we apply dropout to the sums of the embeddings and the positional encodings in both the encoder and decoder stacks. For the base model, we use a rate of Pdrop = 0.1.\n\nLabel Smoothing During training, we employed label smoothing of value ϵls = 0.1 [36]. This hurts perplexity, as the model learns to be more unsure, but improves accuracy and BLEU score."
+        },
+        {
+          "rank": 5,
+          "document": "lost-in-the-middle",
+          "section": "References",
+          "page": 11,
+          "score": 0.045686483,
+          "node_id": "25ae4b2a-b815-47c7-93ff-ce2608ca28b8",
+          "text": "References\n\nAvi Arampatzis, Jaap Kamps, and Stephen Robertson. 2009. Where to stop reading a ranked list? threshold optimization using truncated score distributions. In Proc. "
+        }
+      ],
+      "answer": "The authors chose the fixed sine and cosine positional encoding because it may allow the model to extrapolate to sequence lengths longer than the ones encountered during training.",
+      "claims": [
+        "The authors chose the fixed sine and cosine positional encoding because it may allow the model to extrapolate to sequence lengths longer than the ones encountered during training."
+      ],
+      "claims_supported": 0,
+      "claims_total": 1,
+      "citation_accuracy": 0.0,
+      "extractive": false,
+      "gold_answer": null,
+      "exact_match": null,
+      "retrieval_latency_s": 0.019127125007798895,
+      "generation_latency_s": 3.6196613329811953,
+      "prompt_tokens": 809,
+      "completion_tokens": 28,
+      "total_tokens": 837
+    },
+    {
+      "question": "papers-dpr-01",
+      "stratum": "identifier_heavy",
+      "scored": true,
+      "unscored_reason": null,
+      "recall": 1.0,
+      "reciprocal_rank": 1.0,
+      "recall_at": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0
+      },
+      "ndcg_at": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0
+      },
+      "locations": [
+        {
+          "document": "dense-passage-retrieval",
+          "section": "4.1 Wikipedia Data Pre-processing",
+          "rank": 1
+        }
+      ],
+      "retrieved": [
+        {
+          "rank": 1,
+          "document": "dense-passage-retrieval",
+          "section": "6 Experiments: Question Answering",
+          "page": 7,
+          "score": 0.23629704,
+          "node_id": "c12d89e1-ebfa-4267-8df9-ef58c394b58f",
+          "text": "6 Experiments: Question Answering\n\nIn this section, we experiment with how different passage retrievers affect the ﬁnal QA accuracy."
+        },
+        {
+          "rank": 2,
+          "document": "dense-passage-retrieval",
+          "section": "Dense Passage Retrieval for Open-Domain Question Answering",
+          "page": 1,
+          "score": 0.2001363,
+          "node_id": "240f864d-6a65-456d-bbdc-e256b04e6ebf",
+          "text": "Dense Passage Retrieval for Open-Domain Question Answering"
+        },
+        {
+          "rank": 3,
+          "document": "dense-passage-retrieval",
+          "section": "Abstract",
+          "page": 1,
+          "score": 0.16350676,
+          "node_id": "1a580bcb-4f49-49b4-8637-a5b81407be17",
+          "text": "When evaluated on a wide range of open-domain QA datasets, our dense retriever outperforms a strong LuceneBM25 system greatly by 9%-19% absolute in terms of top-20 passage retrieval accuracy, and helps our end-to-end QA system establish new state-of-the-art on multiple open-domain QA benchmarks.1"
+        },
+        {
+          "rank": 4,
+          "document": "bge-m3",
+          "section": "4.1 Multi-Lingual Retrieval",
+          "page": 6,
+          "score": 0.14893049,
+          "node_id": "fd33b192-55bf-46fb-a340-36feaeae395b",
+          "text": "We can also observe the additional improvement from multi-vector retrieval, which relies on finegrained interactions between query and passage’s embeddings to compute the relevance score. Finally, the collaboration of dense and sparse method (Dense+Sparse) leads to a further improvement over each individual method, and the collaboration of all three methods (All) brings forth the best performance."
+        },
+        {
+          "rank": 5,
+          "document": "bge-m3",
+          "section": "References",
+          "page": 9,
+          "score": 0.14881508,
+          "node_id": "eca23425-d096-423d-b8fd-0b1ee97f5c3a",
+          "text": "2022. RetroMAE: Pre-training retrieval-oriented language models via masked auto-encoder. In Proceedings of the 2022 Conference on Empirical Methods in Natural Language Processing, pages 538–548, Abu Dhabi, United Arab Emirates. Association for Computational Linguistics.\n\nShitao Xiao, Zheng Liu, Peitian Zhang, and Niklas Muennighoff. 2023. C-pack: Packaged resources to advance general chinese embedding.\n\nXiaohui Xie, Qian Dong, Bingning Wang, Feiyang Lv, Ting Yao, Weinan Gan, Zhijing Wu, Xiangsheng Li, Haitao Li, Yiqun Liu, et al. 2023. T2ranking: A large-scale chinese benchmark for passage ranking. arXiv preprint arXiv:2304.03679.\n\nLee Xiong, Chenyan Xiong, Ye Li, Kwok-Fung Tang, Jialin Liu, Paul Bennett, Junaid Ahmed, and Arnold Overwijk. "
+        }
+      ],
+      "answer": "The provided context does not contain the answer to the question. The context mentions \"top-20 passage retrieval accuracy\" in [3] and discusses passage retrievers in [1] and [4], but it does not specify the total number of passages in the passage collection used by the retriever.",
+      "claims": [
+        "The provided context does not contain the answer to the question.",
+        "The context mentions \"top-20 passage retrieval accuracy\" in [3] and discusses passage retrievers in [1] and [4], but it does not specify the total number of passages in the passage collection used by the retriever."
+      ],
+      "claims_supported": 0,
+      "claims_total": 2,
+      "citation_accuracy": 0.0,
+      "extractive": true,
+      "gold_answer": "21,015,324 passages",
+      "exact_match": 0.0,
+      "retrieval_latency_s": 0.022624500008532777,
+      "generation_latency_s": 0.355419332976453,
+      "prompt_tokens": 311,
+      "completion_tokens": 46,
+      "total_tokens": 357
+    },
+    {
+      "question": "papers-dpr-02",
+      "stratum": "identifier_heavy",
+      "scored": true,
+      "unscored_reason": null,
+      "recall": 1.0,
+      "reciprocal_rank": 1.0,
+      "recall_at": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0
+      },
+      "ndcg_at": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0
+      },
+      "locations": [
+        {
+          "document": "dense-passage-retrieval",
+          "section": "5.1 Main Results",
+          "rank": 1
+        }
+      ],
+      "retrieved": [
+        {
+          "rank": 1,
+          "document": "dense-passage-retrieval",
+          "section": "Dense Passage Retrieval for Open-Domain Question Answering",
+          "page": 1,
+          "score": 0.22578263,
+          "node_id": "240f864d-6a65-456d-bbdc-e256b04e6ebf",
+          "text": "Dense Passage Retrieval for Open-Domain Question Answering"
+        },
+        {
+          "rank": 2,
+          "document": "lexically-accelerated-dense-retrieval",
+          "section": "2.3 Re-ranking Pipeline to Improve Efficiency",
+          "page": 3,
+          "score": 0.22186716,
+          "node_id": "9e849e15-4bce-4e93-9de3-2753b47b39bb",
+          "text": "2.3 Re-ranking Pipeline to Improve Efficiency\n\nTraditional token-based and vocabulary-centric approaches like BM25 are efficient but not effective. On the contrary, dense retrieval approaches mainly based on contextualized transformer language models like BERT are highly effective but not efficient. Many researchers worked on approaches to strike the balance between efficiency and effectiveness. "
+        },
+        {
+          "rank": 3,
+          "document": "dense-passage-retrieval",
+          "section": "5.2 Ablation Study on Model Training",
+          "page": 5,
+          "score": 0.20996676,
+          "node_id": "4d41a798-9516-4569-b437-059d58ba0b3d",
+          "text": "G.+BM25(1) and G.+BM25(2) denote in-batch training with 1 or 2 additional BM25 negatives, which serve as negative passages for all questions in the batch.\n\nOur experiments on Natural Questions show that switching to distantly-supervised passages (using the highest-ranked BM25 passage that contains the answer), has only a small impact: 1 point lower top-k accuracy for retrieval. Appendix A contains more details.\n\n"
+        },
+        {
+          "rank": 4,
+          "document": "dense-passage-retrieval",
+          "section": "5.1 Main Results",
+          "page": 5,
+          "score": 0.19622777,
+          "node_id": "ef2797d4-29b9-4321-b81c-6ca1855f4472",
+          "text": "5.1 Main Results\n\nTable 2 compares different passage retrieval systems on ﬁve QA datasets, using the top-k accuracy (k ∈ {20,100}). With the exception of SQuAD, DPR performs consistently better than BM25 on all datasets. The gap is especially large when k is small (e.g., 78.4% vs. 59.1% for top-20 accuracy on Natural Questions). When training with mul-\n\nWe conjecture that the lower performance on SQuAD is due to two reasons. First, the annotators wrote questions after seeing the passage. As a result, there is a high lexical overlap between passages and questions, which gives BM25 a clear advantage. Second, the data was collected from only 500+ Wikipedia articles and thus the distribution of training examples is extremely biased, as argued previously by Lee et al. (2019).\n\n8SQuAD is limited to a small set of Wikipedia documents and thus introduces unwanted bias. We will discuss this issue more in Section 5.1.\n\n"
+        },
+        {
+          "rank": 5,
+          "document": "dense-passage-retrieval",
+          "section": "Abstract",
+          "page": 1,
+          "score": 0.19124065,
+          "node_id": "eeaec026-22ea-4bbd-957b-cba64b6c0566",
+          "text": "Abstract\n\nRetrieval in open-domain QA is usually imple-\n\nOpen-domain question answering relies on efﬁcient passage retrieval to select candidate contexts, where traditional sparse vector space models, such as TF-IDF or BM25, are the de facto method. In this work, we show that retrieval can be practically implemented using dense representations alone, where embeddings are learned from a small number of questions and passages by a simple dualencoder framework. "
+        }
+      ],
+      "answer": "Based on the context provided, the top-20 retrieval accuracy for the dense retriever (DPR) on Natural Questions is **78.4%**, and for BM25, it is **59.1%**.\n\nThis information is found in section 5.1 (Main Results) of the document `dpr.pdf`: \"The gap is especially large when k is small (e.g., 78.4% vs. 59.1% for top-20 accuracy on Natural Questions).\"",
+      "claims": [
+        "Based on the context provided, the top-20 retrieval accuracy for the dense retriever (DPR) on Natural Questions is **78.4%**, and for BM25, it is **59.1%**.",
+        "This information is found in section 5.1 (Main Results) of the document `dpr.pdf`: \"The gap is especially large when k is small (e.g., 78.4% vs.",
+        "59.1% for top-20 accuracy on Natural Questions).\""
+      ],
+      "claims_supported": 1,
+      "claims_total": 3,
+      "citation_accuracy": 0.3333333333333333,
+      "extractive": true,
+      "gold_answer": "78.4% vs. 59.1% for top-20 accuracy on Natural Questions",
+      "exact_match": 0.0,
+      "retrieval_latency_s": 0.01677566600847058,
+      "generation_latency_s": 5.64522541599581,
+      "prompt_tokens": 433,
+      "completion_tokens": 57,
+      "total_tokens": 490
+    },
+    {
+      "question": "papers-dpr-03",
+      "stratum": "identifier_heavy",
+      "scored": true,
+      "unscored_reason": null,
+      "recall": 1.0,
+      "reciprocal_rank": 0.3333333333333333,
+      "recall_at": {
+        "1": 0.0,
+        "3": 1.0,
+        "5": 1.0
+      },
+      "ndcg_at": {
+        "1": 0.0,
+        "3": 0.5,
+        "5": 0.5
+      },
+      "locations": [
+        {
+          "document": "dense-passage-retrieval",
+          "section": "3.2 Training",
+          "rank": 3
+        }
+      ],
+      "retrieved": [
+        {
+          "rank": 1,
+          "document": "bge-m3",
+          "section": "A.1 Collected Data",
+          "page": 14,
+          "score": 0.11802004,
+          "node_id": "22dc480a-c596-470b-bd7c-1be4e9ae2745",
+          "text": "This approach allows relevant text segments to appear randomly at any position within the long sequence. During training, we applied this operation to passages with a probability of 0.2%."
+        },
+        {
+          "rank": 2,
+          "document": "bge-m3",
+          "section": "References",
+          "page": 9,
+          "score": 0.11148893,
+          "node_id": "eca23425-d096-423d-b8fd-0b1ee97f5c3a",
+          "text": "2022. RetroMAE: Pre-training retrieval-oriented language models via masked auto-encoder. In Proceedings of the 2022 Conference on Empirical Methods in Natural Language Processing, pages 538–548, Abu Dhabi, United Arab Emirates. Association for Computational Linguistics.\n\nShitao Xiao, Zheng Liu, Peitian Zhang, and Niklas Muennighoff. 2023. C-pack: Packaged resources to advance general chinese embedding.\n\nXiaohui Xie, Qian Dong, Bingning Wang, Feiyang Lv, Ting Yao, Weinan Gan, Zhijing Wu, Xiangsheng Li, Haitao Li, Yiqun Liu, et al. 2023. T2ranking: A large-scale chinese benchmark for passage ranking. arXiv preprint arXiv:2304.03679.\n\nLee Xiong, Chenyan Xiong, Ye Li, Kwok-Fung Tang, Jialin Liu, Paul Bennett, Junaid Ahmed, and Arnold Overwijk. "
+        },
+        {
+          "rank": 3,
+          "document": "dense-passage-retrieval",
+          "section": "Dense Passage Retrieval for Open-Domain Question Answering",
+          "page": 1,
+          "score": 0.106820546,
+          "node_id": "240f864d-6a65-456d-bbdc-e256b04e6ebf",
+          "text": "Dense Passage Retrieval for Open-Domain Question Answering"
+        },
+        {
+          "rank": 4,
+          "document": "dense-passage-retrieval",
+          "section": "6 Experiments: Question Answering",
+          "page": 7,
+          "score": 0.105659895,
+          "node_id": "c12d89e1-ebfa-4267-8df9-ef58c394b58f",
+          "text": "6 Experiments: Question Answering\n\nIn this section, we experiment with how different passage retrievers affect the ﬁnal QA accuracy."
+        },
+        {
+          "rank": 5,
+          "document": "dense-passage-retrieval",
+          "section": "A Distant Supervision",
+          "page": 12,
+          "score": 0.09191019,
+          "node_id": "08f78799-5e95-471b-bfd6-19683e166739",
+          "text": "A Distant Supervision\n\nWhen training our ﬁnal DPR model using Natural Questions, we use the passages in our collection that best match the gold context as the positive passages. "
+        }
+      ],
+      "answer": "The provided context does not contain the answer to the question about which two kinds of wrong passages the best configuration trains against. The context mentions \"positive passages\" in [5] but does not specify the types of negative or wrong passages used in the training configuration.",
+      "claims": [
+        "The provided context does not contain the answer to the question about which two kinds of wrong passages the best configuration trains against.",
+        "The context mentions \"positive passages\" in [5] but does not specify the types of negative or wrong passages used in the training configuration."
+      ],
+      "claims_supported": 0,
+      "claims_total": 2,
+      "citation_accuracy": 0.0,
+      "extractive": true,
+      "gold_answer": "gold passages from the same mini-batch and one BM25 negative passage",
+      "exact_match": 0.0,
+      "retrieval_latency_s": 0.04099654100718908,
+      "generation_latency_s": 5.454170166020049,
+      "prompt_tokens": 271,
+      "completion_tokens": 46,
+      "total_tokens": 317
+    },
+    {
+      "question": "papers-dpr-04",
+      "stratum": "paraphrase",
+      "scored": true,
+      "unscored_reason": null,
+      "recall": 1.0,
+      "reciprocal_rank": 0.5,
+      "recall_at": {
+        "1": 0.0,
+        "3": 1.0,
+        "5": 1.0
+      },
+      "ndcg_at": {
+        "1": 0.0,
+        "3": 0.6309297535714575,
+        "5": 0.6309297535714575
+      },
+      "locations": [
+        {
+          "document": "dense-passage-retrieval",
+          "section": "3.1 Overview",
+          "rank": 2
+        }
+      ],
+      "retrieved": [
+        {
+          "rank": 1,
+          "document": "bge-m3",
+          "section": "4.1 Multi-Lingual Retrieval",
+          "page": 6,
+          "score": 0.09886744,
+          "node_id": "fd33b192-55bf-46fb-a340-36feaeae395b",
+          "text": "We can also observe the additional improvement from multi-vector retrieval, which relies on finegrained interactions between query and passage’s embeddings to compute the relevance score. Finally, the collaboration of dense and sparse method (Dense+Sparse) leads to a further improvement over each individual method, and the collaboration of all three methods (All) brings forth the best performance."
+        },
+        {
+          "rank": 2,
+          "document": "dense-passage-retrieval",
+          "section": "Dense Passage Retrieval for Open-Domain Question Answering",
+          "page": 1,
+          "score": 0.085600376,
+          "node_id": "240f864d-6a65-456d-bbdc-e256b04e6ebf",
+          "text": "Dense Passage Retrieval for Open-Domain Question Answering"
+        },
+        {
+          "rank": 3,
+          "document": "dense-passage-retrieval",
+          "section": "6 Experiments: Question Answering",
+          "page": 7,
+          "score": 0.08467029,
+          "node_id": "c12d89e1-ebfa-4267-8df9-ef58c394b58f",
+          "text": "6 Experiments: Question Answering\n\nIn this section, we experiment with how different passage retrievers affect the ﬁnal QA accuracy."
+        },
+        {
+          "rank": 4,
+          "document": "dense-passage-retrieval",
+          "section": "A Distant Supervision",
+          "page": 12,
+          "score": 0.08305226,
+          "node_id": "706bc210-8c8a-436e-868a-65487f402eb8",
+          "text": "As some QA datasets contain only the question and answer pairs, it is thus interesting to see when using the passages that contain the answers as positives (i.e., the distant supervision setting), whether there is a signiﬁcant performance degradation. Using the question and answer together as the query, we run Lucene-BM25 and pick the top passage that contains the answer as the positive passage. Table 5 shows the performance of DPR when trained using the original setting and the distant supervision setting."
+        },
+        {
+          "rank": 5,
+          "document": "dense-passage-retrieval",
+          "section": "1 Introduction",
+          "page": 1,
+          "score": 0.07733777,
+          "node_id": "4f434281-dd8e-4ead-b62b-b2f75c9bf950",
+          "text": "Our contributions are twofold. First, we demonstrate that with the proper training setup, simply ﬁne-tuning the question and passage encoders on existing question-passage pairs is sufﬁcient to greatly outperform BM25. Our empirical results also suggest that additional pretraining may not be needed. Second, we verify that, in the context of open-domain question answering, a higher retrieval precision indeed translates to a higher end-to-end QA accuracy. By applying a modern reader model to the top retrieved passages, we achieve comparable or better results on multiple QA datasets in the open-retrieval setting, compared to several, much complicated systems."
+        }
+      ],
+      "answer": "The provided context does not contain the answer to why the passage side of the pair cannot be turned into the query side of the comparison at search time.",
+      "claims": [
+        "The provided context does not contain the answer to why the passage side of the pair cannot be turned into the query side of the comparison at search time."
+      ],
+      "claims_supported": 0,
+      "claims_total": 1,
+      "citation_accuracy": 0.0,
+      "extractive": false,
+      "gold_answer": null,
+      "exact_match": null,
+      "retrieval_latency_s": 0.01995216598152183,
+      "generation_latency_s": 3.396724541002186,
+      "prompt_tokens": 355,
+      "completion_tokens": 29,
+      "total_tokens": 384
+    },
+    {
+      "question": "papers-rag-01",
+      "stratum": "identifier_heavy",
+      "scored": true,
+      "unscored_reason": null,
+      "recall": 1.0,
+      "reciprocal_rank": 1.0,
+      "recall_at": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0
+      },
+      "ndcg_at": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0
+      },
+      "locations": [
+        {
+          "document": "rag-for-knowledge-intensive-nlp-tasks",
+          "section": "2.3 Generator: BART",
+          "rank": 1
+        }
+      ],
+      "retrieved": [
+        {
+          "rank": 1,
+          "document": "rag-for-knowledge-intensive-nlp-tasks",
+          "section": "6 Discussion",
+          "page": 9,
+          "score": 0.14782742,
+          "node_id": "8124f7ac-2182-4885-9608-9dac58891935",
+          "text": "6 Discussion\n\nIn this work, we presented hybrid generation models with access to parametric and non-parametric memory. We showed that our RAG models obtain state of the art results on open-domain QA. "
+        },
+        {
+          "rank": 2,
+          "document": "rag-for-knowledge-intensive-nlp-tasks",
+          "section": "2.3 Generator: BART",
+          "page": 3,
+          "score": 0.12540764,
+          "node_id": "e3194c21-a77e-401c-aa06-1e02471cb30a",
+          "text": "2.3 Generator: BART\n\nThe generator component pθ(yi|x,z,y1:i−1) could be modelled using any encoder-decoder. We use BART-large [32], a pre-trained seq2seq transformer [58] with 400M parameters. "
+        },
+        {
+          "rank": 3,
+          "document": "rag-for-knowledge-intensive-nlp-tasks",
+          "section": "Appendices for Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks",
+          "page": 17,
+          "score": 0.12082953,
+          "node_id": "924444d3-0c90-48fa-9d9e-6c1bba4351ef",
+          "text": "Appendices for Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks"
+        },
+        {
+          "rank": 4,
+          "document": "rag-for-knowledge-intensive-nlp-tasks",
+          "section": "Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks",
+          "page": 1,
+          "score": 0.119665176,
+          "node_id": "0aa0ff56-9c56-435e-8684-3ac085fc4593",
+          "text": "Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks\n\nPatrick Lewis'?, Ethan Perez*,"
+        },
+        {
+          "rank": 5,
+          "document": "rag-for-knowledge-intensive-nlp-tasks",
+          "section": "References",
+          "page": 10,
+          "score": 0.10435529,
+          "node_id": "0a49563e-b591-4f08-adc6-06f3f7328b2e",
+          "text": "URL https://www.aclweb.org/anthology/D18-1255.\n\n[42] Preksha Nema and Mitesh M. Khapra. Towards a better metric for evaluating question generation systems. In Proceedings of the 2018 Conference on Empirical Methods in Natural Language Processing, pages 3950–3959, Brussels, Belgium, October-November 2018. Association for Computational Linguistics. doi: 10.18653/v1/D18-1429. URL https://www.aclweb.org/ anthology/D18-1429.\n\n[43] Tri Nguyen, Mir Rosenberg, Xia Song, Jianfeng Gao, Saurabh Tiwary, Rangan Majumder, and Li Deng. MS MARCO: A human generated machine reading comprehension dataset. In Tarek Richard Besold, Antoine Bordes, Artur S. d’Avila Garcez, and Greg Wayne, editors, Proceedings of the Workshop on Cognitive Computation: Integrating neural and symbolic\n\napproaches 2016 co-located with the 30th Annual Conference on Neural Information Processing Systems (NIPS 2016), Barcelona, Spain, December 9, 2016, volume 1773 of CEUR Workshop Proceedings. CEUR-WS.org, 2016. "
+        }
+      ],
+      "answer": "The generator has 400M parameters.",
+      "claims": [
+        "The generator has 400M parameters."
+      ],
+      "claims_supported": 0,
+      "claims_total": 1,
+      "citation_accuracy": 0.0,
+      "extractive": true,
+      "gold_answer": "a pre-trained seq2seq transformer [58] with 400M parameters",
+      "exact_match": 0.0,
+      "retrieval_latency_s": 0.015514291008003056,
+      "generation_latency_s": 6.40045679101604,
+      "prompt_tokens": 281,
+      "completion_tokens": 5,
+      "total_tokens": 286
+    },
+    {
+      "question": "papers-rag-02",
+      "stratum": "identifier_heavy",
+      "scored": true,
+      "unscored_reason": null,
+      "recall": 1.0,
+      "reciprocal_rank": 1.0,
+      "recall_at": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0
+      },
+      "ndcg_at": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0
+      },
+      "locations": [
+        {
+          "document": "rag-for-knowledge-intensive-nlp-tasks",
+          "section": "2.5 Decoding",
+          "rank": 1
+        }
+      ],
+      "retrieved": [
+        {
+          "rank": 1,
+          "document": "rag-for-knowledge-intensive-nlp-tasks",
+          "section": "2.5 Decoding",
+          "page": 4,
+          "score": 0.12933302,
+          "node_id": "4181c0a5-8778-4123-b9eb-4002902c56c0",
+          "text": "We refer to this decoding procedure as “Fast Decoding.”"
+        },
+        {
+          "rank": 2,
+          "document": "attention-is-all-you-need",
+          "section": "3.3 Position-wise Feed-Forward Networks",
+          "page": 5,
+          "score": 0.11426774,
+          "node_id": "51b42ebd-8faf-48f2-b65a-26d146e57ec4",
+          "text": "3.3 Position-wise Feed-Forward Networks\n\nIn addition to attention sub-layers, each of the layers in our encoder and decoder contains a fully connected feed-forward network, which is applied to each position separately and identically. This consists of two linear transformations with a ReLU activation in between.\n\n"
+        },
+        {
+          "rank": 3,
+          "document": "attention-is-all-you-need",
+          "section": "3.1 Encoder and Decoder Stacks",
+          "page": 3,
+          "score": 0.09822996,
+          "node_id": "b636c460-6a0f-40de-b22d-0c70dce47586",
+          "text": "3.1 Encoder and Decoder Stacks\n\nEncoder: The encoder is composed of a stack of N = 6 identical layers. Each layer has two sub-layers. "
+        },
+        {
+          "rank": 4,
+          "document": "attention-is-all-you-need",
+          "section": "3.2.3 Applications of Attention in our Model",
+          "page": 5,
+          "score": 0.092583805,
+          "node_id": "ab9c19b8-ad52-415c-8d81-56f656d1a711",
+          "text": "We need to prevent leftward information flow in the decoder to preserve the auto-regressive property. We implement this inside of scaled dot-product attention by masking out (setting to −∞) all values in the input of the softmax which correspond to illegal connections. See Figure 2."
+        },
+        {
+          "rank": 5,
+          "document": "lost-in-the-middle",
+          "section": "Input Context",
+          "page": 4,
+          "score": 0.08941437,
+          "node_id": "63351a78-ed3d-4d88-80cc-b514f9271f6b",
+          "text": "(2023), who compare question answering performance when the relevant paragraph is placed (i) at the beginning of the input or (ii) a random position within the input. They find that encoder-decoder models have significantly higher performance when relevant information is placed at the start of the input context. In contrast, we study finer-grained changes in the position of relevant information."
+        }
+      ],
+      "answer": "Based on the provided context, the name given to this decoding procedure is **“Fast Decoding.”**\n\n[1] (./documents/papers/rag-knowledge-intensive.pdf (section 2.5 Decoding, page 4))",
+      "claims": [
+        "Based on the provided context, the name given to this decoding procedure is **“Fast Decoding.”**\n\n[1] (./documents/papers/rag-knowledge-intensive.pdf (section 2.5 Decoding, page 4))"
+      ],
+      "claims_supported": 0,
+      "claims_total": 1,
+      "citation_accuracy": 0.0,
+      "extractive": true,
+      "gold_answer": "Fast Decoding",
+      "exact_match": 0.0,
+      "retrieval_latency_s": 0.0471390419988893,
+      "generation_latency_s": 3.630090916994959,
+      "prompt_tokens": 274,
+      "completion_tokens": 22,
+      "total_tokens": 296
+    },
+    {
+      "question": "papers-rag-03",
+      "stratum": "paraphrase",
+      "scored": true,
+      "unscored_reason": null,
+      "recall": 0.0,
+      "reciprocal_rank": 0.0,
+      "recall_at": {
+        "1": 0.0,
+        "3": 0.0,
+        "5": 0.0
+      },
+      "ndcg_at": {
+        "1": 0.0,
+        "3": 0.0,
+        "5": 0.0
+      },
+      "locations": [
+        {
+          "document": "rag-for-knowledge-intensive-nlp-tasks",
+          "section": "2.1 Models",
+          "rank": null
+        }
+      ],
+      "retrieved": [
+        {
+          "rank": 1,
+          "document": "dense-passage-retrieval",
+          "section": "Dense Passage Retrieval for Open-Domain Question Answering",
+          "page": 1,
+          "score": 0.10128139,
+          "node_id": "240f864d-6a65-456d-bbdc-e256b04e6ebf",
+          "text": "Dense Passage Retrieval for Open-Domain Question Answering"
+        },
+        {
+          "rank": 2,
+          "document": "dense-passage-retrieval",
+          "section": "6 Experiments: Question Answering",
+          "page": 7,
+          "score": 0.100180924,
+          "node_id": "c12d89e1-ebfa-4267-8df9-ef58c394b58f",
+          "text": "6 Experiments: Question Answering\n\nIn this section, we experiment with how different passage retrievers affect the ﬁnal QA accuracy."
+        },
+        {
+          "rank": 3,
+          "document": "bge-m3",
+          "section": "References",
+          "page": 9,
+          "score": 0.0989959,
+          "node_id": "eca23425-d096-423d-b8fd-0b1ee97f5c3a",
+          "text": "2022. RetroMAE: Pre-training retrieval-oriented language models via masked auto-encoder. In Proceedings of the 2022 Conference on Empirical Methods in Natural Language Processing, pages 538–548, Abu Dhabi, United Arab Emirates. Association for Computational Linguistics.\n\nShitao Xiao, Zheng Liu, Peitian Zhang, and Niklas Muennighoff. 2023. C-pack: Packaged resources to advance general chinese embedding.\n\nXiaohui Xie, Qian Dong, Bingning Wang, Feiyang Lv, Ting Yao, Weinan Gan, Zhijing Wu, Xiangsheng Li, Haitao Li, Yiqun Liu, et al. 2023. T2ranking: A large-scale chinese benchmark for passage ranking. arXiv preprint arXiv:2304.03679.\n\nLee Xiong, Chenyan Xiong, Ye Li, Kwok-Fung Tang, Jialin Liu, Paul Bennett, Junaid Ahmed, and Arnold Overwijk. "
+        },
+        {
+          "rank": 4,
+          "document": "dense-passage-retrieval",
+          "section": "A Distant Supervision",
+          "page": 12,
+          "score": 0.08901577,
+          "node_id": "08f78799-5e95-471b-bfd6-19683e166739",
+          "text": "A Distant Supervision\n\nWhen training our ﬁnal DPR model using Natural Questions, we use the passages in our collection that best match the gold context as the positive passages. "
+        },
+        {
+          "rank": 5,
+          "document": "attention-is-all-you-need",
+          "section": "5 Training",
+          "page": 7,
+          "score": 0.08010899,
+          "node_id": "8088171e-5ddb-49aa-8643-dfad9af2f119",
+          "text": "5 Training\n\nThis section describes the training regime for our models."
+        }
+      ],
+      "answer": "The provided context does not contain the answer to the question. The context includes titles and sections from papers on Dense Passage Retrieval (DPR), BGE-M3, and Attention Is All You Need, but it does not describe a model that \"picks one passage for the whole reply\" versus one that \"switches passages partway through,\" nor does it detail what is given up in such a comparison.",
+      "claims": [
+        "The provided context does not contain the answer to the question.",
+        "The context includes titles and sections from papers on Dense Passage Retrieval (DPR), BGE-M3, and Attention Is All You Need, but it does not describe a model that \"picks one passage for the whole reply\" versus one that \"switches passages partway through,\" nor does it detail what is given up in such a comparison."
+      ],
+      "claims_supported": 0,
+      "claims_total": 2,
+      "citation_accuracy": 0.0,
+      "extractive": false,
+      "gold_answer": null,
+      "exact_match": null,
+      "retrieval_latency_s": 0.020080541988136247,
+      "generation_latency_s": 4.713397666986566,
+      "prompt_tokens": 264,
+      "completion_tokens": 65,
+      "total_tokens": 329
+    },
+    {
+      "question": "papers-rag-04",
+      "stratum": "paraphrase",
+      "scored": true,
+      "unscored_reason": null,
+      "recall": 0.0,
+      "reciprocal_rank": 0.0,
+      "recall_at": {
+        "1": 0.0,
+        "3": 0.0,
+        "5": 0.0
+      },
+      "ndcg_at": {
+        "1": 0.0,
+        "3": 0.0,
+        "5": 0.0
+      },
+      "locations": [
+        {
+          "document": "rag-for-knowledge-intensive-nlp-tasks",
+          "section": "4.1 Open-domain Question Answering",
+          "rank": null
+        }
+      ],
+      "retrieved": [
+        {
+          "rank": 1,
+          "document": "dense-passage-retrieval",
+          "section": "Dense Passage Retrieval for Open-Domain Question Answering",
+          "page": 1,
+          "score": 0.20209667,
+          "node_id": "240f864d-6a65-456d-bbdc-e256b04e6ebf",
+          "text": "Dense Passage Retrieval for Open-Domain Question Answering"
+        },
+        {
+          "rank": 2,
+          "document": "dense-passage-retrieval",
+          "section": "6 Experiments: Question Answering",
+          "page": 7,
+          "score": 0.1967834,
+          "node_id": "c12d89e1-ebfa-4267-8df9-ef58c394b58f",
+          "text": "6 Experiments: Question Answering\n\nIn this section, we experiment with how different passage retrievers affect the ﬁnal QA accuracy."
+        },
+        {
+          "rank": 3,
+          "document": "dense-passage-retrieval",
+          "section": "2 Background",
+          "page": 2,
+          "score": 0.13298056,
+          "node_id": "efb31937-d521-4a1f-9299-9515633d9dfd",
+          "text": "Assume that our collection contains D documents, d;,d2,--- ,dp. We first split each of the documents into text passages of equal lengths as the basic retrieval units’ and get M total passages in our corpus C = {p1,p2,.--, Pm}; where each passage p; can be viewed as a sequence of tokens wl, w, ree, w\\. . Given a question q, the task is to find a span w0, we), ww from one of the passages p; that can answer the question. Notice that to cover a wide variety of domains, the corpus size can easily range from millions of documents (e.g., Wikipedia) to billions (e.g., the Web). As aresult, any open-domain QA system needs to include an efficient retriever component that can select a small set of relevant texts, before applying the reader to extract the answer (Chen et al., 2017).4 Formally speaking, a retriever R : (q,C) > Cr is a function that takes as input a question g and a corpus C and returns a much smaller filter set of texts Cz C C, where |Cr| = k < |C|. Fora fixed k, a retriever can be evaluated in isolation on top-k retrieval accuracy, which is the fraction of questions for which Cz contains a span that answers the question."
+        },
+        {
+          "rank": 4,
+          "document": "dense-passage-retrieval",
+          "section": "8 Conclusion",
+          "page": 9,
+          "score": 0.109374315,
+          "node_id": "71a7fa19-77e9-4cca-9fd1-c8b165e48513",
+          "text": "As a result of improved retrieval performance, we obtained new state-of-the-art results on multiple open-domain question answering benchmarks."
+        },
+        {
+          "rank": 5,
+          "document": "dense-passage-retrieval",
+          "section": "6.1 End-to-end QA System",
+          "page": 7,
+          "score": 0.108076245,
+          "node_id": "bfb0edcd-c73e-48d7-8fc8-3e9df2d97dc0",
+          "text": "6.1 End-to-end QA System\n\nWe implement an end-to-end question answering system in which we can plug different retriever systems directly. Besides the retriever, our QA system consists of a neural reader that outputs the answer to the question. Given the top k retrieved passages (up to 100 in our experiments), the reader assigns a passage selection score to each passage. In addition, it extracts an answer span from each passage and assigns a span score. The best span from the passage with the highest passage selection\n\n10FAISS conﬁguration: we used HNSW index type on CPU, neighbors to store per node = 512, construction time search depth = 200, search depth = 128.\n\nscore is chosen as the ﬁnal answer. The passage selection model serves as a reranker through crossattention between the question and the passage. Although cross-attention is not feasible for retrieving relevant passages in a large corpus due to its nondecomposable nature, it has more capacity than the dual-encoder model sim(q,p) as in Eq. (1). "
+        }
+      ],
+      "answer": "The provided context does not contain the answer to this question. The text describes a system that extracts an answer span from retrieved passages (Context [3] and [5]) but does not discuss or compare this method against writing an answer out from scratch.",
+      "claims": [
+        "The provided context does not contain the answer to this question.",
+        "The text describes a system that extracts an answer span from retrieved passages (Context [3] and [5]) but does not discuss or compare this method against writing an answer out from scratch."
+      ],
+      "claims_supported": 0,
+      "claims_total": 2,
+      "citation_accuracy": 0.0,
+      "extractive": false,
+      "gold_answer": null,
+      "exact_match": null,
+      "retrieval_latency_s": 0.016927832999499515,
+      "generation_latency_s": 7.799782832997153,
+      "prompt_tokens": 513,
+      "completion_tokens": 43,
+      "total_tokens": 556
+    },
+    {
+      "question": "papers-lost-01",
+      "stratum": "identifier_heavy",
+      "scored": true,
+      "unscored_reason": null,
+      "recall": 1.0,
+      "reciprocal_rank": 1.0,
+      "recall_at": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0
+      },
+      "ndcg_at": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0
+      },
+      "locations": [
+        {
+          "document": "lost-in-the-middle",
+          "section": "2.1 Experimental Setup",
+          "rank": 1
+        }
+      ],
+      "retrieved": [
+        {
+          "rank": 1,
+          "document": "lost-in-the-middle",
+          "section": "2 Multi-Document Question Answering",
+          "page": 3,
+          "score": 0.22049664,
+          "node_id": "4b452fef-387d-4b0b-b1fa-59af682dea31",
+          "text": "2 Multi-Document Question Answering\n\nOur goal is to better understand how language models use their input context. To this end, we analyze model performance on multi-document question answering, which requires models to find relevant information within an input context and use it to answer the question. "
+        },
+        {
+          "rank": 2,
+          "document": "lost-in-the-middle",
+          "section": "G Full Multi-Document Question Answering Results",
+          "page": 18,
+          "score": 0.20679119,
+          "node_id": "dce572eb-f888-4779-884a-057cd8cadb09",
+          "text": "G Full Multi-Document Question Answering Results\n\nThis section tabulates model performance when evaluated on the multi-document QA task with varying numbers of documents (Figure 5). “Index n” indicates performance when the document with the answer occurs at position n + 1, where lower indices are closer to the start of the input context. "
+        },
+        {
+          "rank": 3,
+          "document": "lost-in-the-middle",
+          "section": "Abstract",
+          "page": 1,
+          "score": 0.19460434,
+          "node_id": "5da549d8-2049-45e2-9850-44acb28ae94f",
+          "text": "Abstract\n\n20 Total Retrieved Documents (~4K tokens)\n\nWhile recent language models have the abil-\n\nity to take long contexts as input, relatively little is known about how well they use longer context. We analyze the performance of language models on two tasks that require identifying relevant information in their input contexts: multi-document question answering and key-value retrieval. We find that performance can degrade significantly when changing the position of relevant information, indicating that current language models do not robustly make use of information in long input contexts. "
+        },
+        {
+          "rank": 4,
+          "document": "lost-in-the-middle",
+          "section": "4 Why Are Language Models Not Robust to Changes in the Position of Relevant Information?",
+          "page": 7,
+          "score": 0.19421461,
+          "node_id": "1018663a-72b3-49f9-9de2-4c51fd264c1f",
+          "text": "4 Why Are Language Models Not Robust to Changes in the Position of Relevant Information?\n\nOur multi-document question answering and keyvalue retrieval results show that language models struggle to robustly access and use information in long input contexts, since performance degrades significantly when changing the position of relevant information. To better understand why, we perform some preliminary investigations into the role of model architecture (decoder-only vs. "
+        },
+        {
+          "rank": 5,
+          "document": "lost-in-the-middle",
+          "section": "B Random Distractors in Multi-Document QA",
+          "page": 14,
+          "score": 0.18002586,
+          "node_id": "2e58d8cc-03f0-48b6-bf34-58e7bdc87be3",
+          "text": "B Random Distractors in Multi-Document QA\n\nWe also run multi-document question answering experiments with random Wikipedia documents as distractors, which allows us to ablate the impact of retrieved distractors (hard negatives). Note that in this setting, the the document containing the answer can often be identified with simple heuristics (e.g., lexical overlap with the query). "
+        }
+      ],
+      "answer": "The provided context does not contain the answer to how many queries the multi-document question answering task uses. The context mentions the number of retrieved documents (e.g., \"20 Total Retrieved Documents\" in [3]) and the position of documents, but it does not specify the total number of queries used in the task.",
+      "claims": [
+        "The provided context does not contain the answer to how many queries the multi-document question answering task uses.",
+        "The context mentions the number of retrieved documents (e.g., \"20 Total Retrieved Documents\" in [3]) and the position of documents, but it does not specify the total number of queries used in the task."
+      ],
+      "claims_supported": 0,
+      "claims_total": 2,
+      "citation_accuracy": 0.0,
+      "extractive": true,
+      "gold_answer": "2655 queries",
+      "exact_match": 0.0,
+      "retrieval_latency_s": 0.04858379199868068,
+      "generation_latency_s": 4.481173082982423,
+      "prompt_tokens": 404,
+      "completion_tokens": 52,
+      "total_tokens": 456
+    },
+    {
+      "question": "papers-lost-02",
+      "stratum": "identifier_heavy",
+      "scored": true,
+      "unscored_reason": null,
+      "recall": 1.0,
+      "reciprocal_rank": 1.0,
+      "recall_at": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0
+      },
+      "ndcg_at": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0
+      },
+      "locations": [
+        {
+          "document": "lost-in-the-middle",
+          "section": "3.2 Results and Discussion",
+          "rank": 1
+        }
+      ],
+      "retrieved": [
+        {
+          "rank": 1,
+          "document": "lost-in-the-middle",
+          "section": "3.1 Experimental Setup",
+          "page": 6,
+          "score": 0.2605742,
+          "node_id": "7b479fc9-d6bb-40ea-b51a-9703ccb8c6fe",
+          "text": "3.1 Experimental Setup\n\nIn our synthetic key-value retrieval task, the inputs are (i) a string-serialized JSON object with k keyvalue pairs, where each of the keys and values are unique, randomly-generated UUIDs and (ii) a key within the aforementioned JSON object. The goal is to return the value associated with the specified key. Thus, each JSON object contains one relevant key-value pair (where the value is to be returned), and k − 1 irrelevant “distractor” key-value pairs. Figure 6 provides an example input context and its corresponding desired output. "
+        },
+        {
+          "rank": 2,
+          "document": "lost-in-the-middle",
+          "section": "3 How Well Can Language Models Retrieve From Input Contexts?",
+          "page": 6,
+          "score": 0.20117,
+          "node_id": "cd1c3b99-ccf0-464f-bbde-d15064a8aa80",
+          "text": "3 How Well Can Language Models Retrieve From Input Contexts?\n\nmuch natural language semantics as possible (using random UUIDs instead), since language features may present potential confounders. For example, Transformer language models may have varying sensitivity to different linguistic features in their input (O’Connor and Andreas, 2021).\n\nGiven that language models struggle to retrieve and use information from the middle of their input contexts in the multi-document question answering task, to what extent can they simply retrieve from input contexts? We study this question with a synthetic key-value retrieval task, which is designed to provide a minimal testbed for the basic ability to retrieve matching tokens from an input context.\n\nTo modulate the position of relevant information within the input context, we change the position of the key to retrieve within the serialized JSON object. "
+        },
+        {
+          "rank": 3,
+          "document": "lost-in-the-middle",
+          "section": "3.1 Experimental Setup",
+          "page": 6,
+          "score": 0.18092698,
+          "node_id": "f099519e-71b0-4d2d-bebc-7b97ea301618",
+          "text": "We again measure accuracy by evaluating whether the correct value appears in the predicted output.\n\nOur synthetic key-value retrieval task shares similar goals with the Little Retrieval Test of Papailiopoulos et al. (2023) and the fine-grained line retrieval task of Li et al. (2023), but we explicitly seek to distill and simplify the task by removing as\n\nWe experiment with input contexts containing 75, 140, and 300 key-value pairs (500 examples each). We use the same set of models as the multidocument question answering experiments, see §2.2 for more details.\n\nFigure 7 presents key-value retrieval performance. Claude-1.3 and Claude-1.3 (100K) do nearly perfectly on all evaluated input context lengths, but other models struggle, especially when contexts have 140 or 300 key-value pairs— although the synthetic key-value retrieval task only requires identifying exact match within the input context, not all models achieve high performance.\n\nSimilar to our multi-document QA results, GPT3.5-Turbo, GPT-3.5-Turbo (16K), and MPT-30BInstruct have the lowest performance when they must access key-value pairs in the middle of their input context. LongChat-13B (16K) exhibits a different trend in the 140 key-value setting; we qualitatively observe that when relevant information is\n\nUV © a) U <\n\nFigure 7: The effect of changing the input context length and the position of relevant information on key-value retrieval performance. Lower positions are closer to the start of the input context. Although some models show perfect accuracy on this synthetic task (e.g., Claude-1.3 and Claude-1.3 (100K)), we see again that performance is often highest when relevant information is occurs at the very start or end of the context, and rapidly degrades when models must retrieve from the middle of the input context.\n\nplaced at the start of the input context, LongChat13B (16K) tends to generate code to retrieve the key, rather than outputting the value directly."
+        },
+        {
+          "rank": 4,
+          "document": "lost-in-the-middle",
+          "section": "Abstract",
+          "page": 1,
+          "score": 0.1516824,
+          "node_id": "5da549d8-2049-45e2-9850-44acb28ae94f",
+          "text": "Abstract\n\n20 Total Retrieved Documents (~4K tokens)\n\nWhile recent language models have the abil-\n\nity to take long contexts as input, relatively little is known about how well they use longer context. We analyze the performance of language models on two tasks that require identifying relevant information in their input contexts: multi-document question answering and key-value retrieval. We find that performance can degrade significantly when changing the position of relevant information, indicating that current language models do not robustly make use of information in long input contexts. "
+        },
+        {
+          "rank": 5,
+          "document": "lost-in-the-middle",
+          "section": "3 How Well Can Language Models Retrieve From Input Contexts?",
+          "page": 6,
+          "score": 0.14956811,
+          "node_id": "60178890-d87e-49ef-96fb-b7b9c16e4f3b",
+          "text": "To modulate the input context length, we change the number of input JSON key-value pairs k by adding or removing random keys, changing the number of distractor key-value pairs."
+        }
+      ],
+      "answer": "The input contexts contain 75, 140, and 300 key-value pairs.",
+      "claims": [
+        "The input contexts contain 75, 140, and 300 key-value pairs."
+      ],
+      "claims_supported": 0,
+      "claims_total": 1,
+      "citation_accuracy": 0.0,
+      "extractive": true,
+      "gold_answer": "75, 140, and 300 key-value pairs",
+      "exact_match": 0.0,
+      "retrieval_latency_s": 0.04643491702154279,
+      "generation_latency_s": 9.465509417001158,
+      "prompt_tokens": 737,
+      "completion_tokens": 10,
+      "total_tokens": 747
+    },
+    {
+      "question": "papers-lost-03",
+      "stratum": "paraphrase",
+      "scored": true,
+      "unscored_reason": null,
+      "recall": 1.0,
+      "reciprocal_rank": 1.0,
+      "recall_at": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0
+      },
+      "ndcg_at": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0
+      },
+      "locations": [
+        {
+          "document": "lost-in-the-middle",
+          "section": "4.3 Effect of Instruction Fine-Tuning",
+          "rank": 1
+        }
+      ],
+      "retrieved": [
+        {
+          "rank": 1,
+          "document": "lost-in-the-middle",
+          "section": "B Random Distractors in Multi-Document QA",
+          "page": 14,
+          "score": 0.17463107,
+          "node_id": "480731fd-1cee-4c20-b3db-04078e0535c5",
+          "text": "Figure 13 presents the results of this experiment. Although all models have higher absolute accuracy in this setting, they surprisingly still struggle to reason over their entire input context, indicating that their performance degradation is not solely due to an inability to identify relevant documents."
+        },
+        {
+          "rank": 2,
+          "document": "lost-in-the-middle",
+          "section": "C Randomizing Distractor Order in Multi-Document QA",
+          "page": 14,
+          "score": 0.13632676,
+          "node_id": "ccc42155-cbf0-47dc-a28b-7438bea4b522",
+          "text": "The search results are ordered randomly.” In addition, we randomly shuffle the k − 1 distractor documents.\n\nFigure 13: Language model performance on multidocument QA when using random distractors, rather than retrieved distractors.\n\nFigure 14 presents the results of this experiment. We continue to see a U-shaped performance curve, with performance degrading when language models must use information in the middle of their input contexts. Comparing the results in §2.3 with those when randomizing the distractor order and mentioning such in the prompt, we see that randomization slightly decreases performance when the relevant information is at the very beginning of the context, and slightly increases performance when using information in the middle and end of the context."
+        },
+        {
+          "rank": 3,
+          "document": "rag-for-knowledge-intensive-nlp-tasks",
+          "section": "4.1 Open-domain Question Answering",
+          "page": 5,
+          "score": 0.1280277,
+          "node_id": "5c442ee0-e32b-4744-97de-847c04a49daa",
+          "text": "Furthermore, RAG can generate correct answers even when the correct answer is not in any retrieved document, achieving 11.8% accuracy in such cases for NQ, where an extractive model would score 0%."
+        },
+        {
+          "rank": 4,
+          "document": "lost-in-the-middle",
+          "section": "2 Multi-Document Question Answering",
+          "page": 3,
+          "score": 0.12503095,
+          "node_id": "4b452fef-387d-4b0b-b1fa-59af682dea31",
+          "text": "2 Multi-Document Question Answering\n\nOur goal is to better understand how language models use their input context. To this end, we analyze model performance on multi-document question answering, which requires models to find relevant information within an input context and use it to answer the question. "
+        },
+        {
+          "rank": 5,
+          "document": "rag-for-knowledge-intensive-nlp-tasks",
+          "section": "F Null Document Probabilities",
+          "page": 18,
+          "score": 0.1205734,
+          "node_id": "c8d6b42a-0519-43e3-96a7-53969510ce5c",
+          "text": "For Open MS-MARCO, where useful retrieved documents cannot always be retrieved, we observe that the model learns to always retrieve a particular set of documents for questions that are less likely to beneﬁt from retrieval, suggesting that null document mechanisms may not be necessary for RAG."
+        }
+      ],
+      "answer": "Based on the context provided, the model's accuracy takes a **U-shaped** curve.\n\nThis is explicitly stated in context [2], which notes: \"We continue to see a U-shaped performance curve, with performance degrading when language models must use information in the middle of their input contexts.\" This indicates that performance is higher when the relevant information is at the beginning or end of the context and lower when it is in the middle.",
+      "claims": [
+        "Based on the context provided, the model's accuracy takes a **U-shaped** curve.",
+        "This is explicitly stated in context [2], which notes: \"We continue to see a U-shaped performance curve, with performance degrading when language models must use information in the middle of their input contexts.\" This indicates that performance is higher when the relevant information is at the beginning or end of the context and lower when it is in the middle."
+      ],
+      "claims_supported": 0,
+      "claims_total": 2,
+      "citation_accuracy": 0.0,
+      "extractive": true,
+      "gold_answer": "Both models have a U-shaped performance curve",
+      "exact_match": 0.0,
+      "retrieval_latency_s": 0.044545582990394905,
+      "generation_latency_s": 4.473620208009379,
+      "prompt_tokens": 389,
+      "completion_tokens": 72,
+      "total_tokens": 461
+    },
+    {
+      "question": "papers-lost-04",
+      "stratum": "paraphrase",
+      "scored": true,
+      "unscored_reason": null,
+      "recall": 1.0,
+      "reciprocal_rank": 1.0,
+      "recall_at": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0
+      },
+      "ndcg_at": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0
+      },
+      "locations": [
+        {
+          "document": "lost-in-the-middle",
+          "section": "4.1 Effect of Model Architecture",
+          "rank": 1
+        }
+      ],
+      "retrieved": [
+        {
+          "rank": 1,
+          "document": "lost-in-the-middle",
+          "section": "4 Why Are Language Models Not Robust to Changes in the Position of Relevant Information?",
+          "page": 7,
+          "score": 0.13844779,
+          "node_id": "1018663a-72b3-49f9-9de2-4c51fd264c1f",
+          "text": "4 Why Are Language Models Not Robust to Changes in the Position of Relevant Information?\n\nOur multi-document question answering and keyvalue retrieval results show that language models struggle to robustly access and use information in long input contexts, since performance degrades significantly when changing the position of relevant information. To better understand why, we perform some preliminary investigations into the role of model architecture (decoder-only vs. "
+        },
+        {
+          "rank": 2,
+          "document": "lexically-accelerated-dense-retrieval",
+          "section": "2.4 Seed-based Exploration in Proximity Graphs",
+          "page": 3,
+          "score": 0.13003795,
+          "node_id": "f316262b-2465-42ca-822e-20b8cb7edd22",
+          "text": "These seed points could be better derived from input document or query. We empower dense retrieval models with bag-of-words based seeding approach for informed exploration."
+        },
+        {
+          "rank": 3,
+          "document": "lost-in-the-middle",
+          "section": "B Random Distractors in Multi-Document QA",
+          "page": 14,
+          "score": 0.12591611,
+          "node_id": "480731fd-1cee-4c20-b3db-04078e0535c5",
+          "text": "Figure 13 presents the results of this experiment. Although all models have higher absolute accuracy in this setting, they surprisingly still struggle to reason over their entire input context, indicating that their performance degradation is not solely due to an inability to identify relevant documents."
+        },
+        {
+          "rank": 4,
+          "document": "lost-in-the-middle",
+          "section": "Abstract",
+          "page": 1,
+          "score": 0.12048521,
+          "node_id": "5da549d8-2049-45e2-9850-44acb28ae94f",
+          "text": "Abstract\n\n20 Total Retrieved Documents (~4K tokens)\n\nWhile recent language models have the abil-\n\nity to take long contexts as input, relatively little is known about how well they use longer context. We analyze the performance of language models on two tasks that require identifying relevant information in their input contexts: multi-document question answering and key-value retrieval. We find that performance can degrade significantly when changing the position of relevant information, indicating that current language models do not robustly make use of information in long input contexts. "
+        },
+        {
+          "rank": 5,
+          "document": "rag-for-knowledge-intensive-nlp-tasks",
+          "section": "F Null Document Probabilities",
+          "page": 18,
+          "score": 0.1171806,
+          "node_id": "c8d6b42a-0519-43e3-96a7-53969510ce5c",
+          "text": "For Open MS-MARCO, where useful retrieved documents cannot always be retrieved, we observe that the model learns to always retrieve a particular set of documents for questions that are less likely to beneﬁt from retrieval, suggesting that null document mechanisms may not be necessary for RAG."
+        }
+      ],
+      "answer": "Based on the provided context, there is no information explaining why a model that reads the whole pile before writing anything would cope better with a long prompt than one that writes as it reads. The context discusses how language models struggle to robustly access information in long contexts and how performance degrades when the position of relevant information changes, but it does not compare \"read-then-write\" versus \"write-as-you-read\" architectures or strategies.",
+      "claims": [
+        "Based on the provided context, there is no information explaining why a model that reads the whole pile before writing anything would cope better with a long prompt than one that writes as it reads.",
+        "The context discusses how language models struggle to robustly access information in long contexts and how performance degrades when the position of relevant information changes, but it does not compare \"read-then-write\" versus \"write-as-you-read\" architectures or strategies."
+      ],
+      "claims_supported": 0,
+      "claims_total": 2,
+      "citation_accuracy": 0.0,
+      "extractive": false,
+      "gold_answer": null,
+      "exact_match": null,
+      "retrieval_latency_s": 0.035008540988201275,
+      "generation_latency_s": 6.583700749994023,
+      "prompt_tokens": 385,
+      "completion_tokens": 71,
+      "total_tokens": 456
+    },
+    {
+      "question": "papers-m3-01",
+      "stratum": "identifier_heavy",
+      "scored": true,
+      "unscored_reason": null,
+      "recall": 1.0,
+      "reciprocal_rank": 1.0,
+      "recall_at": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0
+      },
+      "ndcg_at": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0
+      },
+      "locations": [
+        {
+          "document": "bge-m3",
+          "section": "3.1 Data Curation",
+          "rank": 1
+        }
+      ],
+      "retrieved": [
+        {
+          "rank": 1,
+          "document": "bge-m3",
+          "section": "A.1 Collected Data",
+          "page": 14,
+          "score": 0.13066325,
+          "node_id": "c4699206-9424-4c6f-9ec6-5a704b58f8e4",
+          "text": "A.1 Collected Data\n\nThe language and length distribution (the number of tokens) of the unsupervised data are illustrated in Figure 4.\n\nWe observed that for long texts (e.g., the news in cc-news), the initial sentences tend to be summarizing statements, and the model can rely solely on the information presented in these initial sentences to establish relevant relationships. To prevent the model from focusing solely on these starting sentences, we implemented a strategy of randomly shuffling the order of segments within entire texts. Specifically, we divided the text into three segments, shuffled their order randomly, and recombined them. "
+        },
+        {
+          "rank": 2,
+          "document": "bge-m3",
+          "section": "References",
+          "page": 9,
+          "score": 0.10586655,
+          "node_id": "825109d4-6edf-42ec-8798-08ab60055b07",
+          "text": "Niklas Muennighoff, Thomas Wang, Lintang Sutawika, Adam Roberts, Stella Biderman, Teven Le Scao, M Saiful Bari, Sheng Shen, Zheng Xin Yong, Hailey Schoelkopf, Xiangru Tang, Dragomir Radev, Alham Fikri Aji, Khalid Almubarak, Samuel Albanie, Zaid Alyafeai, Albert Webson, Edward Raff, and Colin Raffel. 2023. Crosslingual generalization through multitask finetuning. In Proceedings of the 61st Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers), pages 15991–16111, Toronto, Canada. Association for Computational Linguistics.\n\nArvind Neelakantan, Tao Xu, Raul Puri, Alec Radford, Jesse Michael Han, Jerry Tworek, Qiming Yuan, Nikolas Tezak, Jong Wook Kim, Chris Hallacy, et al. 2022. Text and code embeddings by contrastive pretraining. arXiv preprint arXiv:2201.10005.\n\nTri Nguyen, Mir Rosenberg, Xia Song, Jianfeng Gao, Saurabh Tiwary, Rangan Majumder, and Li Deng. 2016. Ms marco: A human generated machine reading comprehension dataset. choice, 2640:660.\n\nJianmo Ni, Gustavo Hernandez Abrego, Noah Constant, Ji Ma, Keith Hall, Daniel Cer, and Yinfei Yang. "
+        },
+        {
+          "rank": 3,
+          "document": "dense-passage-retrieval",
+          "section": "1 Introduction",
+          "page": 1,
+          "score": 0.09820154,
+          "node_id": "4f434281-dd8e-4ead-b62b-b2f75c9bf950",
+          "text": "Our contributions are twofold. First, we demonstrate that with the proper training setup, simply ﬁne-tuning the question and passage encoders on existing question-passage pairs is sufﬁcient to greatly outperform BM25. Our empirical results also suggest that additional pretraining may not be needed. Second, we verify that, in the context of open-domain question answering, a higher retrieval precision indeed translates to a higher end-to-end QA accuracy. By applying a modern reader model to the top retrieved passages, we achieve comparable or better results on multiple QA datasets in the open-retrieval setting, compared to several, much complicated systems."
+        },
+        {
+          "rank": 4,
+          "document": "lost-in-the-middle",
+          "section": "6.2 How Do Language Models Use Context?",
+          "page": 10,
+          "score": 0.093306616,
+          "node_id": "130a6642-a0a7-49dc-8578-36af17a044ae",
+          "text": "6.2 How Do Language Models Use Context?\n\nThe pioneering work of Khandelwal et al. (2018) showed that small LSTM language models make increasingly coarse use of longer-term context; Sankar et al. (2019) found similar results in dialogue models. In a similar vein, Daniluk et al. (2017) find that attentive LSTM language models tend to mainly use recent history. Petroni et al. (2020) were among the first to demonstrate the potential of combining context from an information retrieval system with a pretrained language models for unsupervised question answering. O’Connor and Andreas (2021) found that many information-destroying operations had marginal effects on Transformer LMs’ predictions. Krishna et al. (2022) found that long-context neural generation in modestly-sized Transformer language models degenerates because models fail to properly condition on long context. Finally, studying long-context models, Sun et al. "
+        },
+        {
+          "rank": 5,
+          "document": "bge-m3",
+          "section": "1 Introduction",
+          "page": 1,
+          "score": 0.090690255,
+          "node_id": "6a8a1ae0-5ac6-4ca4-b682-32109ab89d7b",
+          "text": "Last but not least, we perform extensive and high-quality data curation. Our dataset includes three sources: 1) the extraction of unsupervised data from massive multi-lingual corpora, 2) the integration of closely related supervised data, 3) the synthesization of scarce training data. The three data sources are complement to each other and applied to different training stages, which lays a solid foundation for the versatile text embeddings.\n\nM3-Embedding exhibits a remarkable versatility in our experiments. It achieves superior retrieval quality for a variety of languages, leading to state-of-the-art performances on popular multilingual and cross-lingual benchmarks like MIRACL (Zhang et al., 2023c) and MKQA (Longpre et al., 2021). It effectively learns the three retrieval functionalities, which can not only work individually but also work together for an even stronger retrieval quality. It also well maintains its superior capability across different input granularities within 8192 tokens, which outperforms the existing\n\nmethods by a notable advantage.\n\nOur contributions are summarized as follows. 1) We present M3-Embedding, which achieves unprecedented versatility in multi-linguality, multifunctionality, and multi-granularity. 2) We propose a novel training framework of self-knowledge distillation and optimize the batching strategy for efficient training. We also create high-quality training resource based on comprehensive data curation. 3) Our model, code, and data is publicly available, offering critical resources for both direct usage and future development of text embeddings."
+        }
+      ],
+      "answer": "The provided context does not contain the specific number of text pairs of unsupervised data used for pretraining.\n\nContext [1] mentions that the language and length distribution of the unsupervised data are illustrated in \"Figure 4,\" but the figure itself and its specific numerical data are not included in the text. Context [5] mentions the extraction of unsupervised data from massive multi-lingual corpora but does not provide a count.",
+      "claims": [
+        "The provided context does not contain the specific number of text pairs of unsupervised data used for pretraining.",
+        "Context [1] mentions that the language and length distribution of the unsupervised data are illustrated in \"Figure 4,\" but the figure itself and its specific numerical data are not included in the text.",
+        "Context [5] mentions the extraction of unsupervised data from massive multi-lingual corpora but does not provide a count."
+      ],
+      "claims_supported": 0,
+      "claims_total": 3,
+      "citation_accuracy": 0.0,
+      "extractive": true,
+      "gold_answer": "1.2 billion",
+      "exact_match": 0.0,
+      "retrieval_latency_s": 0.057743458019103855,
+      "generation_latency_s": 9.880345917015802,
+      "prompt_tokens": 782,
+      "completion_tokens": 69,
+      "total_tokens": 851
+    },
+    {
+      "question": "papers-m3-02",
+      "stratum": "identifier_heavy",
+      "scored": true,
+      "unscored_reason": null,
+      "recall": 1.0,
+      "reciprocal_rank": 1.0,
+      "recall_at": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0
+      },
+      "ndcg_at": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0
+      },
+      "locations": [
+        {
+          "document": "bge-m3",
+          "section": "4.1 Multi-Lingual Retrieval",
+          "rank": 1
+        }
+      ],
+      "retrieved": [
+        {
+          "rank": 1,
+          "document": "bge-m3",
+          "section": "2 Related Work",
+          "page": 2,
+          "score": 0.2171408,
+          "node_id": "9f684ffd-f617-4d07-acfb-6c0f91e4ae6c",
+          "text": "2 Related Work\n\nThe related works are reviewed from three aspects: general text embeddings, embedding models for neural retrieval, embeddings of multi-linguality.\n\nIn the past few years, substantial progress has been achieved in the field of text embedding. "
+        },
+        {
+          "rank": 2,
+          "document": "bge-m3",
+          "section": "4.1 Multi-Lingual Retrieval",
+          "page": 6,
+          "score": 0.16289635,
+          "node_id": "58231a53-9273-4095-aeaa-cde4de6418f3",
+          "text": "4.1 Multi-Lingual Retrieval\n\nWe evaluate the multi-lingual retrieval performance with MIRACL (Zhang et al., 2023c), which consists of ad-hoc retrieval tasks in 18 languages. Each task is made up of query and passage presented in the same language. Following the official benchmark, we evaluate our method using Pyserini (Lin et al., 2021), and use nDCG@10 as the primary evaluation metric (Recall@100 is also measured and reported in Appendix C.1). Specifically, for the dense method (denoted as Dense), we first use it to generate the embeddings of the corpus and then build the dense index for searching top-1000 candidates with Faiss. For the sparse method (denoted as Sparse), we first use it to generate the weights of the corpus and then build the sparse index for searching top-1000 candidates with Lucene. For the multi-vector method (denoted as Multi-vec), considering its heavy cost, we use it as reranker to re-rank the top-200 candidates from dense method. For the hybrid retrieval of dense method and sparse method (denoted as Dense+Sparse), we set w1 = 1, w2 = 0.3 and\n\ntop-1000 candidates from Dense and top-1000 candidate from Sparse. For the hybrid retrieval of all three methods (denoted as All), we set w1 = 1, w2 = 0.3 and w3 = 1 in equation(1) to re-rank the top-200 candidates from Dense.\n\nWe incorporate the following baselines in our experiment: the lexical retrieval method: BM25 (Robertson and Zaragoza, 2009); the dense retrieval methods: mDPR3 (Zhang et al., 2023b), mContriever4 (Izacard et al., 2022), mE5large (Wang et al., 2022) and E5mistral-7b (Wang et al., 2023). To make the BM25 and M3 more comparable, in the experiment, we use the same tokenizer as M3 (i.e., the tokenizer of XLM-Roberta) for BM25. Using the same vocabulary from XLM-Roberta can also ensure that both approaches have the same retrieval latency. The results of BM25 with different tokenizers are shown in Appendix C.2. We also make a comparison with Text-Embedding-3-Large(abbreviated as OpenAI3), which was recently released by OpenAI5.\n\nWe can make the following observations according to the experiment result in Table 1. Firstly, M3Embedding already achieves a superior retrieval performance with only its dense retrieval functionality (Dense). It not only outperforms other baseline methods in the average performance, but also maintains a consistent empirical advantage in most of individual languages. Even compared with E5mistral-7b, which leverages a much larger Mistral-7B model as the text encoder and specifically trained with English data, our method is able to produce a similar result in English and notably higher results in the other languages. Besides, the sparse retrieval functionality (Sparse) is also effectively trained by M3-Embedding, as it outper-\n\nw3 = 0 in equation(1) to re-rank the union set of\n\n<table><thead><tr><th></th><th>BM25</th><th>mDPR</th><th>mContriever</th><th>MESjarge</th><th>E5mistrai-7»</th><th>OpenAI-3</th><th colspan=\"5\">Dense Sparse Multi-vec Dense+Sparse All</th></tr></thead><tbody><tr><td>ar</td><td>18.9</td><td>48.2</td><td>58.2</td><td>68.7</td><td>59.6</td><td>65.6</td><td>71.10</td><td>23.5</td><td>71.4</td><td>711</td><td>71.5</td></tr><tr><td>da</td><td>49.3</td><td>67.4</td><td>73.9</td><td>7714</td><td>778</td><td>73.6</td><td>772°</td><td>S54</td><td>77.5</td><td>714</td><td>7716</td></tr><tr><td>de</td><td>35.4</td><td>65.8</td><td>71.7</td><td>76.9</td><td>77.0</td><td>73.6</td><td>76.2</td><td>43.3</td><td>76.3</td><td>76.4</td><td>76.3</td></tr><tr><td>es</td><td>43.4</td><td>66.8</td><td>72.6</td><td>76.4</td><td>77.4</td><td>73.9</td><td>76.4</td><td>50.6</td><td>76.6</td><td>76.7</td><td>76.9</td></tr><tr><td>fi</td><td>46.3</td><td>56.2</td><td>70.2</td><td>74.0</td><td>72.0</td><td>72.7</td><td>75.1</td><td>51.1</td><td>75.3</td><td>75.3</td><td>75.5</td></tr><tr><td>fr</td><td>45.3.</td><td>68.2</td><td>72.8</td><td>75.5</td><td>78.0</td><td>74.1</td><td>76.2</td><td>53.9</td><td>76.4</td><td>76.6</td><td>76.6</td></tr><tr><td>he</td><td>26.9</td><td>49.7</td><td>63.8</td><td>69.6</td><td>47.2</td><td>58.1</td><td>724</td><td>31.1</td><td>72.9</td><td>72.5</td><td>73.0</td></tr><tr><td>hu</td><td>38.2</td><td>60.4</td><td>69.7</td><td>74.7</td><td>75.0</td><td>71.2</td><td>74.7</td><td>44.6</td><td>74.6</td><td>74.9</td><td>75.0</td></tr><tr><td>it</td><td>45.2</td><td>66.0</td><td>72.3</td><td>76.8</td><td>77.1</td><td>73.6</td><td>76.0</td><td>52.5</td><td>76.4</td><td>76.3</td><td>76.5</td></tr><tr><td>ja</td><td>24.5</td><td>60.3</td><td>64.8</td><td>71.5</td><td>65.1</td><td>71.9</td><td>75.0</td><td>31.3</td><td>75.1</td><td>75.0</td><td>75.2</td></tr><tr><td>km</td><td>27.8</td><td>29.5</td><td>26.8</td><td>28.1</td><td>34.3</td><td>33.9</td><td>68.6</td><td>30.1</td><td>69.1</td><td>68.8</td><td>69.2</td></tr><tr><td>ko</td><td>27.9</td><td>50.9</td><td>59.7</td><td>68.1</td><td>59.4</td><td>63.9</td><td>716</td><td>314</td><td>71.7</td><td>71.6</td><td>71.8</td></tr><tr><td>ms</td><td>55.9</td><td>65.5</td><td>74.1</td><td>76.3</td><td>77.2</td><td>73.3</td><td>77.2</td><td>624</td><td>77.4</td><td>77.4</td><td>77.4</td></tr><tr><td>nl</td><td>56.2.</td><td>68.2</td><td>73.7</td><td>77.8</td><td>79.1</td><td>74.2</td><td>714</td><td>624</td><td>77.6</td><td>77.7</td><td>7716</td></tr><tr><td>no</td><td>52.1</td><td>66.7</td><td>73.5</td><td>77.3</td><td>76.6</td><td>73.3</td><td>T7110</td><td>57.9</td><td>77.2</td><td>77.4</td><td>77.3</td></tr><tr><td>pl</td><td>40.8</td><td>63.3</td><td>71.6</td><td>76.7</td><td>77.1</td><td>72.7</td><td>76.3</td><td>46.1</td><td>76.5</td><td>76.3</td><td>76.6</td></tr><tr><td>pt</td><td>44.9</td><td>65.5</td><td>72.0</td><td>73.5</td><td>77.5</td><td>73.7</td><td>76.3</td><td>50.9</td><td>76.4</td><td>76.5,</td><td>76.4</td></tr><tr><td>ru</td><td>33.2</td><td>62.7</td><td>69.8</td><td>76.8</td><td>75.5</td><td>72.0</td><td>76.2</td><td>36.9</td><td>76.4</td><td>76.2</td><td>76.5</td></tr><tr><td>SV</td><td>54.6</td><td>66.9</td><td>73.2</td><td>77.6</td><td>78.3</td><td>74.0</td><td>76.9</td><td>59.6</td><td>77.2</td><td>714</td><td>714</td></tr><tr><td>th</td><td>37.8</td><td>53.8</td><td>66.9</td><td>76.0</td><td>67.4</td><td>65.2</td><td>76.4</td><td>42.0</td><td>76.5</td><td>76.5,</td><td>76.6</td></tr><tr><td>tr</td><td>45.8</td><td>59.1</td><td>71.1</td><td>74.3</td><td>73.0</td><td>71.8</td><td>75.6</td><td>51.8</td><td>75.9</td><td>76.0</td><td>76.0</td></tr><tr><td>vi</td><td>46.6</td><td>63.4</td><td>70.9</td><td>75.4</td><td>70.9</td><td>71.1</td><td>76.6</td><td>51.8</td><td>76.7</td><td>76.8</td><td>76.9</td></tr><tr><td>zh_cn</td><td>31.0</td><td>63.7</td><td>68.1</td><td>56.6</td><td>69.3</td><td>70.7</td><td>74.6</td><td>35.4</td><td>74.9</td><td>74.7</td><td>75.0</td></tr><tr><td>zhhk</td><td>35.0</td><td>62.8</td><td>68.0</td><td>58.1</td><td>65.1</td><td>69.6</td><td>73.8</td><td>39.8</td><td>74.1</td><td>74.0</td><td>74.3</td></tr><tr><td>zhtw</td><td>33.5</td><td>64.0</td><td>67.9</td><td>58.1</td><td>65.8</td><td>69.7</td><td>73.55</td><td>37.7</td><td>73.5</td><td>73.6</td><td>73.6</td></tr><tr><td>Avg</td><td>39.9</td><td>60.6</td><td>67.9</td><td>70.9</td><td>70.1</td><td>69.5</td><td>75.1</td><td>45.3</td><td>75.3</td><td>75.3</td><td>75.5</td></tr></tbody></table>\n\nTable 2: Cross-lingual retrieval performance on MKQA (measured by Recall@100).\n\nforms the typical BM25 methods in all languages. "
+        },
+        {
+          "rank": 3,
+          "document": "bge-m3",
+          "section": "Table 1: Multi-lingual retrieval performance on the MIRACL dev set (measured by nDCG@10).",
+          "page": 6,
+          "score": 0.16195956,
+          "node_id": "8700f1a3-1f51-4380-bd63-b8779d93ad3c",
+          "text": "Table 1: Multi-lingual retrieval performance on the MIRACL dev set (measured by nDCG@10).\n\ntion or data resource, we present an even simpler method called MCLS (Multi-CLS), which simply inserts multiple CLS tokens to the long document during inference, and takes the average of all CLS embeddings as the ultimate embedding of the document. Despite simplicity, it is surprisingly effective in practice. "
+        },
+        {
+          "rank": 4,
+          "document": "bge-m3",
+          "section": "4 Experiment",
+          "page": 6,
+          "score": 0.15774727,
+          "node_id": "a6573024-5c80-4fce-a958-3f180a5fe8c7",
+          "text": "4 Experiment\n\nIn this section, we investigate M3-Embedding’s performance in terms of multi-lingual retrieval, crosslingual retrieval, and long-doc retrieval. We also explore the impact of its technical factors."
+        },
+        {
+          "rank": 5,
+          "document": "bge-m3",
+          "section": "Abstract",
+          "page": 1,
+          "score": 0.15584765,
+          "node_id": "3af1cc14-4691-4ee4-b226-8d64a71f0da1",
+          "text": "Abstract\n\nIn this paper, we introduce a new embedding\n\nmodel called M3-Embedding, which is distinguished for its versatility in Multi-Linguality, Multi-Functionality, and Multi-Granularity. It provides a uniform support for the semantic retrieval of more than 100 working languages. It can simultaneously accomplish the three common retrieval functionalities: dense retrieval, multi-vector retrieval, and sparse retrieval. Besides, it is also capable of processing inputs of different granularities, spanning from short sentences to long documents of up to 8,192 tokens. "
+        }
+      ],
+      "answer": "Based on the context provided in section 4.1 (Multi-Lingual Retrieval), the multi-vector method (denoted as Multi-vec) is used as a reranker to re-rank the **top-200** candidates from the dense method.\n\nAnswer: 200",
+      "claims": [
+        "Based on the context provided in section 4.1 (Multi-Lingual Retrieval), the multi-vector method (denoted as Multi-vec) is used as a reranker to re-rank the **top-200** candidates from the dense method.",
+        "Answer: 200"
+      ],
+      "claims_supported": 0,
+      "claims_total": 2,
+      "citation_accuracy": 0.0,
+      "extractive": true,
+      "gold_answer": "top-200",
+      "exact_match": 0.0,
+      "retrieval_latency_s": 0.057339167018653825,
+      "generation_latency_s": 36.77378150000004,
+      "prompt_tokens": 765,
+      "completion_tokens": 32,
+      "total_tokens": 797
+    },
+    {
+      "question": "papers-m3-03",
+      "stratum": "paraphrase",
+      "scored": true,
+      "unscored_reason": null,
+      "recall": 1.0,
+      "reciprocal_rank": 0.25,
+      "recall_at": {
+        "1": 0.0,
+        "3": 0.0,
+        "5": 1.0
+      },
+      "ndcg_at": {
+        "1": 0.0,
+        "3": 0.0,
+        "5": 0.43067655807339306
+      },
+      "locations": [
+        {
+          "document": "bge-m3",
+          "section": "4.2 Cross-Lingual Retrieval",
+          "rank": 4
+        }
+      ],
+      "retrieved": [
+        {
+          "rank": 1,
+          "document": "lexically-accelerated-dense-retrieval",
+          "section": "2.3 Re-ranking Pipeline to Improve Efficiency",
+          "page": 3,
+          "score": 0.124161854,
+          "node_id": "9e849e15-4bce-4e93-9de3-2753b47b39bb",
+          "text": "2.3 Re-ranking Pipeline to Improve Efficiency\n\nTraditional token-based and vocabulary-centric approaches like BM25 are efficient but not effective. On the contrary, dense retrieval approaches mainly based on contextualized transformer language models like BERT are highly effective but not efficient. Many researchers worked on approaches to strike the balance between efficiency and effectiveness. "
+        },
+        {
+          "rank": 2,
+          "document": "dense-passage-retrieval",
+          "section": "C Qualitative Analysis",
+          "page": 12,
+          "score": 0.12307584,
+          "node_id": "26bc9ced-3dc1-456b-9302-32f58553a747",
+          "text": "The second example is one where BM25 does better. The salient phrase “Thoros of Myr” is critical, and DPR is unable to capture it."
+        },
+        {
+          "rank": 3,
+          "document": "lexically-accelerated-dense-retrieval",
+          "section": "3.3 Adaptive LADR",
+          "page": 4,
+          "score": 0.121810876,
+          "node_id": "f03dd295-5809-4217-8d60-d680955883d6",
+          "text": "Computational and Storage Overheads. Unlike Proactive LADR, the worst-case computational cost of Adaptive LADR is the cost of lexical retrieval plus 𝑂(𝐷) vector similarity calculations, which assumes a very poor selection of seed documents, necessitating a full exploration of the document graph. This case is very unlikely, given the well-established reasonable effectiveness of lexical search models like BM25. Even so, practitioners may consider including a timeout or other suitable termination criteria in Adaptive LADR to conclude the search early; we leave the exploration of the effect of such strategies for future work. The storage overheads are the same as for Proactive LADR: 𝑂(𝐷𝑛) needed to store the document graph where n represents the number of neighbors stored for each document."
+        },
+        {
+          "rank": 4,
+          "document": "bge-m3",
+          "section": "2 Related Work",
+          "page": 2,
+          "score": 0.12058226,
+          "node_id": "9f684ffd-f617-4d07-acfb-6c0f91e4ae6c",
+          "text": "2 Related Work\n\nThe related works are reviewed from three aspects: general text embeddings, embedding models for neural retrieval, embeddings of multi-linguality.\n\nIn the past few years, substantial progress has been achieved in the field of text embedding. "
+        },
+        {
+          "rank": 5,
+          "document": "dense-passage-retrieval",
+          "section": "D Joint Training of Retriever and Reader",
+          "page": 12,
+          "score": 0.11993349,
+          "node_id": "c17ec7f3-23cf-431e-aacb-090dff449068",
+          "text": "...</td></tr></tbody></table>\n\nTable 7: Examples of passages returned from BM25 and DPR. Correct answers are written in blue and the content words in the question are written in bold.\n\nfrom the top 5 positive and top 30 negative passages (from the set of top 100 passages retrieved from the same question). The question encoder’s initial state is taken from a DPR model previously trained on the NQ dataset. The reader’s initial state is a BERT-base model. In terms of the end-to-end QA results, our joint-training scheme does not provide better results compared to the usual retriever/reader training pipeline, resulting in the same 39.8 exact match score on NQ dev as in our regular reader model training."
+        }
+      ],
+      "answer": "The provided context does not contain the answer to this question. The context discusses BM25 and dense retrieval models (such as DPR and LADR) in terms of efficiency, effectiveness, and specific examples of retrieval performance, but it does not mention a \"word-overlap head,\" \"cross-lingual search,\" or a comparison where a model beats plain BM25 in cross-lingual settings.",
+      "claims": [
+        "The provided context does not contain the answer to this question.",
+        "The context discusses BM25 and dense retrieval models (such as DPR and LADR) in terms of efficiency, effectiveness, and specific examples of retrieval performance, but it does not mention a \"word-overlap head,\" \"cross-lingual search,\" or a comparison where a model beats plain BM25 in cross-lingual settings."
+      ],
+      "claims_supported": 0,
+      "claims_total": 2,
+      "citation_accuracy": 0.0,
+      "extractive": false,
+      "gold_answer": null,
+      "exact_match": null,
+      "retrieval_latency_s": 0.08549270901130512,
+      "generation_latency_s": 5.561492417007685,
+      "prompt_tokens": 446,
+      "completion_tokens": 57,
+      "total_tokens": 503
+    },
+    {
+      "question": "papers-m3-04",
+      "stratum": "paraphrase",
+      "scored": true,
+      "unscored_reason": null,
+      "recall": 1.0,
+      "reciprocal_rank": 0.2,
+      "recall_at": {
+        "1": 0.0,
+        "3": 0.0,
+        "5": 1.0
+      },
+      "ndcg_at": {
+        "1": 0.0,
+        "3": 0.0,
+        "5": 0.38685280723454163
+      },
+      "locations": [
+        {
+          "document": "bge-m3",
+          "section": "3.3 Self-Knowledge Distillation",
+          "rank": 5
+        }
+      ],
+      "retrieved": [
+        {
+          "rank": 1,
+          "document": "rag-for-knowledge-intensive-nlp-tasks",
+          "section": "2.2 Retriever: DPR",
+          "page": 3,
+          "score": 0.1544253,
+          "node_id": "117626c8-e6b3-4b77-b722-984fddffd05f",
+          "text": "This retriever was trained to retrieve documents which contain answers to TriviaQA [24] questions and Natural Questions [29]. We refer to the document index as the non-parametric memory."
+        },
+        {
+          "rank": 2,
+          "document": "rag-for-knowledge-intensive-nlp-tasks",
+          "section": "Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks",
+          "page": 1,
+          "score": 0.12529482,
+          "node_id": "0aa0ff56-9c56-435e-8684-3ac085fc4593",
+          "text": "Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks\n\nPatrick Lewis'?, Ethan Perez*,"
+        },
+        {
+          "rank": 3,
+          "document": "dense-passage-retrieval",
+          "section": "6 Experiments: Question Answering",
+          "page": 7,
+          "score": 0.12409853,
+          "node_id": "c12d89e1-ebfa-4267-8df9-ef58c394b58f",
+          "text": "6 Experiments: Question Answering\n\nIn this section, we experiment with how different passage retrievers affect the ﬁnal QA accuracy."
+        },
+        {
+          "rank": 4,
+          "document": "rag-for-knowledge-intensive-nlp-tasks",
+          "section": "Appendices for Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks",
+          "page": 17,
+          "score": 0.12157782,
+          "node_id": "924444d3-0c90-48fa-9d9e-6c1bba4351ef",
+          "text": "Appendices for Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks"
+        },
+        {
+          "rank": 5,
+          "document": "bge-m3",
+          "section": "2 Related Work",
+          "page": 2,
+          "score": 0.12048709,
+          "node_id": "9f684ffd-f617-4d07-acfb-6c0f91e4ae6c",
+          "text": "2 Related Work\n\nThe related works are reviewed from three aspects: general text embeddings, embedding models for neural retrieval, embeddings of multi-linguality.\n\nIn the past few years, substantial progress has been achieved in the field of text embedding. "
+        }
+      ],
+      "answer": "The provided context does not contain information about \"three retrieval heads,\" their training on \"own objectives,\" or the meaning of \"weights in the combined score.\" Therefore, I cannot answer this question based solely on the given context.",
+      "claims": [
+        "The provided context does not contain information about \"three retrieval heads,\" their training on \"own objectives,\" or the meaning of \"weights in the combined score.\" Therefore, I cannot answer this question based solely on the given context."
+      ],
+      "claims_supported": 0,
+      "claims_total": 1,
+      "citation_accuracy": 0.0,
+      "extractive": false,
+      "gold_answer": null,
+      "exact_match": null,
+      "retrieval_latency_s": 0.016603208001470193,
+      "generation_latency_s": 3.44418904100894,
+      "prompt_tokens": 210,
+      "completion_tokens": 37,
+      "total_tokens": 247
+    },
+    {
+      "question": "papers-ladr-01",
+      "stratum": "identifier_heavy",
+      "scored": true,
+      "unscored_reason": null,
+      "recall": 1.0,
+      "reciprocal_rank": 1.0,
+      "recall_at": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0
+      },
+      "ndcg_at": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0
+      },
+      "locations": [
+        {
+          "document": "lexically-accelerated-dense-retrieval",
+          "section": "3 LADR",
+          "rank": 1
+        }
+      ],
+      "retrieved": [
+        {
+          "rank": 1,
+          "document": "lexically-accelerated-dense-retrieval",
+          "section": "5.3 RQ3 and RQ4: Overhead and Parameters",
+          "page": 8,
+          "score": 0.1486452,
+          "node_id": "9de2e49e-d939-4261-a17f-6f98c03c7048",
+          "text": "5.3 RQ3 and RQ4: Overhead and Parameters\n\nNext, we perform an analysis of the parameters introduced by\n\nLADR: the number of neighbors per document in the proximity graph (𝑘), the seed set size (𝑛) and the exploration depth (𝑐). Figure 4 reports the nDCG, Recall@1k, RBO, and mean latency per query, when using the TAS-B model over the DL19 dataset.\n\nWe observe several trends, which should help researchers and\n\npractitioners tune LADR for their particular needs. First, as the number of neighbors in the proximity graph (𝑘) increases, the performance in nDCG, Recall@1k and RBO (Rank Biased Overlap) also increase, but so does latency. This is expected, given that increasing 𝑘 results in LADR scoring more documents that are nearby potentially relevant ones [14]. "
+        },
+        {
+          "rank": 2,
+          "document": "lexically-accelerated-dense-retrieval",
+          "section": "6 CONCLUSIONS AND FUTURE DIRECTIONS",
+          "page": 9,
+          "score": 0.13383746,
+          "node_id": "df17a6ef-741a-4579-acb6-803ca8e2af09",
+          "text": "6 CONCLUSIONS AND FUTURE DIRECTIONS\n\nThe ability to identify related documents that do not necessarily contain same terms but are closer in the semantic space is the key of dense retrieval approaches. This requires exhaustive search which is an expensive operation. Current state of the art approximate k nearest neighbor methods like HNSW, ScaNN, IVF etc try to provide some resolve to this challenging task but fail to match the precision and recall of exhaustive search. Our simple-yet-effective method ‘LADR’ (Lexically-Accelerated Dense Retrieval) uses lexical retrieval techniques to seed a dense retrieval exploration that uses a document proximity graph. Both Proactive and Adaptive LADR establish a new dense retrieval effectiveness-efficiency Pareto frontier among approximate k nearest neighbor techniques. While Proactive LADR outperforms baselines at lower time budgets, Adaptive LADR focuses on optimal use of compute on promising documents leading to a major leap in recall. "
+        },
+        {
+          "rank": 3,
+          "document": "lexically-accelerated-dense-retrieval",
+          "section": "5.4 RQ5: Document Proximity Sources",
+          "page": 9,
+          "score": 0.12242602,
+          "node_id": "d6474bce-0dd3-4f49-993c-873ef3983b91",
+          "text": "Both Proactive and Adaptive LADR show high performance irrespective of the the proximity graph construction method. The results suggest that both Proactive and Adaptive LADR are remarkably robust to these alternative proximity signals addressing RQ5."
+        },
+        {
+          "rank": 4,
+          "document": "lexically-accelerated-dense-retrieval",
+          "section": "5.4 RQ5: Document Proximity Sources",
+          "page": 9,
+          "score": 0.121748544,
+          "node_id": "fa46e746-4352-4cec-ab8c-53d1bda8be39",
+          "text": "5.4 RQ5: Document Proximity Sources\n\nUp to this point, we have explored the setting where the exact top\n\n𝑘 nearest documents to each document in the target vector space are known. This is not always a realistic requirement, however; computing such scores is a quadratic operation over the number of documents in the collection. We therefore now explore two alternative sources of document proximity to test whether LADR can be used without requiring a precise similarity graph.\n\nWe explore two alternatives. First, we identify that HNSW [27]\n\nconstructsitsproximitygraphinloglineartimebymakinguseofapproximate searches through its hierarchical structure for each new document. We therefore explore an Approximate setting, wherein the document similarity graph is constructed by the HNSW index construction algorithm (Algorithm 1 in [27]). Meanwhile, MacAvaney et al. [26] found that using document proximity via BM25 provides similar effectiveness as dense vector document similarity in their adaptive re-ranking algorithm. Given that a BM25 graph would be model-agnostic, we also consider this strategy here.\n\nWe construct the two alternative document similarity graphs\n\n(Approx. and BM25), each linking up to 𝑘 = 128 nearby documents, and report the results in Table 2 for TAS-B. Table 2 shows results for Exact proximity graph with TAS-B, Approx method (HNSW) and BM25 for the DL 2019, DL 2020 and Dev (small) datasets. As evident in Table 2, differences in nDCG and Recall@1k of Approx proximity graph when compared with Exact proximity graph are not significant for datasets DL 2019 and DL 2020. Similar trends are observed when BM25 based proximity graph and Exact proximity graph are compared. Further statistical equivalence for results without significant differences are also depicted in Table 2. "
+        },
+        {
+          "rank": 5,
+          "document": "lexically-accelerated-dense-retrieval",
+          "section": "2.4 Seed-based Exploration in Proximity Graphs",
+          "page": 3,
+          "score": 0.11789717,
+          "node_id": "0e923c64-6686-4331-b66f-83ae59ed24e1",
+          "text": "2.4 Seed-based Exploration in Proximity Graphs\n\nHierarchical Navigable Small World graphs (HNSW) [27] are used to perform efficient dense retrieval. Graph-based approaches use the clustering hypothesis which states that relevance among documents could be mapped to the same query [14]. Proximity graph methods exemplified by HNSW are current state of the art methods in ANN search and large scale retrieval using dense vector representations can be modelled as nearest neighbor search. To speed up the proceeding, approximate nearest neighbor search using HNSW is used. This results in substantial decrease in latency when compared to exhaustive dense retrieval. Another competitive index is Inverted Files index (IVF) [38, 47] which is based on Voronoi diagrams (Dirichlet tessellation). IVF also performs clustering to reduce the search scope. IVF based dense retrieval also reduces latency to a great extent delivering decent search-quality.\n\nFigure 2: Overview of (a) Proactive and (b) Adaptive LADR.\n\nScaNN [11] is another quantization based technique which works\n\non anisotropic quantization loss function for inner product search.\n\nMost of the recent approaches couple random seed point-based exploration with dense retrieval. The initiation points are influenced by the proximity graph building algorithms and do not take differentiating query characteristics into account [38, 47]. Random exploration of search space until global minima is reached is often very expensive and the above mentioned approaches usually terminate around local minimas. Identification of right seed points to have informed exploration definitely could add value in terms of efficiency as well as accuracy. Multiple applications have witnessed enhancements in various aspects by using seeding techniques [19, 27, 37]. "
+        }
+      ],
+      "answer": "Based on the context provided, specifically in section 5.4 (RQ5: Document Proximity Sources), the document states that the alternative document similarity graphs (Approx. and BM25) were constructed \"each linking up to $k = 128$ nearby documents.\"\n\nAnswer: 128",
+      "claims": [
+        "Based on the context provided, specifically in section 5.4 (RQ5: Document Proximity Sources), the document states that the alternative document similarity graphs (Approx.",
+        "and BM25) were constructed \"each linking up to $k = 128$ nearby documents.\"\n\nAnswer: 128"
+      ],
+      "claims_supported": 0,
+      "claims_total": 2,
+      "citation_accuracy": 0.0,
+      "extractive": true,
+      "gold_answer": "128 closest documents",
+      "exact_match": 0.0,
+      "retrieval_latency_s": 0.051168875012081116,
+      "generation_latency_s": 12.794489792024251,
+      "prompt_tokens": 933,
+      "completion_tokens": 38,
+      "total_tokens": 971
+    },
+    {
+      "question": "papers-ladr-02",
+      "stratum": "identifier_heavy",
+      "scored": true,
+      "unscored_reason": null,
+      "recall": 1.0,
+      "reciprocal_rank": 1.0,
+      "recall_at": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0
+      },
+      "ndcg_at": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0
+      },
+      "locations": [
+        {
+          "document": "lexically-accelerated-dense-retrieval",
+          "section": "4.1 Datasets and Measures",
+          "rank": 1
+        }
+      ],
+      "retrieved": [
+        {
+          "rank": 1,
+          "document": "lexically-accelerated-dense-retrieval",
+          "section": "4.1 Datasets and Measures",
+          "page": 5,
+          "score": 0.2571614,
+          "node_id": "d9863503-4b5e-41e6-a576-1ec2f5289e0b",
+          "text": "4.1 Datasets and Measures\n\nTREC 2019 Deep Learning (Passage Subtask). This is the official evaluation query set used in the TREC 2019 Deep Learning shared task [4]. It consists of 43 manually-judged queries using four relevance grades (215 relevance assessments per query, on average). TREC 2020 Deep Learning (Passage Subtask). This is the official evaluation query set used in the TREC 2020 Deep Learning shared task [3]. It consists of 54 queries with manual judgments from NIST annotators (211 relevance assessments per query, on average). "
+        },
+        {
+          "rank": 2,
+          "document": "lexically-accelerated-dense-retrieval",
+          "section": "REFERENCES",
+          "page": 10,
+          "score": 0.1752505,
+          "node_id": "91dcbc3b-7c2b-4046-9918-f96ea6115fc8",
+          "text": "2021. Combining Lexical and Neural Retrieval\n\nwith Longformer-based Summarization for Effective Case Law Retrieval. In DESIRES.\n\n[3] Nick Craswell, Bhaskar Mitra, Emine Yilmaz, and Daniel Campos. 2021. Overview oftheTREC2020deeplearningtrack. https://doi.org/10.48550/ARXIV.2102.07662\n\n[4] Nick Craswell, Bhaskar Mitra, Emine Yilmaz, Daniel Campos, and Ellen M.\n\nVoorhees. 2020. Overview of the TREC 2019 deep learning track. //doi.org/10.48550/ARXIV.2003.07820 https:\n\n[5] Zhuyun Dai and Jamie Callan. 2020. Context-Aware Term Weighting For First Stage Passage Retrieval. Proceedings of the 43rd International ACM SIGIR Conference on Research and Development in Information Retrieval (2020).\n\n[6] Shuai Ding and Torsten Suel. 2011. Faster Top-k Document Retrieval Using Block-Max Indexes. In Proceedings of the 34th International ACM SIGIR Conference on Research and Development in Information Retrieval (Beijing, China) (SIGIR ’11). Association for Computing Machinery, New York, NY, USA, 993–1002. https: //doi.org/10.1145/2009916.2010048\n\n[7] YixingFan,XiaohuiXie,YinqiongCai,JiaChen,XinyuMa,XiangshengLi,Ruqing Zhang, and Jiafeng Guo. 2021. Pre-training Methods in Information Retrieval. https://doi.org/10.48550/ARXIV.2111.13853\n\n[8] Thibault Formal, Benjamin Piwowarski, and Stéphane Clinchant. 2021. SPLADE:\n\nSparse Lexical and Expansion Model for First Stage Ranking. In Proceedings of the 44th International ACM SIGIR Conference on Research and Development in Information Retrieval (Virtual Event, Canada) (SIGIR ’21). Association for Computing Machinery, New York, NY, USA, 2288–2292. https://doi.org/10.1145/ 3404835.3463098\n\n[9] Luyu Gao, Zhuyun Dai, Tongfei Chen, Zhen Fan, Benjamin Van Durme, and Jamie Callan. "
+        },
+        {
+          "rank": 3,
+          "document": "lexically-accelerated-dense-retrieval",
+          "section": "4.1 Datasets and Measures",
+          "page": 5,
+          "score": 0.15426256,
+          "node_id": "b8cbd5f9-0840-496c-ae89-f9f763958b09",
+          "text": "Dev (small). This is the official small version of the dev set and has 6980 queries which is about 6.9% of the full MS-Marco passage dev set. Unlike TREC DL 19/20, this dataset only contains a few known relevant passages per query (1.1 on average).\n\nWe evaluate using nDCG and Recall (with a minimum relevance\n\nscore of 2) at 1000 for TREC DL 2019 and 2020. Similarity, we evaluate using Mean Reciprocal Rank at 10 and Recall at 1000 for Dev (small). To measure how faithful the approximations are to the true rankings, we report Rank Biased Overlap (RBO [42]) with 𝑝 = 0.99 of each method to the results from an exhaustive search. We also report the per-query mean retrieval latency in milliseconds. Since query encoding time (i.e., the time to compute the query vector) is constant over all approximate nearest neighbor methods, we only consider the retrieval time in our measurements (i.e., we exclude query encoding latency).7 Given the larger query sample, we use the Dev (small) dataset for all latency measurements."
+        },
+        {
+          "rank": 4,
+          "document": "bge-m3",
+          "section": "4.1 Multi-Lingual Retrieval",
+          "page": 6,
+          "score": 0.1510294,
+          "node_id": "fd33b192-55bf-46fb-a340-36feaeae395b",
+          "text": "We can also observe the additional improvement from multi-vector retrieval, which relies on finegrained interactions between query and passage’s embeddings to compute the relevance score. Finally, the collaboration of dense and sparse method (Dense+Sparse) leads to a further improvement over each individual method, and the collaboration of all three methods (All) brings forth the best performance."
+        },
+        {
+          "rank": 5,
+          "document": "lexically-accelerated-dense-retrieval",
+          "section": "KEYWORDS",
+          "page": 1,
+          "score": 0.13723037,
+          "node_id": "f2fe655a-36ef-4233-8c43-04fd449573be",
+          "text": "Request permissions from permissions@acm.org.\n\nFigure 1: Comparison of our approach (LADR) and baselines when retrieving using TAS-B [13] on the TREC Deep Learning 2019 dataset, in terms of nDCG, Recall@1000, and latency (single CPU). LADR establishes a new Pareto frontier with higher nDCG and Recall at latencies below 16ms/query.\n\nbenefits from pruning the search space to only documents that use\n\nterms from the user’s query, as well as other optimizations [6].) The efficiency problem of dense retrieval has spawned numerous efforts to approximate top results. Researchers proposed various approximation methods like HNSW [27], IVF [38, 47], and ScaNN [11]. However, these methods have their own limitations. Most notably, they suffer in terms of recall, which is meant to be one of the key benefits of dense retrieval.\n\nRemarkably, simply re-ranking an initial pool of lexical results\n\n(such as BM25) remains highly competitive [20, 41]. We posit that this is due to two reasons. First, lexical signals are inherently valuable in many textual search tasks; intuitively, documents that satisfy a user’s query will often contain the terms in the query itself. Second, pools of candidates with matching terms can be obtained very efficiently; decades of optimizations in this area have given us highly-optimized algorithms for the task, like BlockMax WAND [6]. Nevertheless, using a lexical model as a pool of documents for re-ranking has inherent drawbacks, including exclusive reliance on lexical signals for retrieval — another key problem that dense retrieval is meant to solve.\n\nIn this paper, we propose a simple-yet-effective technique called\n\nLexically-Accelerated Dense Retrieval (LADR). It builds on the strengths of existing approximate k-nearest neighbor approximation techniques by leveraging a pool of candidate documents retrieved using a lexical model to seed the dense retrieval search. By using the lexical document pool, LADR leverages highly-efficient lexical search to obtain reasonable seed documents. LADR then explores the neighboring documents in the dense retrieval model’s semantic space, allowing for documents to be retrieved that do not contain lexical matches with the query. We explore two strategies for exploration: a proactive strategy that greedily scores the neighbors of all seed documents, and an adaptive strategy that iteratively scores neighbors of documents in the top results until they converge.\n\nThrough extensive experiments across several dense retrieval\n\nmodels on standard text retrieval test collections, we find that LADRestablishesaParetofrontierintermsofretrievaleffectiveness and efficiency. For example, Figure 1 compares the performance of LADR on the TAS-B [13] model with alternative approximation techniques.1 At all latencies between 4 and 16ms/query, we see that LADR exceeds the effectiveness of existing techniques in terms of nDCGandRecall@1000.Furtheranalysisshowsthattheparameters that LADR introduces (e.g., the number of nearest neighbors in the proximity graph) allow the user to easily trade off efficiency, effectiveness, and storage requirements, and that the approach is largely robust to alternative sources of proximity signals, such as approximate proximity graphs or graphs based on lexical proximity. In summary, our contributions are as follows:\n\n• We introduce LADR, a technique for reducing the computational overhead of dense retrieval while maintaining high effectiveness.\n\n• We explore a proactive and an adaptive strategy to ensure effective exploration and optimal use of time budget for better retrieval.\n\n• We conduct extensive experiments on standard benchmarks and a variety of single-representation dense retrieval models and\n\n1Each technique is parameterized by the degree of exploration. LADR and re-rank: number of candidates; HNSW: expansion factor; IVF/ScaNN: number of probes.\n\nHrishikesh Kulkarni, Sean MacAvaney, Nazli Goharian, & Ophir Frieder\n\nfind that our approach establishes a new Pareto frontier for lowlatency approximate dense retrieval.\n\n• Further analysis demonstrates that LADR is robust to its introduced parameters and alternative sources of document proximity."
+        }
+      ],
+      "answer": "The TREC 2020 Deep Learning (Passage Subtask) set consists of 54 queries.",
+      "claims": [
+        "The TREC 2020 Deep Learning (Passage Subtask) set consists of 54 queries."
+      ],
+      "claims_supported": 1,
+      "claims_total": 1,
+      "citation_accuracy": 1.0,
+      "extractive": true,
+      "gold_answer": "54 queries",
+      "exact_match": 0.0,
+      "retrieval_latency_s": 0.04591650000656955,
+      "generation_latency_s": 18.58605658300803,
+      "prompt_tokens": 1205,
+      "completion_tokens": 12,
+      "total_tokens": 1217
+    },
+    {
+      "question": "papers-ladr-03",
+      "stratum": "paraphrase",
+      "scored": true,
+      "unscored_reason": null,
+      "recall": 1.0,
+      "reciprocal_rank": 1.0,
+      "recall_at": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0
+      },
+      "ndcg_at": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0
+      },
+      "locations": [
+        {
+          "document": "lexically-accelerated-dense-retrieval",
+          "section": "5.4 RQ5: Document Proximity Sources",
+          "rank": 1
+        }
+      ],
+      "retrieved": [
+        {
+          "rank": 1,
+          "document": "lexically-accelerated-dense-retrieval",
+          "section": "CCS CONCEPTS",
+          "page": 1,
+          "score": 0.103363216,
+          "node_id": "65001198-0842-43dd-9ed8-ac629d0e7307",
+          "text": "This is significantly more expensive than lexical search since it scales linearly with the number of documents in the corpus. (Meanwhile, lexical search\n\n• Information systems → Retrieval models and ranking."
+        },
+        {
+          "rank": 2,
+          "document": "lexically-accelerated-dense-retrieval",
+          "section": "6 CONCLUSIONS AND FUTURE DIRECTIONS",
+          "page": 9,
+          "score": 0.09912752,
+          "node_id": "df17a6ef-741a-4579-acb6-803ca8e2af09",
+          "text": "6 CONCLUSIONS AND FUTURE DIRECTIONS\n\nThe ability to identify related documents that do not necessarily contain same terms but are closer in the semantic space is the key of dense retrieval approaches. This requires exhaustive search which is an expensive operation. Current state of the art approximate k nearest neighbor methods like HNSW, ScaNN, IVF etc try to provide some resolve to this challenging task but fail to match the precision and recall of exhaustive search. Our simple-yet-effective method ‘LADR’ (Lexically-Accelerated Dense Retrieval) uses lexical retrieval techniques to seed a dense retrieval exploration that uses a document proximity graph. Both Proactive and Adaptive LADR establish a new dense retrieval effectiveness-efficiency Pareto frontier among approximate k nearest neighbor techniques. While Proactive LADR outperforms baselines at lower time budgets, Adaptive LADR focuses on optimal use of compute on promising documents leading to a major leap in recall. "
+        },
+        {
+          "rank": 3,
+          "document": "lexically-accelerated-dense-retrieval",
+          "section": "CCS CONCEPTS",
+          "page": 1,
+          "score": 0.09227243,
+          "node_id": "665f19ef-1cd7-479b-8556-2143c5a6a892",
+          "text": "CCS CONCEPTS\n\nSuch approaches come at a comparatively high query-time cost,\n\nhowever. To produce state-of-the-art results, an exhaustive search over all document vectors is usually required. "
+        },
+        {
+          "rank": 4,
+          "document": "lost-in-the-middle",
+          "section": "B Random Distractors in Multi-Document QA",
+          "page": 14,
+          "score": 0.089165844,
+          "node_id": "480731fd-1cee-4c20-b3db-04078e0535c5",
+          "text": "Figure 13 presents the results of this experiment. Although all models have higher absolute accuracy in this setting, they surprisingly still struggle to reason over their entire input context, indicating that their performance degradation is not solely due to an inability to identify relevant documents."
+        },
+        {
+          "rank": 5,
+          "document": "lexically-accelerated-dense-retrieval",
+          "section": "1 INTRODUCTION",
+          "page": 1,
+          "score": 0.086413324,
+          "node_id": "5f2e316b-5faf-4965-9822-47a9054b0968",
+          "text": "1 INTRODUCTION\n\nTo identify relevant documents, search engines typically make use of lexical and/or dense search operations. Lexical approaches use the terms that appear in a user’s query to identify and score documents that contain the same terms (e.g., using an approach like BM25 over an inverted index). Lexical approaches like BM25 [35] fail to understand semantic relationships in different scenarios [17]. A major drawback of this approach is that it is limited to documents that use the exact terms that the user searches for, which can potentially affect the recall. "
+        }
+      ],
+      "answer": "Based on the provided context, it is not affordable (or is \"significantly more expensive\") to know each document's exact nearest neighbors because dense retrieval requires an **exhaustive search** over all document vectors, which **scales linearly with the number of documents in the corpus** [1, 2, 3]. This exhaustive search is described as an \"expensive operation\" [2].",
+      "claims": [
+        "Based on the provided context, it is not affordable (or is \"significantly more expensive\") to know each document's exact nearest neighbors because dense retrieval requires an **exhaustive search** over all document vectors, which **scales linearly with the number of documents in the corpus** [1, 2, 3].",
+        "This exhaustive search is described as an \"expensive operation\" [2]."
+      ],
+      "claims_supported": 0,
+      "claims_total": 2,
+      "citation_accuracy": 0.0,
+      "extractive": false,
+      "gold_answer": null,
+      "exact_match": null,
+      "retrieval_latency_s": 0.0420625839906279,
+      "generation_latency_s": 5.8145697910222225,
+      "prompt_tokens": 427,
+      "completion_tokens": 56,
+      "total_tokens": 483
+    },
+    {
+      "question": "papers-multi-hop-01",
+      "stratum": "multi_hop",
+      "scored": true,
+      "unscored_reason": null,
+      "recall": 1.0,
+      "reciprocal_rank": 1.0,
+      "recall_at": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0
+      },
+      "ndcg_at": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0
+      },
+      "locations": [
+        {
+          "document": "attention-is-all-you-need",
+          "section": "5.2 Hardware and Schedule",
+          "rank": 1
+        },
+        {
+          "document": "attention-is-all-you-need",
+          "section": "6.3 English Constituency Parsing",
+          "rank": 1
+        }
+      ],
+      "retrieved": [
+        {
+          "rank": 1,
+          "document": "attention-is-all-you-need",
+          "section": "5.2 Hardware and Schedule",
+          "page": 7,
+          "score": 0.16281684,
+          "node_id": "266e6b2a-2fba-423e-be97-c04f9154b254",
+          "text": "5.2 Hardware and Schedule\n\nWe trained our models on one machine with 8 NVIDIA P100 GPUs. For our base models using the hyperparameters described throughout the paper, each training step took about 0.4 seconds. "
+        },
+        {
+          "rank": 2,
+          "document": "attention-is-all-you-need",
+          "section": "1 Introduction",
+          "page": 2,
+          "score": 0.14868438,
+          "node_id": "5fa4f444-4f9f-4c5b-8566-302bb98657f6",
+          "text": "The fundamental constraint of sequential computation, however, remains.\n\nAttention mechanisms have become an integral part of compelling sequence modeling and transduction models in various tasks, allowing modeling of dependencies without regard to their distance in the input or output sequences [2, 19]. In all but a few cases [27], however, such attention mechanisms are used in conjunction with a recurrent network.\n\nIn this work we propose the Transformer, a model architecture eschewing recurrence and instead relying entirely on an attention mechanism to draw global dependencies between input and output. The Transformer allows for significantly more parallelization and can reach a new state of the art in translation quality after being trained for as little as twelve hours on eight P100 GPUs."
+        },
+        {
+          "rank": 3,
+          "document": "attention-is-all-you-need",
+          "section": "Abstract",
+          "page": 1,
+          "score": 0.1357568,
+          "node_id": "8c29892b-3d04-444c-b746-80e4acd8dc6c",
+          "text": "Abstract\n\nThe dominant sequence transduction models are based on complex recurrent or convolutional neural networks that include an encoder and a decoder. The best performing models also connect the encoder and decoder through an attention mechanism. We propose a new simple network architecture, the Transformer, based solely on attention mechanisms, dispensing with recurrence and convolutions entirely. Experiments on two machine translation tasks show these models to be superior in quality while being more parallelizable and requiring significantly less time to train. Our model achieves 28.4 BLEU on the WMT 2014 Englishto-German translation task, improving over the existing best results, including ensembles, by over 2 BLEU. On the WMT 2014 English-to-French translation task, our model establishes a new single-model state-of-the-art BLEU score of 41.8 after training for 3.5 days on eight GPUs, a small fraction of the training costs of the best models from the literature. We show that the Transformer generalizes well to other tasks by applying it successfully to English constituency parsing both with large and limited training data.\n\n∗Equal contribution. Listing order is random. Jakob proposed replacing RNNs with self-attention and started the effort to evaluate this idea. Ashish, with Illia, designed and implemented the first Transformer models and has been crucially involved in every aspect of this work. Noam proposed scaled dot-product attention, multi-head attention and the parameter-free position representation and became the other person involved in nearly every detail. Niki designed, implemented, tuned and evaluated countless model variants in our original codebase and tensor2tensor. Llion also experimented with novel model variants, was responsible for our initial codebase, and efficient inference and visualizations. Lukasz and Aidan spent countless long days designing various parts of and implementing tensor2tensor, replacing our earlier codebase, greatly improving results and massively accelerating our research.\n\n†Work performed while at Google Brain.\n\n"
+        },
+        {
+          "rank": 4,
+          "document": "attention-is-all-you-need",
+          "section": "6.1 Machine Translation",
+          "page": 8,
+          "score": 0.12157587,
+          "node_id": "51b33e62-9d56-4e66-a611-5c27d9b16700",
+          "text": "Training took 3.5 days on 8 P100 GPUs. Even our base model surpasses all previously published models and ensembles, at a fraction of the training cost of any of the competitive models.\n\nOn the WMT 2014 English-to-French translation task, our big model achieves a BLEU score of 41.0, outperforming all of the previously published single models, at less than 1/4 the training cost of the previous state-of-the-art model. The Transformer (big) model trained for English-to-French used dropout rate Pdrop = 0.1, instead of 0.3.\n\nFor the base models, we used a single model obtained by averaging the last 5 checkpoints, which were written at 10-minute intervals. For the big models, we averaged the last 20 checkpoints. We used beam search with a beam size of 4 and length penalty α = 0.6 [38]. These hyperparameters were chosen after experimentation on the development set. We set the maximum output length during inference to input length + 50, but terminate early when possible [38].\n\nTable 2 summarizes our results and compares our translation quality and training costs to other model architectures from the literature. We estimate the number of floating point operations used to train a model by multiplying the training time, the number of GPUs used, and an estimate of the sustained single-precision floating-point capacity of each GPU 5."
+        },
+        {
+          "rank": 5,
+          "document": "attention-is-all-you-need",
+          "section": "5.2 Hardware and Schedule",
+          "page": 7,
+          "score": 0.112203315,
+          "node_id": "758c21e9-622d-42ef-a440-8c9fbcad3874",
+          "text": "We trained the base models for a total of 100,000 steps or 12 hours. For our big models,(described on the bottom line of table 3), step time was 1.0 seconds. The big models were trained for 300,000 steps (3.5 days)."
+        }
+      ],
+      "answer": "Based on the provided context:\n\n*   **Base Translation Model Hardware and Time:** The base model was trained on **8 NVIDIA P100 GPUs** for a total of **12 hours** (100,000 steps) [1, 5].\n*   **Parsing Model F1 Score:** The context **does not contain** the F1 score for the parsing model. While the abstract mentions that the Transformer was applied successfully to English constituency parsing [3], it does not provide specific performance metrics such as an F1 score.",
+      "claims": [
+        "Based on the provided context:\n\n*   **Base Translation Model Hardware and Time:** The base model was trained on **8 NVIDIA P100 GPUs** for a total of **12 hours** (100,000 steps) [1, 5].",
+        "*   **Parsing Model F1 Score:** The context **does not contain** the F1 score for the parsing model.",
+        "While the abstract mentions that the Transformer was applied successfully to English constituency parsing [3], it does not provide specific performance metrics such as an F1 score."
+      ],
+      "claims_supported": 0,
+      "claims_total": 3,
+      "citation_accuracy": 0.0,
+      "extractive": false,
+      "gold_answer": null,
+      "exact_match": null,
+      "retrieval_latency_s": 0.058015957998577505,
+      "generation_latency_s": 9.641381207999075,
+      "prompt_tokens": 826,
+      "completion_tokens": 76,
+      "total_tokens": 902
+    },
+    {
+      "question": "papers-multi-hop-02",
+      "stratum": "multi_hop",
+      "scored": true,
+      "unscored_reason": null,
+      "recall": 0.5,
+      "reciprocal_rank": 1.0,
+      "recall_at": {
+        "1": 0.5,
+        "3": 0.5,
+        "5": 0.5
+      },
+      "ndcg_at": {
+        "1": 1.0,
+        "3": 0.6131471927654584,
+        "5": 0.6131471927654584
+      },
+      "locations": [
+        {
+          "document": "rag-for-knowledge-intensive-nlp-tasks",
+          "section": "2.4 Training",
+          "rank": 1
+        },
+        {
+          "document": "dense-passage-retrieval",
+          "section": "3 Dense Passage Retriever (DPR)",
+          "rank": null
+        }
+      ],
+      "retrieved": [
+        {
+          "rank": 1,
+          "document": "rag-for-knowledge-intensive-nlp-tasks",
+          "section": "4.1 Open-domain Question Answering",
+          "page": 5,
+          "score": 0.14982733,
+          "node_id": "5c442ee0-e32b-4744-97de-847c04a49daa",
+          "text": "Furthermore, RAG can generate correct answers even when the correct answer is not in any retrieved document, achieving 11.8% accuracy in such cases for NQ, where an extractive model would score 0%."
+        },
+        {
+          "rank": 2,
+          "document": "rag-for-knowledge-intensive-nlp-tasks",
+          "section": "1 Introduction",
+          "page": 1,
+          "score": 0.12970652,
+          "node_id": "7f2d1fbe-7dbe-463b-afb3-336a29d95a5e",
+          "text": "1). The retriever (Dense Passage Retriever [26], henceforth DPR) provides latent documents conditioned on the input, and the seq2seq model (BART [32]) then conditions on these latent documents together with the input to generate the output. We marginalize the latent documents with a top-K approximation, either on a per-output basis (assuming the same document is responsible for all tokens) or a per-token basis (where different documents are responsible for different tokens). Like T5 [51] or BART, RAG can be ﬁne-tuned on any seq2seq task, whereby both the generator and retriever are jointly learned.\n\nThere has been extensive previous work proposing architectures to enrich systems with non-parametric memory which are trained from scratch for speciﬁc tasks, e.g. memory networks [64, 55], stackaugmented networks [25] and memory layers [30]. In contrast, we explore a setting where both parametric and non-parametric memory components are pre-trained and pre-loaded with extensive knowledge. Crucially, by using pre-trained access mechanisms, the ability to access knowledge is present without additional training.\n\nOur results highlight the beneﬁts of combining parametric and non-parametric memory with generation for knowledge-intensive tasks—tasks that humans could not reasonably be expected to perform without access to an external knowledge source. Our RAG models achieve state-of-the-art results on open Natural Questions [29], WebQuestions [3] and CuratedTrec [2] and strongly outperform recent approaches that use specialised pre-training objectives on TriviaQA [24]. Despite these being extractive tasks, we ﬁnd that unconstrained generation outperforms previous extractive approaches. For knowledge-intensive generation, we experiment with MS-MARCO [1] and Jeopardy question generation, and we ﬁnd that our models generate responses that are more factual, speciﬁc, and diverse than a BART baseline. For FEVER [56] fact veriﬁcation, we achieve results within 4.3% of state-of-the-art pipeline models which use strong retrieval supervision. Finally, we demonstrate that the non-parametric memory can be replaced to update the models’ knowledge as the world changes.1"
+        },
+        {
+          "rank": 3,
+          "document": "rag-for-knowledge-intensive-nlp-tasks",
+          "section": "6 Discussion",
+          "page": 9,
+          "score": 0.12559173,
+          "node_id": "b3e11deb-21d9-4ff9-b8ba-b01b7ea38213",
+          "text": "We found that people prefer RAG’s generation over purely parametric BART, ﬁnding RAG more factual and speciﬁc. We conducted an thorough investigation of the learned retrieval component, validating its effectiveness, and we illustrated how the retrieval index can be hot-swapped to update the model without requiring any retraining. In future work, it may be fruitful to investigate if the two components can be jointly pre-trained from scratch, either with a denoising objective similar to BART or some another objective. Our work opens up new research directions on how parametric and non-parametric memories interact and how to most effectively combine them, showing promise in being applied to a wide variety of NLP tasks."
+        },
+        {
+          "rank": 4,
+          "document": "rag-for-knowledge-intensive-nlp-tasks",
+          "section": "F Null Document Probabilities",
+          "page": 18,
+          "score": 0.122926675,
+          "node_id": "c8d6b42a-0519-43e3-96a7-53969510ce5c",
+          "text": "For Open MS-MARCO, where useful retrieved documents cannot always be retrieved, we observe that the model learns to always retrieve a particular set of documents for questions that are less likely to beneﬁt from retrieval, suggesting that null document mechanisms may not be necessary for RAG."
+        },
+        {
+          "rank": 5,
+          "document": "rag-for-knowledge-intensive-nlp-tasks",
+          "section": "G Parameters",
+          "page": 18,
+          "score": 0.11931929,
+          "node_id": "2a5b61ba-6b2f-47bf-8192-109bd89fc0fa",
+          "text": "G Parameters\n\nOur RAG models contain the trainable parameters for the BERT-base query and document encoder of DPR, with 110M parameters each (although we do not train the document encoder ourselves) and 406M trainable parameters from BART-large, 406M parameters, making a total of 626M trainable\n\nTable 7: Number of instances in the datasets used. *A hidden subset of this data is used for evaluation\n\n<table><tbody><tr><td>Natural Questions</td><td>79169</td><td>8758</td><td>3611</td></tr><tr><td>TriviaQA</td><td>78786</td><td>8838</td><td>11314</td></tr><tr><td>WebQuestions</td><td>3418</td><td>362</td><td>2033</td></tr><tr><td>CuratedTrec</td><td>635</td><td>134</td><td>635</td></tr><tr><td>Jeopardy Question Generation</td><td>97392</td><td>13714</td><td>26849</td></tr><tr><td>MS-MARCO</td><td>153726</td><td>12468</td><td>101093*</td></tr><tr><td>FEVER-3-way</td><td>145450</td><td>10000</td><td>10000</td></tr><tr><td>FEVER-2-way</td><td>96966</td><td>6666</td><td>6666</td></tr></tbody></table>\n\nparameters. The best performing \"closed-book\" (parametric only) open-domain QA model is T5-11B with 11 Billion trainable parameters. "
+        }
+      ],
+      "answer": "Based on the context provided, RAG leaves the **document encoder** of the DPR retriever alone (the text states \"although we do not train the document encoder ourselves\" in section G).\n\nHowever, the provided context **does not contain** information regarding how large the collection behind that half (the document encoder) is. The context mentions the number of parameters (110M) but does not specify the size of the document collection/index.",
+      "claims": [
+        "Based on the context provided, RAG leaves the **document encoder** of the DPR retriever alone (the text states \"although we do not train the document encoder ourselves\" in section G).",
+        "However, the provided context **does not contain** information regarding how large the collection behind that half (the document encoder) is.",
+        "The context mentions the number of parameters (110M) but does not specify the size of the document collection/index."
+      ],
+      "claims_supported": 0,
+      "claims_total": 3,
+      "citation_accuracy": 0.0,
+      "extractive": false,
+      "gold_answer": null,
+      "exact_match": null,
+      "retrieval_latency_s": 0.05627987498883158,
+      "generation_latency_s": 12.869994709006278,
+      "prompt_tokens": 683,
+      "completion_tokens": 68,
+      "total_tokens": 751
+    },
+    {
+      "question": "papers-multi-hop-03",
+      "stratum": "multi_hop",
+      "scored": true,
+      "unscored_reason": null,
+      "recall": 1.0,
+      "reciprocal_rank": 1.0,
+      "recall_at": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0
+      },
+      "ndcg_at": {
+        "1": 1.0,
+        "3": 1.0,
+        "5": 1.0
+      },
+      "locations": [
+        {
+          "document": "lost-in-the-middle",
+          "section": "6.3 The Serial-Position Effect",
+          "rank": 1
+        },
+        {
+          "document": "lost-in-the-middle",
+          "section": "4.2 Effect of Query-Aware Contextualization",
+          "rank": 1
+        }
+      ],
+      "retrieved": [
+        {
+          "rank": 1,
+          "document": "lost-in-the-middle",
+          "section": "6.3 The Serial-Position Effect",
+          "page": 10,
+          "score": 0.13348192,
+          "node_id": "fab8ec3e-896e-44cc-aa5b-a1bf87629f84",
+          "text": "6.3 The Serial-Position Effect\n\nThe U-shaped curve we observe in this work has a connection in psychology known as the serialposition effect (Ebbinghaus, 1913; Murdock Jr, 1962), that states that in free-association recall of elements from a list, humans tend to best remember the first and last elements of the list. The serial-position effect plays a role in understanding how humans develop shortand long-term mem-\n\nory. "
+        },
+        {
+          "rank": 2,
+          "document": "lost-in-the-middle",
+          "section": "E Llama-2 Performance",
+          "page": 16,
+          "score": 0.07399397,
+          "node_id": "d8f85c91-a6ea-4bdd-bf5d-54677bb238a6",
+          "text": "E Llama-2 Performance\n\nWe evaluate Llama-2 (Touvron et al., 2023b) on multi-document QA with 20 total documents in each input context. The Llama tokenizer produces longer sequences than the tokenizers for our previously-studied models, so we discard 20 exam-\n\n20 Total Retrieved Documents\n\nFigure 14: Language model performance when randomizing the order of the distractors (rather than presenting them in order of decreasing relevance) and mentioning as such in the prompt.\n\nFigure 15: Although GPT-4 has higher absolute performance than other models, its performance still degrades when relevant information occurs in the middle of the input context.\n\nples (out of 2655) that exceed Llama-2’s maximum context length of 4096 tokens. We experiment with models of varying sizes (7B, 13B, and 70B parameters), with and without additional supervised fine-tuning and reinforcement learning from human feedback (“-chat-” models). The results are presented in Figure 16.\n\nComparing Llama-2 models of varying sizes, we find that only the larger models (13B and 70B) exhibit the U-shaped performance curve (i.e., both primacy and recency bias)—the smallest Llama2 models (7B) are solely recency-biased. Given these results, we hypothesize that prior work (e.g., Khandelwal et al., 2018; Sun et al., 2021) did not previously observe any primacy bias in language models because the models they studied were too small (less than 1B parameters).\n\nComparing between Llama-2 models with and without additional supervised fine-tuning and reinforcement learning from human feedback, we see that additional fine-tuning dramatically improves performance on the multi-document QA task. The 7B models with and without additional fine-tuning show minimal primacy bias, and are largely recency-biased. "
+        },
+        {
+          "rank": 3,
+          "document": "lost-in-the-middle",
+          "section": "C Randomizing Distractor Order in Multi-Document QA",
+          "page": 14,
+          "score": 0.073473915,
+          "node_id": "ccc42155-cbf0-47dc-a28b-7438bea4b522",
+          "text": "The search results are ordered randomly.” In addition, we randomly shuffle the k − 1 distractor documents.\n\nFigure 13: Language model performance on multidocument QA when using random distractors, rather than retrieved distractors.\n\nFigure 14 presents the results of this experiment. We continue to see a U-shaped performance curve, with performance degrading when language models must use information in the middle of their input contexts. Comparing the results in §2.3 with those when randomizing the distractor order and mentioning such in the prompt, we see that randomization slightly decreases performance when the relevant information is at the very beginning of the context, and slightly increases performance when using information in the middle and end of the context."
+        },
+        {
+          "rank": 4,
+          "document": "lost-in-the-middle",
+          "section": "Abstract",
+          "page": 1,
+          "score": 0.06478768,
+          "node_id": "3201cc42-d9ef-4a6a-b8c6-f914b7820da8",
+          "text": "In particular, we observe that performance is often highest when relevant information occurs at the beginning or end of the input context, and significantly degrades when models must access relevant information in the middle of long contexts, even for explicitly long-context models. Our analysis provides a better understanding of how language models use their input context and provides new evaluation protocols for future long-context language models.\n\nFigure 1: Changing the location of relevant information (in this case, the position of the passage that answers an input question) within the language model’s input context results in a U-shaped performance curve—models are better at using relevant information that occurs at the very beginning (primacy bias) or end of its input context (recency bias), and performance degrades significantly when models must access and use information located in the middle of its input context."
+        },
+        {
+          "rank": 5,
+          "document": "rag-for-knowledge-intensive-nlp-tasks",
+          "section": "6 Discussion",
+          "page": 9,
+          "score": 0.0600149,
+          "node_id": "8124f7ac-2182-4885-9608-9dac58891935",
+          "text": "6 Discussion\n\nIn this work, we presented hybrid generation models with access to parametric and non-parametric memory. We showed that our RAG models obtain state of the art results on open-domain QA. "
+        }
+      ],
+      "answer": "The effect is called the **serial-position effect**. The change the paper tries is **randomizing the order of the distractors** (rather than presenting them in order of decreasing relevance) and mentioning this in the prompt.",
+      "claims": [
+        "The effect is called the **serial-position effect**.",
+        "The change the paper tries is **randomizing the order of the distractors** (rather than presenting them in order of decreasing relevance) and mentioning this in the prompt."
+      ],
+      "claims_supported": 0,
+      "claims_total": 2,
+      "citation_accuracy": 0.0,
+      "extractive": false,
+      "gold_answer": null,
+      "exact_match": null,
+      "retrieval_latency_s": 0.04355670799850486,
+      "generation_latency_s": 9.537664292001864,
+      "prompt_tokens": 725,
+      "completion_tokens": 34,
+      "total_tokens": 759
+    },
+    {
+      "question": "papers-multi-hop-04",
+      "stratum": "multi_hop",
+      "scored": true,
+      "unscored_reason": null,
+      "recall": 1.0,
+      "reciprocal_rank": 0.3333333333333333,
+      "recall_at": {
+        "1": 0.0,
+        "3": 1.0,
+        "5": 1.0
+      },
+      "ndcg_at": {
+        "1": 0.0,
+        "3": 0.5,
+        "5": 0.5
+      },
+      "locations": [
+        {
+          "document": "bge-m3",
+          "section": "4.3 Multilingual Long-Doc Retrieval",
+          "rank": 3
+        },
+        {
+          "document": "bge-m3",
+          "section": "3.2 Hybrid Retrieval",
+          "rank": 3
+        }
+      ],
+      "retrieved": [
+        {
+          "rank": 1,
+          "document": "lexically-accelerated-dense-retrieval",
+          "section": "CCS CONCEPTS",
+          "page": 1,
+          "score": 0.1685741,
+          "node_id": "65001198-0842-43dd-9ed8-ac629d0e7307",
+          "text": "This is significantly more expensive than lexical search since it scales linearly with the number of documents in the corpus. (Meanwhile, lexical search\n\n• Information systems → Retrieval models and ranking."
+        },
+        {
+          "rank": 2,
+          "document": "lexically-accelerated-dense-retrieval",
+          "section": "REFERENCES",
+          "page": 10,
+          "score": 0.14638275,
+          "node_id": "91dcbc3b-7c2b-4046-9918-f96ea6115fc8",
+          "text": "2021. Combining Lexical and Neural Retrieval\n\nwith Longformer-based Summarization for Effective Case Law Retrieval. In DESIRES.\n\n[3] Nick Craswell, Bhaskar Mitra, Emine Yilmaz, and Daniel Campos. 2021. Overview oftheTREC2020deeplearningtrack. https://doi.org/10.48550/ARXIV.2102.07662\n\n[4] Nick Craswell, Bhaskar Mitra, Emine Yilmaz, Daniel Campos, and Ellen M.\n\nVoorhees. 2020. Overview of the TREC 2019 deep learning track. //doi.org/10.48550/ARXIV.2003.07820 https:\n\n[5] Zhuyun Dai and Jamie Callan. 2020. Context-Aware Term Weighting For First Stage Passage Retrieval. Proceedings of the 43rd International ACM SIGIR Conference on Research and Development in Information Retrieval (2020).\n\n[6] Shuai Ding and Torsten Suel. 2011. Faster Top-k Document Retrieval Using Block-Max Indexes. In Proceedings of the 34th International ACM SIGIR Conference on Research and Development in Information Retrieval (Beijing, China) (SIGIR ’11). Association for Computing Machinery, New York, NY, USA, 993–1002. https: //doi.org/10.1145/2009916.2010048\n\n[7] YixingFan,XiaohuiXie,YinqiongCai,JiaChen,XinyuMa,XiangshengLi,Ruqing Zhang, and Jiafeng Guo. 2021. Pre-training Methods in Information Retrieval. https://doi.org/10.48550/ARXIV.2111.13853\n\n[8] Thibault Formal, Benjamin Piwowarski, and Stéphane Clinchant. 2021. SPLADE:\n\nSparse Lexical and Expansion Model for First Stage Ranking. In Proceedings of the 44th International ACM SIGIR Conference on Research and Development in Information Retrieval (Virtual Event, Canada) (SIGIR ’21). Association for Computing Machinery, New York, NY, USA, 2288–2292. https://doi.org/10.1145/ 3404835.3463098\n\n[9] Luyu Gao, Zhuyun Dai, Tongfei Chen, Zhen Fan, Benjamin Van Durme, and Jamie Callan. "
+        },
+        {
+          "rank": 3,
+          "document": "bge-m3",
+          "section": "Figure 1: Characters of M3-Embedding.",
+          "page": 1,
+          "score": 0.1431298,
+          "node_id": "988f9e47-988d-4f87-b9ff-2bcbf55d3dad",
+          "text": "dense retrieval, where relevant answers to the query can be retrieved based on the embedding similarity (Karpukhin et al., 2020; Xiong et al., 2020; Neelakantan et al., 2022; Wang et al., 2022; Xiao et al., 2023). Besides, the embedding model can also be applied to other IR tasks, such as multi-vector retrieval where the fine-grained relevance between query and document is computed based on the interaction score of multiple embeddings (Khattab and Zaharia, 2020), and sparse or lexical retrieval where the importance of each term is estimated by its output embedding (Gao et al., 2021a; Lin and Ma, 2021; Dai and Callan, 2020).\n\ndocument retrieval benchmarks.1"
+        },
+        {
+          "rank": 4,
+          "document": "lexically-accelerated-dense-retrieval",
+          "section": "3.1 𝑅0 Lexical Seed Documents",
+          "page": 3,
+          "score": 0.13566591,
+          "node_id": "a66b6666-b385-4df3-bfac-69a19ad53c5b",
+          "text": "These algorithms generally result in sub-linear query processing time with respect to both the number of documents indexed2 and the number of top results returned.3 They also are inexpensive to construct, compress, and store without specialized hardware acceleration, especially when compared to the overheads of dense retrieval models.4 Finally, it is commonplace in industry to use a lexical search index for first stage retrieval already (e.g., tools like ElasticSearch are prevalent), so the choice fits with existing operational structures."
+        },
+        {
+          "rank": 5,
+          "document": "rag-for-knowledge-intensive-nlp-tasks",
+          "section": "2.2 Retriever: DPR",
+          "page": 3,
+          "score": 0.12677187,
+          "node_id": "117626c8-e6b3-4b77-b722-984fddffd05f",
+          "text": "This retriever was trained to retrieve documents which contain answers to TriviaQA [24] questions and Natural Questions [29]. We refer to the document index as the non-parametric memory."
+        }
+      ],
+      "answer": "The provided context does not contain information regarding a \"long-document benchmark,\" a comparison of \"three retrieval heads,\" or the specific source of the lexical head's term weights. The context mentions lexical search, dense retrieval, and specific models like SPLADE and M3-Embedding, but it does not provide the specific details requested in the question.",
+      "claims": [
+        "The provided context does not contain information regarding a \"long-document benchmark,\" a comparison of \"three retrieval heads,\" or the specific source of the lexical head's term weights.",
+        "The context mentions lexical search, dense retrieval, and specific models like SPLADE and M3-Embedding, but it does not provide the specific details requested in the question."
+      ],
+      "claims_supported": 0,
+      "claims_total": 2,
+      "citation_accuracy": 0.0,
+      "extractive": false,
+      "gold_answer": null,
+      "exact_match": null,
+      "retrieval_latency_s": 0.08981579099781811,
+      "generation_latency_s": 9.718317916005617,
+      "prompt_tokens": 549,
+      "completion_tokens": 53,
+      "total_tokens": 602
+    },
+    {
+      "question": "papers-unanswerable-01",
+      "stratum": "unanswerable",
+      "scored": false,
+      "unscored_reason": "names no place in the corpus to look in",
+      "recall": null,
+      "reciprocal_rank": null,
+      "recall_at": null,
+      "ndcg_at": null,
+      "locations": [],
+      "retrieved": [
+        {
+          "rank": 1,
+          "document": "bge-m3",
+          "section": "5 Conclusion",
+          "page": 9,
+          "score": 0.15488341,
+          "node_id": "b20930f0-c7b6-4577-9324-e393ed8bcc38",
+          "text": "The effectiveness of M3-Embedding is empirically verified, where it leads to superior performances on multi-lingual retrieval, cross-lingual retrieval, and multi-lingual long-document retrieval tasks."
+        },
+        {
+          "rank": 2,
+          "document": "bge-m3",
+          "section": "3.2 Hybrid Retrieval",
+          "page": 3,
+          "score": 0.15276657,
+          "node_id": "1b14be96-e095-4599-94f5-32d0c88d8c15",
+          "text": "3.2 Hybrid Retrieval\n\nM3-Embedding unifies the common retrieval functionalities of the embedding model, i.e. dense retrieval, lexical (sparse) retrieval, and multi-vector retrieval. The formulation is presented as follows.\n\n"
+        },
+        {
+          "rank": 3,
+          "document": "bge-m3",
+          "section": "4 Experiment",
+          "page": 6,
+          "score": 0.14830092,
+          "node_id": "a6573024-5c80-4fce-a958-3f180a5fe8c7",
+          "text": "4 Experiment\n\nIn this section, we investigate M3-Embedding’s performance in terms of multi-lingual retrieval, crosslingual retrieval, and long-doc retrieval. We also explore the impact of its technical factors."
+        },
+        {
+          "rank": 4,
+          "document": "bge-m3",
+          "section": "4.4 Ablation study",
+          "page": 8,
+          "score": 0.13754663,
+          "node_id": "de7f7d0e-bbb3-4b8f-a050-99d601a310c6",
+          "text": "4.4 Ablation study\n\nTo explore the reason for M3-Embedding’s competitiveness in long-document retrieval, we perform the ablation study by removing the long document data from the fine-tuning stage (denoted as w.o. long). "
+        },
+        {
+          "rank": 5,
+          "document": "dense-passage-retrieval",
+          "section": "Abstract",
+          "page": 1,
+          "score": 0.13554156,
+          "node_id": "1a580bcb-4f49-49b4-8637-a5b81407be17",
+          "text": "When evaluated on a wide range of open-domain QA datasets, our dense retriever outperforms a strong LuceneBM25 system greatly by 9%-19% absolute in terms of top-20 passage retrieval accuracy, and helps our end-to-end QA system establish new state-of-the-art on multiple open-domain QA benchmarks.1"
+        }
+      ],
+      "answer": "Based on the provided context, there is no mention of a specific benchmark suite that pools many datasets into a single retrieval score. The context mentions that M3-Embedding is evaluated on \"multi-lingual retrieval, cross-lingual retrieval, and multi-lingual long-document retrieval tasks\" [1, 3] and discusses hybrid retrieval [2] and ablation studies [4], but it does not name a specific benchmark suite (such as MTEB) or describe a single pooled score derived from such a suite.\n\nTherefore, the context does not contain the answer.",
+      "claims": [
+        "Based on the provided context, there is no mention of a specific benchmark suite that pools many datasets into a single retrieval score.",
+        "The context mentions that M3-Embedding is evaluated on \"multi-lingual retrieval, cross-lingual retrieval, and multi-lingual long-document retrieval tasks\" [1, 3] and discusses hybrid retrieval [2] and ablation studies [4], but it does not name a specific benchmark suite (such as MTEB) or describe a single pooled score derived from such a suite.",
+        "Therefore, the context does not contain the answer."
+      ],
+      "claims_supported": 0,
+      "claims_total": 3,
+      "citation_accuracy": 0.0,
+      "extractive": false,
+      "gold_answer": null,
+      "exact_match": null,
+      "retrieval_latency_s": 0.04632129200035706,
+      "generation_latency_s": 4.509533584001474,
+      "prompt_tokens": 243,
+      "completion_tokens": 82,
+      "total_tokens": 325
+    },
+    {
+      "question": "papers-unanswerable-02",
+      "stratum": "unanswerable",
+      "scored": false,
+      "unscored_reason": "names no place in the corpus to look in",
+      "recall": null,
+      "reciprocal_rank": null,
+      "recall_at": null,
+      "ndcg_at": null,
+      "locations": [],
+      "retrieved": [
+        {
+          "rank": 1,
+          "document": "lexically-accelerated-dense-retrieval",
+          "section": "5.2 RQ2: Model Applicability",
+          "page": 8,
+          "score": 0.22545011,
+          "node_id": "abe32d37-3180-45e6-b854-640b158bb841",
+          "text": "5.2 RQ2: Model Applicability\n\nTable 1 presents the Proactive and Adaptive LADR results across a variety of dense retrieval models. It shows statistically significant improvements over the baselines for DL19 and DL20 across all four dense retrieval methods, with the only exception being ANCE on DL20. "
+        },
+        {
+          "rank": 2,
+          "document": "lexically-accelerated-dense-retrieval",
+          "section": "4 EXPERIMENTAL SETUP",
+          "page": 5,
+          "score": 0.21460341,
+          "node_id": "336e451f-678c-461b-9807-0a5ff35f6146",
+          "text": "4 EXPERIMENTAL SETUP\n\nVia experimentation, we answer the following research questions:\n\nRQ1 HowdoesLADRcomparetootherapproximationtechniques in terms of effectiveness and efficiency?\n\nRQ2 Is LADR applicable to a variety of single-representation\n\ndense retrieval models?\n\nRQ3 What are the computational overheads of LADR?\n\n"
+        },
+        {
+          "rank": 3,
+          "document": "lexically-accelerated-dense-retrieval",
+          "section": "5.2 RQ2: Model Applicability",
+          "page": 8,
+          "score": 0.19731052,
+          "node_id": "b9cd076f-c1b4-4d15-bf7f-bda9af3b83c2",
+          "text": "These improvements are observed in both nDCG and Recall@1k metrics at multiple operational points. Further, this trend also largely holds on the Dev (small) dataset, though occasionally re-ranking and GAR achieve higher RR@10 performance (RetroMAE and ANCE). Hence, addressing RQ2 we conclude that both Proactive and Adaptive LADR are applicable to a variety of single-representation dense retrieval models."
+        },
+        {
+          "rank": 4,
+          "document": "lexically-accelerated-dense-retrieval",
+          "section": "4.2 Models and Parameters",
+          "page": 5,
+          "score": 0.1764104,
+          "node_id": "836566ad-ef73-4a89-ab15-2b2720317a4f",
+          "text": "4.2 Models and Parameters\n\nWe apply LADR and the baselines over the following diverse sam-\n\nple of single-representation dense retrieval models: TAS-B8 [13],\n\n6http://github.com/Georgetown-IR-Lab/ladr\n\n7Indeed, we also found that query encoding time exhibited higher variance across\n\ndense retrieval models than the the approximate nearest neighbor method. 8sebastian-hofstaetter/distilbert-dot-tas_b-b256-msmarco\n\nHrishikesh Kulkarni, Sean MacAvaney, Nazli Goharian, & Ophir Frieder\n\nFigure 3: Performance of LADR over TAS-B and baselines across various operational points.\n\n"
+        },
+        {
+          "rank": 5,
+          "document": "lexically-accelerated-dense-retrieval",
+          "section": "3.5 Comparison with Existing Methods",
+          "page": 5,
+          "score": 0.17611766,
+          "node_id": "fb0ec778-b13f-41bb-9ea8-f4193b961866",
+          "text": "3.5 Comparison with Existing Methods\n\nRe-ranking. Both LADR variants build upon the high effectiveness of the re-ranking technique [20, 41]. Using a lexical model for reranking alone is a major drawback, however: it inherently limits the retrievable documents to those with lexical matches. Though we argue that this is a reasonable starting point, it is not ideal to exclusively use such signals for dense retrieval because the highestscoring results from a dense retrieval model need not have lexical overlap. LADR addresses this problem by expanding the scope of the search to the neighboring documents in the semantic space.\n\n"
+        }
+      ],
+      "answer": "The provided context does not contain the answer. The context discusses the \"LADR\" paper and its application to various dense retrieval models (such as TAS-B8, RetroMAE, and ANCE), but it does not mention a \"RAG\" paper, nor does it identify a specific dense retriever checkpoint name that both papers build upon.",
+      "claims": [
+        "The provided context does not contain the answer.",
+        "The context discusses the \"LADR\" paper and its application to various dense retrieval models (such as TAS-B8, RetroMAE, and ANCE), but it does not mention a \"RAG\" paper, nor does it identify a specific dense retriever checkpoint name that both papers build upon."
+      ],
+      "claims_supported": 0,
+      "claims_total": 2,
+      "citation_accuracy": 0.0,
+      "extractive": false,
+      "gold_answer": null,
+      "exact_match": null,
+      "retrieval_latency_s": 0.0323705000046175,
+      "generation_latency_s": 6.757959290989675,
+      "prompt_tokens": 410,
+      "completion_tokens": 51,
+      "total_tokens": 461
+    },
+    {
+      "question": "papers-unanswerable-03",
+      "stratum": "unanswerable",
+      "scored": false,
+      "unscored_reason": "names no place in the corpus to look in",
+      "recall": null,
+      "reciprocal_rank": null,
+      "recall_at": null,
+      "ndcg_at": null,
+      "locations": [],
+      "retrieved": [
+        {
+          "rank": 1,
+          "document": "bge-m3",
+          "section": "A Details of Datasets",
+          "page": 14,
+          "score": 0.12781759,
+          "node_id": "bbbb36dc-d660-4bf5-94ce-064510c21363",
+          "text": "A Details of Datasets"
+        },
+        {
+          "rank": 2,
+          "document": "dense-passage-retrieval",
+          "section": "Abstract",
+          "page": 1,
+          "score": 0.10430979,
+          "node_id": "1a580bcb-4f49-49b4-8637-a5b81407be17",
+          "text": "When evaluated on a wide range of open-domain QA datasets, our dense retriever outperforms a strong LuceneBM25 system greatly by 9%-19% absolute in terms of top-20 passage retrieval accuracy, and helps our end-to-end QA system establish new state-of-the-art on multiple open-domain QA benchmarks.1"
+        },
+        {
+          "rank": 3,
+          "document": "bge-m3",
+          "section": "References",
+          "page": 9,
+          "score": 0.09950419,
+          "node_id": "baa5be14-3db7-4972-b3d3-3be9dabdd184",
+          "text": "2023c. MIRACL: A multilingual retrieval dataset covering 18 diverse languages. Transactions of the Association for Computational Linguistics, 11:1114–1131."
+        },
+        {
+          "rank": 4,
+          "document": "bge-m3",
+          "section": "A.2 Synthetic Data",
+          "page": 14,
+          "score": 0.08583368,
+          "node_id": "a03e3949-65a9-49bd-b1ae-f214d9fdfa62",
+          "text": "Note that you should generate only one question, without including additional content:”. The details of generated dataset are shown in Table 7."
+        },
+        {
+          "rank": 5,
+          "document": "lexically-accelerated-dense-retrieval",
+          "section": "5.2 RQ2: Model Applicability",
+          "page": 8,
+          "score": 0.08555538,
+          "node_id": "b9cd076f-c1b4-4d15-bf7f-bda9af3b83c2",
+          "text": "These improvements are observed in both nDCG and Recall@1k metrics at multiple operational points. Further, this trend also largely holds on the Dev (small) dataset, though occasionally re-ranking and GAR achieve higher RR@10 performance (RetroMAE and ANCE). Hence, addressing RQ2 we conclude that both Proactive and Adaptive LADR are applicable to a variety of single-representation dense retrieval models."
+        }
+      ],
+      "answer": "The provided context does not contain information about a paper written for retrieving photographs by their captions, nor does it list the specific datasets used for such an evaluation. The context includes details about the BGE-M3 dataset, the DPR dense retriever's performance on open-domain QA datasets, and the Lexically Accelerated Dense Retrieval (LADR) model's applicability to single-representation dense retrieval models, but none of these sections mention image retrieval or photograph captioning.",
+      "claims": [
+        "The provided context does not contain information about a paper written for retrieving photographs by their captions, nor does it list the specific datasets used for such an evaluation.",
+        "The context includes details about the BGE-M3 dataset, the DPR dense retriever's performance on open-domain QA datasets, and the Lexically Accelerated Dense Retrieval (LADR) model's applicability to single-representation dense retrieval models, but none of these sections mention image retrieval or photograph captioning."
+      ],
+      "claims_supported": 0,
+      "claims_total": 2,
+      "citation_accuracy": 0.0,
+      "extractive": false,
+      "gold_answer": null,
+      "exact_match": null,
+      "retrieval_latency_s": 0.01898320799227804,
+      "generation_latency_s": 3.502038833015831,
+      "prompt_tokens": 238,
+      "completion_tokens": 71,
+      "total_tokens": 309
+    },
+    {
+      "question": "papers-unanswerable-04",
+      "stratum": "unanswerable",
+      "scored": false,
+      "unscored_reason": "names no place in the corpus to look in",
+      "recall": null,
+      "reciprocal_rank": null,
+      "recall_at": null,
+      "ndcg_at": null,
+      "locations": [],
+      "retrieved": [
+        {
+          "rank": 1,
+          "document": "dense-passage-retrieval",
+          "section": null,
+          "page": 1,
+          "score": 0.238907,
+          "node_id": "b76e4646-285e-48ba-9113-ce448c442041",
+          "text": "arXiv"
+        },
+        {
+          "rank": 2,
+          "document": "bge-m3",
+          "section": null,
+          "page": 1,
+          "score": 0.238907,
+          "node_id": "e11be885-7c42-4dc5-8bc7-ee54ceb8d6db",
+          "text": "arXiv"
+        },
+        {
+          "rank": 3,
+          "document": "lexically-accelerated-dense-retrieval",
+          "section": null,
+          "page": 1,
+          "score": 0.238907,
+          "node_id": "52b4b8a1-2474-43df-9558-f88923bfecd2",
+          "text": "arXiv"
+        },
+        {
+          "rank": 4,
+          "document": "rag-for-knowledge-intensive-nlp-tasks",
+          "section": null,
+          "page": 1,
+          "score": 0.238907,
+          "node_id": "40c337c0-a43f-4edc-a40a-0533e400df4b",
+          "text": "arXiv"
+        },
+        {
+          "rank": 5,
+          "document": "lost-in-the-middle",
+          "section": null,
+          "page": 1,
+          "score": 0.20048861,
+          "node_id": "d6bb00a3-f7f3-4b06-be36-d4fe9ae886d3",
+          "text": "2307.03172v3 arXiv"
+        }
+      ],
+      "answer": "The provided context does not contain the answer. The context only lists the file paths and the text \"arXiv\" (and one specific ID \"2307.03172v3\") for the papers, but it does not list the authors of the papers or the arXiv identifier for the original BERT paper.",
+      "claims": [
+        "The provided context does not contain the answer.",
+        "The context only lists the file paths and the text \"arXiv\" (and one specific ID \"2307.03172v3\") for the papers, but it does not list the authors of the papers or the arXiv identifier for the original BERT paper."
+      ],
+      "claims_supported": 0,
+      "claims_total": 2,
+      "citation_accuracy": 0.0,
+      "extractive": false,
+      "gold_answer": null,
+      "exact_match": null,
+      "retrieval_latency_s": 0.026018250006018206,
+      "generation_latency_s": 2.2990964589989744,
+      "prompt_tokens": 84,
+      "completion_tokens": 46,
+      "total_tokens": 130
+    }
+  ],
+  "aggregates": {
+    "questions": 32,
+    "scored": 28,
+    "unscored": 4,
+    "recall": 0.9107142857142857,
+    "reciprocal_rank": 0.8077380952380953,
+    "recall_at": {
+      "1": 0.7321428571428571,
+      "3": 0.8392857142857143,
+      "5": 0.9107142857142857
+    },
+    "ndcg_at": {
+      "1": 0.75,
+      "3": 0.7944313195120326,
+      "5": 0.823628796844459
+    },
+    "citation_accuracy": 0.041666666666666664,
+    "citation_accuracy_answerable": 0.047619047619047616,
+    "citation_accuracy_unanswerable": 0.0,
+    "citation_scored": 32,
+    "citation_unscored": 0,
+    "exact_match": 0.0,
+    "exact_match_scored": 16,
+    "exact_match_unscored": 16,
+    "citation_accuracy_extractive": 0.08333333333333333,
+    "citation_extractive_scored": 16,
+    "retrieval_latency_p50_s": 0.039999020504183136,
+    "retrieval_latency_p95_s": 0.07038049595430491,
+    "generation_latency_p50_s": 5.507831291513867,
+    "generation_latency_p95_s": 15.442222552307063,
+    "prompt_tokens_mean": 490.28125,
+    "completion_tokens_mean": 44.96875,
+    "total_tokens_mean": 535.25,
+    "total_tokens": 17128,
+    "generation_count": 32
+  }
+}
