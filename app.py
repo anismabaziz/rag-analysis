@@ -48,7 +48,7 @@ def render_qdrant_tab():
         (registered, collection_points(client, registered.collection))
         for registered in architectures
     ]
-    ready = sum(1 for _, count in statuses if count is not None)
+    ready = sum(1 for _, count in statuses if count)
     total_points = sum(count for _, count in statuses if count is not None)
 
     summary_left, summary_mid, summary_right = st.columns(3)
@@ -77,8 +77,8 @@ def render_qdrant_tab():
                     st.metric("Points", f"{count:,}")
             with action:
                 st.write("")
-                if count is None:
-                    st.warning("Not ingested")
+                if not count:
+                    st.warning("Not ingested" if count is None else "Empty")
                     if st.button("Ingest", key=f"ingest-{registered.name}"):
                         with st.spinner(
                             f"Ingesting {registered.name}... reads the whole corpus, takes a while"
@@ -151,6 +151,7 @@ def run_live(name: str, question: str, cache_dir: Path):
 
 def render_result(name: str, outcome: dict):
     st.subheader(name)
+    st.caption(architecture(name).description)
     st.write(outcome["answer"])
     meta = f"retrieval {outcome['retrieval_s']:.2f}s"
     if outcome.get("generation_s") is not None:
@@ -193,9 +194,11 @@ with live_tab:
             names,
             index=names.index("hybrid") if "hybrid" in names else 0,
         )
+        st.caption(architecture(arch_a).description)
     with right:
         default_b = names.index("naive") if "naive" in names else min(1, len(names) - 1)
         arch_b = st.selectbox("Architecture B", names, index=default_b)
+        st.caption(architecture(arch_b).description)
     question = st.text_input(
         "Question",
         "how are the positional encodings scaled?",
@@ -226,6 +229,7 @@ with results_tab:
             f"{len(summary.files)} runs at {', '.join(summary.commits)} "
             f"/ {summary.generation_model} / depth {summary.retrieval_depth}"
         )
+        st.caption("chunk-fixed, chunk-semantic, and chunk-hierarchical are naive dense retrieval. Only the chunking differs.")
         rows = [
             {
                 "architecture": row.architecture,

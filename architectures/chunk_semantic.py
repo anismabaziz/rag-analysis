@@ -5,7 +5,7 @@ from core.registry import DENSE, register
 
 @register(
     name="chunk-semantic",
-    description="Dense retrieval over semantic chunks, for the chunking comparison.",
+    description="Naive dense retrieval over semantic chunks; only the chunking differs.",
     collection="rag_chunk_semantic",
     vectors=(DENSE,),
     chunker=Chunker.variant("semantic", 512, 128),

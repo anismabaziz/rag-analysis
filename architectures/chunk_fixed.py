@@ -5,7 +5,7 @@ from core.registry import DENSE, register
 
 @register(
     name="chunk-fixed",
-    description="Dense retrieval over fixed-size sentence chunks, for the chunking comparison.",
+    description="Naive dense retrieval over fixed-size sentence chunks; only the chunking differs.",
     collection="rag_chunk_fixed",
     vectors=(DENSE,),
     chunker=Chunker.variant("fixed", 512, 128),

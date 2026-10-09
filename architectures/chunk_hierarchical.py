@@ -5,7 +5,7 @@ from core.registry import DENSE, register
 
 @register(
     name="chunk-hierarchical",
-    description="Dense retrieval over hierarchical chunks, for the chunking comparison.",
+    description="Naive dense retrieval over hierarchical chunks; only the chunking differs.",
     collection="rag_chunk_hierarchical",
     vectors=(DENSE,),
     chunker=Chunker.variant("hierarchical", 512, 128),
