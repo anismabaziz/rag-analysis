@@ -294,10 +294,25 @@ with results_tab:
             result for result in target.results if result.question == selected
         )
         st.write(detail.answer)
+        st.caption(
+            "Each chunk is one slice of a paper the retriever handed the generator: "
+            "about 120 words with the paper, section, and page it came from."
+        )
         with st.expander(f"Retrieved chunks ({len(detail.retrieved)})"):
-            for item in detail.retrieved:
-                st.markdown(f"**{item.document}** {item.section} (rank {item.rank})")
-                st.text((item.text[:500] + "…") if len(item.text) > 500 else item.text)
+            for index, item in enumerate(detail.retrieved, start=1):
+                with st.container(border=True):
+                    st.markdown(
+                        f"**Chunk {index}** · rank {item.rank} · "
+                        f"{item.document or 'unknown document'}"
+                    )
+                    bits = []
+                    if item.section:
+                        bits.append(str(item.section))
+                    if item.page is not None:
+                        bits.append(f"page {item.page}")
+                    if bits:
+                        st.caption(" — ".join(bits))
+                    st.write(item.text or "(empty chunk)")
 
 with qdrant_tab:
     render_qdrant_tab()
