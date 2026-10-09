@@ -19,8 +19,8 @@ from pathlib import Path
 from core import registry
 from evaluation.cache import CACHE_DIR, CacheKey
 from evaluation.run import run_evaluation
-from test_evaluation_run import found_everywhere, found_nothing, offline  # noqa: F401
-from test_evaluation_run import retrieve_from
+from tests.fast.test_evaluation_run import found_everywhere, found_nothing, offline  # noqa: F401
+from tests.fast.test_evaluation_run import retrieve_from
 
 
 class CountingLlm:
@@ -206,7 +206,7 @@ def answering_from_other_text(question, top_k):
     """Retrieval that answers the same questions out of different text, changing the context."""
     from dataclasses import replace
 
-    from test_evaluation_run import a_chunk
+    from tests.fast.test_evaluation_run import a_chunk
 
     if question.document is None:
         return [a_chunk("attention-is-all-you-need", "3.2.2 Multi-Head Attention")]
@@ -237,7 +237,7 @@ def test_two_questions_retrieving_the_same_context_get_their_own_answers(
 
 def same_text_for_everything(question, top_k):
     """Retrieval that returns the same passage for every question, whatever was asked."""
-    from test_evaluation_run import a_chunk
+    from tests.fast.test_evaluation_run import a_chunk
 
     return [a_chunk("attention-is-all-you-need", "3.2.2 Multi-Head Attention")]
 

@@ -17,7 +17,7 @@ from config.configuration import Chunker
 from config.params import CHUNKING_STRATEGIES
 from core import registry
 from core.chunk import Chunk
-from test_evaluation_run import found_everywhere, offline  # noqa: F401
+from tests.fast.test_evaluation_run import found_everywhere, offline  # noqa: F401
 
 CHUNKING = ("chunk-fixed", "chunk-semantic", "chunk-hierarchical")
 
@@ -241,7 +241,7 @@ def test_the_chunking_table_excludes_runs_measured_at_the_committed_chunker(
         summarize_chunking,
     )
     from evaluation.run import run_evaluation
-    from test_evaluation_run import found_nothing
+    from tests.fast.test_evaluation_run import found_nothing
 
     monkeypatch.setattr(
         registry.architecture("naive").pipeline,
@@ -337,7 +337,7 @@ def test_the_main_summary_leaves_chunking_runs_out_rather_than_blending_them(
     rather than refused, because a chunking run is a different measurement, not a broken one."""
     from evaluation.run import run_evaluation
     from evaluation.summary import load_committed_runs, summarize
-    from test_evaluation_run import found_nothing
+    from tests.fast.test_evaluation_run import found_nothing
 
     monkeypatch.setattr(
         registry.architecture("naive").pipeline,

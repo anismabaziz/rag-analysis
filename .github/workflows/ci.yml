@@ -55,5 +55,8 @@ jobs:
       - name: Fetch the papers corpus
         run: uv run rag-analysis fetch-corpus --domain papers
 
-      - name: Test
-        run: uv run pytest -q
+      - name: Test (fast)
+        run: uv run pytest tests/fast -q
+
+      - name: Test (slow and integration)
+        run: uv run pytest tests/slow tests/integration -q

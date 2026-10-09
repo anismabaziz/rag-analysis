@@ -17,7 +17,7 @@ import pytest
 from pypdf import PdfReader
 from unstructured.documents.elements import ElementMetadata, NarrativeText
 
-from fixtures.build_messy_layout import (
+from tests.fixtures.build_messy_layout import (
     BODY,
     CAPTION,
     HEADING,
@@ -30,7 +30,7 @@ from fixtures.build_messy_layout import (
 loader_module = importlib.import_module("data.loader")
 PDFLoader = loader_module.PDFLoader
 
-FIXTURE = str(Path(__file__).parent / "fixtures" / "messy_layout.pdf")
+FIXTURE = str(Path(__file__).parent.parent / "fixtures" / "messy_layout.pdf")
 
 DRAFT_STAMP = "Draft, do not cite"
 LETTER_STAMP = "A b c D e f G h"

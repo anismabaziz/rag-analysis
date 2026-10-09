@@ -129,7 +129,7 @@ def test_no_corpus_pdf_is_committed():
         capture_output=True,
         text=True,
         check=True,
-        cwd=Path(__file__).parent.parent,
+        cwd=Path(__file__).parent.parent.parent,
     )
 
     assert [line for line in tracked.stdout.splitlines() if line.endswith(".pdf")] == []

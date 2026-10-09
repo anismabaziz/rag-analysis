@@ -11,7 +11,7 @@ import re
 import shlex
 from pathlib import Path
 
-WORKFLOWS = Path(__file__).resolve().parent.parent / ".github" / "workflows"
+WORKFLOWS = Path(__file__).resolve().parent.parent.parent / ".github" / "workflows"
 CI = WORKFLOWS / "ci.yml"
 SECRET_SCAN = WORKFLOWS / "secret-scan.yml"
 
@@ -88,12 +88,29 @@ def test_a_push_runs_the_linter():
 
 
 def test_a_push_runs_the_whole_suite():
-    """No path and no selector, so a new test file is not silently left out and a filter cannot
-    quietly turn a red suite green. Flags are fine; they name no subset."""
-    command = run_command(CI, "pytest")
+    """Every suite directory has a step that runs it, so a new test file lands in a suite
+    that runs and no step can quietly select a subset. Flags are fine; they name no subset."""
+    commands = [
+        run_command(CI, f"tests/{suite}") for suite in ("fast", "slow", "integration")
+    ]
 
-    assert command[:3] == ["uv", "run", "pytest"]
-    assert [word for word in command[3:] if not word.startswith("-")] == []
+    for command in commands:
+        assert command[:3] == ["uv", "run", "pytest"]
+
+    named = {
+        word
+        for command in commands
+        for word in command[3:]
+        if word.startswith("tests/")
+    }
+    assert named == {"tests/fast", "tests/slow", "tests/integration"}
+
+    for command in commands:
+        assert [
+            word
+            for word in command[3:]
+            if not word.startswith("-") and not word.startswith("tests/")
+        ] == []
 
 
 def test_a_failing_gate_fails_the_run():

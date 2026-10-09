@@ -24,7 +24,7 @@ from architectures.chunk_semantic import ChunkSemanticRAG
 from architectures.chunk_hierarchical import ChunkHierarchicalRAG
 from core import registry
 
-PYPROJECT = Path(__file__).resolve().parent.parent / "pyproject.toml"
+PYPROJECT = Path(__file__).resolve().parent.parent.parent / "pyproject.toml"
 
 THROWAWAY_PACKAGE = "throwaway_architectures"
 

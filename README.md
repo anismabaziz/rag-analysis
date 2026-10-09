@@ -196,13 +196,17 @@ one architecture from the next; nothing else in the project has to change.
 ## Tests
 
 ```bash
-uv run pytest
+uv run pytest tests/fast # every change: hermetic, about a minute
+uv run pytest # before pushing: everything, several minutes
 uv run ruff check .
 ```
 
-No test needs a running service or network access. The vector store, the hosted model client, and
-the embedding models are all swapped out inside the tests. Runs in tests also get a scratch
-cache, so a test run never writes into the committed one.
+`tests/fast` swaps out the vector store, the hosted model client, and the embedding
+models, and runs in tests get a scratch cache, so it needs no service, no key, and no
+network, and a run never writes into the committed cache. `tests/slow` checks the gold
+answers against the real corpus PDFs, which takes minutes. `tests/integration` hits the
+network and the git history to fetch and verify the corpus. CI runs all three, fetching
+the papers corpus first so the slow checks read real documents.
 
 ## Layout
 

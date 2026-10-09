@@ -17,7 +17,7 @@ from core import registry
 from core.chunk import Chunk
 from evaluation.run import load_run_file, run_evaluation
 from evaluation.set import load_evaluation_set
-from test_evaluation_run import found_everywhere, found_nothing, offline  # noqa: F401
+from tests.fast.test_evaluation_run import found_everywhere, found_nothing, offline  # noqa: F401
 
 
 def retrieve_from_both(chunks_for):

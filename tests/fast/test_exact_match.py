@@ -75,7 +75,7 @@ def test_a_run_scores_each_extractive_question_by_exact_match(tmp_path, monkeypa
     from core import registry
     from evaluation.run import run_evaluation
     from evaluation.set import load_evaluation_set
-    from test_evaluation_run import (
+    from tests.fast.test_evaluation_run import (
         RecordingLlm,
         found_everywhere,
         offline,
@@ -132,7 +132,7 @@ def test_a_wrong_answer_scores_zero_and_a_refusal_scores_zero(tmp_path, monkeypa
     from core import registry
     from evaluation.run import run_evaluation
     from evaluation.set import load_evaluation_set
-    from test_evaluation_run import (
+    from tests.fast.test_evaluation_run import (
         RecordingLlm,
         found_everywhere,
         offline,
@@ -175,12 +175,12 @@ def test_exact_match_is_reported_alongside_citation_for_the_same_questions(
     from core import registry
     from evaluation.run import run_evaluation
     from evaluation.set import load_evaluation_set
-    from test_evaluation_run import offline, retrieve_from  # noqa: F401
+    from tests.fast.test_evaluation_run import offline, retrieve_from  # noqa: F401
 
     evaluation_set = load_evaluation_set("papers")
 
     def chunks_for(question, top_k):
-        from test_evaluation_run import found_everywhere
+        from tests.fast.test_evaluation_run import found_everywhere
 
         chunks = found_everywhere(question, top_k)
         if question.extractive and question.gold_answer:
@@ -221,12 +221,12 @@ def test_summary_reports_exact_match_pooled_and_per_domain(tmp_path, monkeypatch
     from core import registry
     from evaluation.run import run_evaluation
     from evaluation.set import load_evaluation_set
-    from test_evaluation_run import offline  # noqa: F401
+    from tests.fast.test_evaluation_run import offline  # noqa: F401
 
     sets = {domain: load_evaluation_set(domain) for domain in ("papers", "manuals")}
 
     def chunks_for(question, top_k):
-        from test_evaluation_run import found_everywhere
+        from tests.fast.test_evaluation_run import found_everywhere
 
         return found_everywhere(question, top_k)
 

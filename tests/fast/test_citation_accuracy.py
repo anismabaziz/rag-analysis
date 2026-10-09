@@ -107,7 +107,7 @@ def test_the_check_is_deterministic_and_uses_no_model():
 
 def _quoting_chunks(question, top_k):
     """Retrieval that answers out of a passage quoting the answer the generator will give."""
-    from test_evaluation_run import a_chunk as real_chunk
+    from tests.fast.test_evaluation_run import a_chunk as real_chunk
 
     if question.document is None:
         return [real_chunk("attention-is-all-you-need", "3.2.2 Multi-Head Attention")]
@@ -136,7 +136,7 @@ def _run_over(tmp_path, monkeypatch, chunks_for, generate):
 
     from core import registry
     from evaluation.run import run_evaluation
-    from test_evaluation_run import RecordingLlm, retrieve_from
+    from tests.fast.test_evaluation_run import RecordingLlm, retrieve_from
 
     monkeypatch.setattr(registry, "get_generation_llm", lambda: RecordingLlm())
     monkeypatch.setattr(registry, "get_embed_model", lambda: _embed_model())
@@ -220,7 +220,7 @@ def test_a_refusal_when_retrieval_is_empty_carries_no_citation_score(
     tmp_path, monkeypatch
 ):
     """Producing no claims is not a miss: the question drops out of the mean instead."""
-    from test_evaluation_run import found_nothing
+    from tests.fast.test_evaluation_run import found_nothing
 
     async def refuse_generate(self, query, context):
         raise AssertionError("empty retrieval must never reach the model")

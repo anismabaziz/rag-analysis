@@ -31,7 +31,7 @@ from evaluation.set import (
 
 # Where the corpus lands, the same root the fetch command installs it into. Only the checks that
 # read the sources themselves need it.
-CORPUS_ROOT = Path(__file__).parents[1] / "documents"
+CORPUS_ROOT = Path(__file__).parents[2] / "documents"
 
 # The counts of each set as it is committed. A count is a recorded result, so it is asserted rather
 # than recomputed: adding a question has to be a deliberate change to this test, not a side effect
@@ -74,7 +74,7 @@ def letters(text: str) -> str:
 
 def set_path(domain: str) -> Path:
     """Where the committed set of a domain lives, named after the domain itself."""
-    return Path(__file__).parents[1] / "evaluation" / "sets" / f"{domain}.json"
+    return Path(__file__).parents[2] / "evaluation" / "sets" / f"{domain}.json"
 
 
 def write_set(root: Path, recorded: dict, domain: str) -> None:

@@ -20,7 +20,7 @@ from config.configuration import frozen_configuration
 from config.params import Params
 from core import registry
 from core.chunk import Chunk, Provenance
-from test_evaluation_run import found_everywhere, offline  # noqa: F401
+from tests.fast.test_evaluation_run import found_everywhere, offline  # noqa: F401
 
 
 class DenseEmbedModel:

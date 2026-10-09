@@ -14,8 +14,8 @@ import json
 
 from core import registry
 from evaluation.run import run_evaluation
-from test_evaluation_run import found_everywhere, found_nothing, offline  # noqa: F401
-from test_evaluation_run import retrieve_from, run_over
+from tests.fast.test_evaluation_run import found_everywhere, found_nothing, offline  # noqa: F401
+from tests.fast.test_evaluation_run import retrieve_from, run_over
 
 
 def test_median_and_p95_retrieval_latency_are_reported(tmp_path, monkeypatch, offline):
