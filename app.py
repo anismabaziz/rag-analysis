@@ -270,17 +270,11 @@ with results_tab:
         st.dataframe(rows, use_container_width=True)
         scopes = sorted({run.domain for run in runs})
         scope = st.selectbox("Domain drilldown", scopes)
-        candidates = sorted(
-            (run for run in runs if run.domain == scope),
-            key=lambda run: (run.architecture, run.commit.short()),
+        arch_names = sorted({run.architecture for run in runs if run.domain == scope})
+        pick = st.selectbox("Run", arch_names)
+        target = next(
+            run for run in runs if run.domain == scope and run.architecture == pick
         )
-        labels = {
-            f"{run.architecture} @ {run.commit.short()}"
-            f"{' · dirty' if run.commit.dirty else ''}": run
-            for run in candidates
-        }
-        pick = st.selectbox("Run", list(labels))
-        target = labels[pick]
         qrows = [
             {
                 "question": result.question,
