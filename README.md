@@ -14,10 +14,33 @@ demonstrated anything except that two retrieval signals were combined; where the
 stops holding is the more useful result than the average. The evaluation set is stratified to
 measure that boundary rather than assume it.
 
-The project exists to test that claim, and the numbers in the results table are not here yet. The
-harness is being built in stages, and the README will carry the measured table once the evaluation
-set exists. See the design decisions in `docs/adr/` for the reasoning behind how it is put
-together.
+The project exists to test that claim, and the numbers below are the measurement so far:
+three architectures over the papers set (32 questions: 14 identifier-heavy, 10 paraphrase,
+4 multi-hop, 4 unanswerable), retrieval depth 5, generation frozen. The full table with
+latencies, token costs, citation, and exact match lives in `results/summary.md`; what matters
+for the claim is recall@5 and reciprocal rank per stratum.
+
+| architecture | identifier_heavy recall@5 | identifier_heavy mrr | paraphrase recall@5 | paraphrase mrr | pooled recall@5 |
+| --- | --- | --- | --- | --- | --- |
+| `naive` | 1.00 | 1.00 | 0.90 | 0.68 | 0.96 |
+| `sparse` | 1.00 | 0.95 | 0.80 | 0.60 | 0.91 |
+| `hybrid` | 1.00 | 1.00 | 0.60 | 0.65 | 0.86 |
+
+Read plainly: the second half of the claim holds (dense beats hybrid on paraphrase, 0.90 vs
+0.60), the first half does not appear (every architecture ceilings at 1.00 on identifiers, so
+fusion has nothing to add where dense already finds everything). Fusion drags paraphrase toward
+the sparse ranking without buying anything back. Ten paraphrase questions is a thin slice, and
+`rerank` is still missing (its run is waiting on the hosted-model quota), so treat the gap as a
+direction, not a magnitude. See the design decisions in `docs/adr/` for the reasoning behind
+how it is put together.
+
+Two caveats on the answer-quality columns in the full table. Exact match sits at 0.00 because
+the metric tolerates whitespace and punctuation only, while the model answers in its own words
+("8 parallel attention heads" against a gold span of "h = 8 parallel attention layers"); the
+answers are correct, the scorer is strict. Citation accuracy is near zero for the same reason:
+claims paraphrased from context fail a span check a human would pass. Both metrics are frozen
+and identical across architectures, so the retrieval comparison stands; the absolute values say
+more about the scorers than the systems.
 
 ## What is being compared
 
