@@ -47,9 +47,9 @@ jobs:
 
       # The corpus is not in the repository, and the tests that check the hand-written gold
       # answers against their sources skip when it is missing. Fetching the papers turns those
-      # skips into checks. Only that domain: arXiv serves one immutable PDF per id, while the
-      # manuals are reissued with point releases, and a build that fails because upstream
-      # regenerated a PDF is a build nobody trusts. Needs no service and no key, but it does
+      # skips into checks. ArXiv serves one immutable PDF per id, so the pinned digests stay
+      # valid and a build never fails because upstream regenerated a file. Needs no service
+      # and no key, but it does
       # need arXiv to answer, and a red build from here is a fetch to read in the log rather
       # than a test to go and fix.
       - name: Fetch the papers corpus

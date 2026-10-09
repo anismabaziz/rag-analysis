@@ -51,7 +51,7 @@ from evaluation.metrics import (
 from evaluation.set import EvaluationSet, Stratum, load_evaluation_set
 
 # Where run files are written. One directory per domain, because results are reported per domain
-# and a reader looking for the manuals numbers should not have to read the papers ones to find them.
+# and a reader looking for one domain's numbers should not have to read another's to find them.
 RESULTS_DIR = Path("results/runs")
 
 

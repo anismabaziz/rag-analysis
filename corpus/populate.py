@@ -49,7 +49,7 @@ class Outcome:
 def download_document(url: str, destination: Path) -> None:
     """Fetch one document to `destination`. Raising means the document was not retrieved.
 
-    Written in blocks rather than read into memory, because a manual in this corpus is tens of
+    Written in blocks rather than read into memory, because a document is tens of
     megabytes and a reader may point this at a larger corpus tomorrow.
     """
     request = urllib.request.Request(

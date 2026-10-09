@@ -223,7 +223,7 @@ def test_summary_reports_exact_match_pooled_and_per_domain(tmp_path, monkeypatch
     from evaluation.set import load_evaluation_set
     from tests.fast.test_evaluation_run import offline  # noqa: F401
 
-    sets = {domain: load_evaluation_set(domain) for domain in ("papers", "manuals")}
+    sets = {domain: load_evaluation_set(domain) for domain in ("papers",)}
 
     def chunks_for(question, top_k):
         from tests.fast.test_evaluation_run import found_everywhere
@@ -252,7 +252,7 @@ def test_summary_reports_exact_match_pooled_and_per_domain(tmp_path, monkeypatch
         raise AssertionError(f"unknown query: {query}")
 
     for architecture in ("naive", "hybrid"):
-        for domain in ("papers", "manuals"):
+        for domain in ("papers",):
             monkeypatch.setattr(
                 registry.architecture(architecture).pipeline, "retrieve", retrieve
             )
@@ -276,7 +276,6 @@ def test_summary_reports_exact_match_pooled_and_per_domain(tmp_path, monkeypatch
     assert "exact_match" in table or "exact" in table
     scopes = {(row.architecture, row.scope) for row in summary.rows}
     assert ("naive", "papers") in scopes
-    assert ("naive", "manuals") in scopes
     assert ("naive", "pooled") in scopes
 
     pooled = next(

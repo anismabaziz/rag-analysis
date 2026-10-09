@@ -99,7 +99,7 @@ committed manifest of URLs and digests, not committed PDFs, so fetch it before t
 ingest:
 
 ```bash
-uv run rag-analysis fetch-corpus              # 60 MB, both domains
+uv run rag-analysis fetch-corpus              # a few MB, the papers domain
 uv run rag-analysis fetch-corpus --domain papers
 
 # see what can be ingested and queried
@@ -115,10 +115,10 @@ uv run rag-analysis query naive "how are the positional encodings scaled?"
 uv run rag-analysis query sparse "how are the positional encodings scaled?"
 uv run rag-analysis query hybrid "how are the positional encodings scaled?"
 
-# run one architecture over a domain's evaluation set and write the result file
+# run one architecture over the evaluation set and write the result file
 uv run rag-analysis run naive --domain papers
 uv run rag-analysis run sparse --domain papers
-uv run rag-analysis run hybrid --domain manuals
+uv run rag-analysis run hybrid --domain papers
 
 # point a run at a cache of your own instead of the committed one
 uv run rag-analysis run naive --domain papers --cache-dir /tmp/responses
@@ -141,10 +141,9 @@ uv run rag-analysis verify-corpus --domain papers
 A document is written to `documents/<domain>/` only once its bytes match the digest in
 `corpus/manifest.json`, and a mismatch fails the command, so a truncated download cannot end up
 inside a corpus. `verify-corpus` answers whether the corpus is unmodified, which is the check a
-reader needs before trusting a number in the results table. The two domains and why they are
-the two are described in [docs/corpus.md](docs/corpus.md). Ingestion reads every PDF under
-`./documents`, and the manuals domain is 9,798 pages of it, so `--domain papers` is the fast
-way in.
+reader needs before trusting a number in the results table. The domain is described in
+[docs/corpus.md](docs/corpus.md). Ingestion reads every PDF under `./documents`, six papers
+at 94 pages in total.
 
 Ingestion can also be run on its own, without the rest of the CLI:
 

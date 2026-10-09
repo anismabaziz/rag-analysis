@@ -194,7 +194,7 @@ def test_chunking_runs_are_compared_on_retrieval_metrics_only(
         summarize_chunking,
     )
 
-    runs_dir = _run_chunking_over_both_domains(tmp_path, monkeypatch)
+    runs_dir = _run_chunking_over_papers(tmp_path, monkeypatch)
     table = render_chunking_markdown(summarize_chunking(load_chunking_runs(runs_dir)))
 
     for metric in (
@@ -221,7 +221,7 @@ def test_chunking_table_states_the_token_budget_and_its_gaps(
         summarize_chunking,
     )
 
-    runs_dir = _run_chunking_over_both_domains(tmp_path, monkeypatch)
+    runs_dir = _run_chunking_over_papers(tmp_path, monkeypatch)
     table = render_chunking_markdown(summarize_chunking(load_chunking_runs(runs_dir)))
 
     assert "token budget" in table.lower()
@@ -256,7 +256,7 @@ def test_the_chunking_table_excludes_runs_measured_at_the_committed_chunker(
             cache_dir=tmp_path / "cache",
         )
     )
-    runs_dir = _run_chunking_over_both_domains(tmp_path, monkeypatch)
+    runs_dir = _run_chunking_over_papers(tmp_path, monkeypatch)
 
     table = render_chunking_markdown(summarize_chunking(load_chunking_runs(runs_dir)))
 
@@ -275,7 +275,7 @@ def test_the_chunking_table_says_whether_the_budget_came_out_matched(
         summarize_chunking,
     )
 
-    runs_dir = _run_chunking_over_both_domains(tmp_path, monkeypatch)
+    runs_dir = _run_chunking_over_papers(tmp_path, monkeypatch)
     summary = summarize_chunking(load_chunking_runs(runs_dir))
     table = render_chunking_markdown(summary)
 
@@ -301,13 +301,12 @@ def test_chunking_table_is_pooled_and_per_domain(tmp_path, monkeypatch, offline)
     from evaluation.chunking import load_chunking_runs, summarize_chunking
 
     summary = summarize_chunking(
-        load_chunking_runs(_run_chunking_over_both_domains(tmp_path, monkeypatch))
+        load_chunking_runs(_run_chunking_over_papers(tmp_path, monkeypatch))
     )
 
     for name in CHUNKING:
         assert {row.scope for row in summary.rows if row.architecture == name} == {
             "papers",
-            "manuals",
             "pooled",
         }
 
@@ -320,7 +319,7 @@ def test_chunking_summary_refuses_runs_that_differ_beyond_the_chunker(
 
     from evaluation.chunking import load_chunking_runs, summarize_chunking
 
-    runs_dir = _run_chunking_over_both_domains(tmp_path, monkeypatch)
+    runs_dir = _run_chunking_over_papers(tmp_path, monkeypatch)
     target = next(runs_dir.rglob("chunk-fixed-*.json"))
     recorded = json.loads(target.read_text())
     recorded["configuration"]["retrieval_depth"] = 10
@@ -352,7 +351,7 @@ def test_the_main_summary_leaves_chunking_runs_out_rather_than_blending_them(
             cache_dir=tmp_path / "cache",
         )
     )
-    runs_dir = _run_chunking_over_both_domains(tmp_path, monkeypatch)
+    runs_dir = _run_chunking_over_papers(tmp_path, monkeypatch)
 
     summary = summarize(load_committed_runs(runs_dir))
 
@@ -364,7 +363,7 @@ def test_the_chunking_command_renders_the_retrieval_only_table(
 ):
     from main import main as cli
 
-    _run_chunking_over_both_domains(tmp_path, monkeypatch, out=tmp_path / "runs")
+    _run_chunking_over_papers(tmp_path, monkeypatch, out=tmp_path / "runs")
     out = tmp_path / "chunking.md"
     monkeypatch.setattr(
         sys,
@@ -391,7 +390,7 @@ def test_the_chunking_command_renders_the_retrieval_only_table(
 def _retrieve_from(chunks_for):
     from evaluation.set import load_evaluation_set
 
-    sets = {domain: load_evaluation_set(domain) for domain in ("papers", "manuals")}
+    sets = {domain: load_evaluation_set(domain) for domain in ("papers",)}
 
     def asked_of_the_sets(query: str, top_k: int = 5) -> list[Chunk]:
         for evaluation_set in sets.values():
@@ -406,7 +405,7 @@ def _retrieve_from(chunks_for):
     return retrieve
 
 
-def _run_chunking_over_both_domains(tmp_path, monkeypatch, out=None):
+def _run_chunking_over_papers(tmp_path, monkeypatch, out=None):
     from evaluation.run import run_evaluation
 
     results_dir = out or (tmp_path / "runs")
@@ -416,7 +415,7 @@ def _run_chunking_over_both_domains(tmp_path, monkeypatch, out=None):
             "retrieve",
             _retrieve_from(found_everywhere),
         )
-        for domain in ("papers", "manuals"):
+        for domain in ("papers",):
             asyncio.run(
                 run_evaluation(
                     name, domain, results_dir=results_dir, cache_dir=tmp_path / "cache"

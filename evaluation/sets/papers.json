@@ -2,7 +2,7 @@
   "domain": "papers",
   "strata": {
     "identifier_heavy": {
-      "definition": "The question names a rare string from the source: a model, a dataset, an option name, a number, a symbol. Lexical matching is expected to do well on these, and a retriever that keeps identifiers apart is expected to beat one that embeds the question and hopes. The shares match the manuals domain so the two are comparable.",
+      "definition": "The question names a rare string from the source: a model, a dataset, an option name, a number, a symbol. Lexical matching is expected to do well on these, and a retriever that keeps identifiers apart is expected to beat one that embeds the question and hopes.",
       "share": 0.44,
       "count": 14
     },

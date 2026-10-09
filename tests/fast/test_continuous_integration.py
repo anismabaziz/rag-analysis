@@ -175,10 +175,9 @@ def test_the_gates_ask_for_nothing_they_do_not_need():
 
 def test_the_corpus_the_labels_are_checked_against_is_fetched_before_the_suite_runs():
     """The gold answers are checked against the documents they were copied from, and those checks
-    skip when the corpus is absent. Fetching it turns a skip into a check. Only the papers are
-    fetched: their digests are pinned to immutable arXiv PDFs, while the manuals are reissued
-    with point releases, and a build that fails because upstream regenerated a PDF is a build
-    nobody trusts."""
+    skip when the corpus is absent. Fetching it turns a skip into a check. The papers are
+    fetched: their digests are pinned to immutable arXiv PDFs, so a build never fails
+    because upstream regenerated a file."""
     workflow = text_of(CI)
     fetched_at = workflow.find("fetch-corpus")
     tested_at = workflow.find("uv run pytest")

@@ -276,7 +276,7 @@ def test_rerank_is_reported_pooled_and_per_domain_alongside_the_others(
     from evaluation.set import load_evaluation_set
     from evaluation.summary import load_runs, render_markdown, summarize
 
-    sets = {domain: load_evaluation_set(domain) for domain in ("papers", "manuals")}
+    sets = {domain: load_evaluation_set(domain) for domain in ("papers",)}
 
     def asked_of_the_sets(query: str, top_k: int = 5) -> list[Chunk]:
         for evaluation_set in sets.values():
@@ -288,7 +288,7 @@ def test_rerank_is_reported_pooled_and_per_domain_alongside_the_others(
     async def retrieve(self, query: str, top_k: int = 5) -> list[Chunk]:
         return asked_of_the_sets(query, top_k)
 
-    for domain in ("papers", "manuals"):
+    for domain in ("papers",):
         monkeypatch.setattr(RerankRAG, "retrieve", retrieve)
         asyncio.run(
             run_evaluation(
@@ -302,8 +302,8 @@ def test_rerank_is_reported_pooled_and_per_domain_alongside_the_others(
     summary = summarize(load_runs(tmp_path / "runs"))
     scopes = {row.scope for row in summary.rows if row.architecture == "rerank"}
 
-    assert scopes == {"papers", "manuals", "pooled"}
-    assert render_markdown(summary).count("| rerank |") == 3
+    assert scopes == {"papers", "pooled"}
+    assert render_markdown(summary).count("| rerank |") == 2
 
 
 def test_rerank_summarizes_alongside_hybrid_without_an_isolation_refusal(
@@ -319,7 +319,7 @@ def test_rerank_summarizes_alongside_hybrid_without_an_isolation_refusal(
     from evaluation.set import load_evaluation_set
     from evaluation.summary import load_runs, summarize
 
-    sets = {domain: load_evaluation_set(domain) for domain in ("papers", "manuals")}
+    sets = {domain: load_evaluation_set(domain) for domain in ("papers",)}
 
     def asked_of_the_sets(query: str, top_k: int = 5) -> list[Chunk]:
         for evaluation_set in sets.values():
@@ -335,7 +335,7 @@ def test_rerank_summarizes_alongside_hybrid_without_an_isolation_refusal(
         monkeypatch.setattr(
             registry.architecture(architecture).pipeline, "retrieve", retrieve
         )
-        for domain in ("papers", "manuals"):
+        for domain in ("papers",):
             asyncio.run(
                 run_evaluation(
                     architecture,
@@ -353,7 +353,6 @@ def test_rerank_summarizes_alongside_hybrid_without_an_isolation_refusal(
             row.scope for row in summary.rows if row.architecture == architecture
         } == {
             "papers",
-            "manuals",
             "pooled",
         }
 

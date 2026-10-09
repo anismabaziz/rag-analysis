@@ -59,26 +59,6 @@
       "filename": "bge-m3.pdf",
       "pages": 18,
       "bytes": 754673
-    },
-    {
-      "id": "postgresql-16-documentation",
-      "domain": "manuals",
-      "title": "PostgreSQL 16.15 Documentation",
-      "url": "https://www.postgresql.org/files/documentation/pdf/16/postgresql-16-US.pdf",
-      "sha256": "f5316371014f5119fe51c153fffe11185b03504dce46361102761107e77c83ba",
-      "filename": "postgresql-16-documentation.pdf",
-      "pages": 3220,
-      "bytes": 15162468
-    },
-    {
-      "id": "mysql-9-3-reference-manual",
-      "domain": "manuals",
-      "title": "MySQL 9.3 Reference Manual",
-      "url": "https://downloads.mysql.com/docs/refman-9.3-en.pdf",
-      "sha256": "d8541c62ec6a446e40143c719994e51014f6148124d29cf92eff0ec6b39c8fb1",
-      "filename": "mysql-9-3-reference-manual.pdf",
-      "pages": 6578,
-      "bytes": 42802744
     }
   ]
 }

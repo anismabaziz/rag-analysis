@@ -1,6 +1,6 @@
 """The corpus is a committed manifest, not a committed pile of PDFs.
 
-Six papers and two database manuals are 60 MB of PDF, which is too much to ask of anyone who
+Six papers are a few MB of PDF, which is still too much to ask of anyone who
 cloned the repository to look at a results table, so what is committed is the list of
 documents: where each one is fetched from, how big it is, and the sha256 of its bytes. This
 module is the one place that list is read and shaped, and the one place that computes a digest,
@@ -17,7 +17,7 @@ MANIFEST_PATH = Path(__file__).with_name("manifest.json")
 
 DIGEST_LENGTH = 64
 
-# Read in blocks, so verifying a several hundred megabyte manual does not need it in memory.
+# Read in blocks, so verifying a large document does not need it in memory.
 READ_BLOCK = 1024 * 1024
 
 

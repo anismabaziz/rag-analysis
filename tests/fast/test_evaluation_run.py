@@ -138,10 +138,21 @@ def finds_at_rank_five(question, top_k):
     Depths are read off one retrieval by truncation, so this is what separates a recall at one
     from a recall at five: the same ranking scores zero shallow and a hit deep.
     """
-    # A document of the other domain, so no question of this run's set can name it: every one
-    # of these four is a miss wherever the run is pointed.
+    # A path the manifest holds no document for, so no question of this run's set can name
+    # it: every one of these four is a miss wherever the run is pointed. A miss keeps its rank
+    # rather than being dropped, which is what buries the hit at rank five.
     misses = [
-        a_chunk("postgresql-16-documentation", "Some other section") for _ in range(4)
+        Chunk(
+            text="a span",
+            score=0.1,
+            provenance=Provenance(
+                source="./documents/papers/stray.pdf",
+                section="Some other section",
+                page=1,
+                node_id="miss",
+            ),
+        )
+        for _ in range(4)
     ]
 
     return (misses + found_everywhere(question, top_k))[:top_k]

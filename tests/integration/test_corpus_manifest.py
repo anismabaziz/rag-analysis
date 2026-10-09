@@ -29,12 +29,6 @@ PAPER_IDS = {
     "bge-m3",
 }
 
-MANUAL_IDS = {
-    "postgresql-16-documentation",
-    "mysql-9-3-reference-manual",
-}
-
-
 class FakeDownloader:
     """Serves the bytes a document should have, and records the URLs it was asked for."""
 
@@ -88,12 +82,11 @@ def run_cli(monkeypatch, root, *argv):
     asyncio.run(module.main())
 
 
-def test_the_manifest_lists_every_document_of_both_domains():
+def test_the_manifest_lists_every_document_of_the_corpus():
     manifest = load_manifest()
 
-    assert set(manifest.domains) == {"papers", "manuals"}
+    assert set(manifest.domains) == {"papers"}
     assert {document.id for document in manifest.in_domain("papers")} == PAPER_IDS
-    assert {document.id for document in manifest.in_domain("manuals")} == MANUAL_IDS
 
 
 def test_every_manifest_document_carries_a_https_url_and_a_digest():

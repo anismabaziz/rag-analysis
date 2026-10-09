@@ -33,10 +33,9 @@ from evaluation.set import (
 # read the sources themselves need it.
 CORPUS_ROOT = Path(__file__).parents[2] / "documents"
 
-# The counts of each set as it is committed. A count is a recorded result, so it is asserted rather
+# The counts of the set as it is committed. A count is a recorded result, so it is asserted rather
 # than recomputed: adding a question has to be a deliberate change to this test, not a side effect
-# of appending to a file. Both domains are held to the same split on purpose, which is what lets the
-# results table compare them; the test below says so out loud.
+# of appending to a file.
 SPLIT = {
     Stratum.IDENTIFIER_HEAVY: 14,
     Stratum.PARAPHRASE: 10,
@@ -57,7 +56,7 @@ class Expected:
 
 DOMAINS = {
     domain: Expected(domain=domain, total=32, by_stratum=SPLIT, documents=documents)
-    for domain, documents in {"papers": 6, "manuals": 2}.items()
+    for domain, documents in {"papers": 6}.items()
 }
 
 
@@ -286,8 +285,8 @@ def test_no_unanswerable_question_is_supported_anywhere_in_its_domain(domain):
     manifest = load_manifest()
     sources = sources_for(document.id for document in manifest.in_domain(domain))
 
-    # Reduced once per document rather than once per probe: the manuals run to several thousand
-    # pages each, and re-reducing one of them for every question is minutes of nothing.
+    # Reduced once per document rather than once per probe, so a large corpus
+    # is not re-reduced for every question.
     corpus = {document_id: letters(text) for document_id, text in sources.items()}
 
     for question in unanswerable:
@@ -316,19 +315,6 @@ def test_the_shares_of_a_set_are_the_ones_it_declares(domain):
         share = evaluation_set.strata_counts()[stratum] / total
         assert entry.count == evaluation_set.strata_counts()[stratum]
         assert abs(share - entry.share) <= PROPORTION_TOLERANCE
-
-
-def test_the_two_domains_are_split_the_same_way_so_the_contrast_is_readable():
-    """The boundary condition is the difference between the domains, not a difference in how they
-    were built. Two sets written to different shares would show a register effect and a sampling
-    effect at the same time, and nothing in the results would separate the two.
-    """
-    papers = load_evaluation_set("papers")
-    manuals = load_evaluation_set("manuals")
-
-    assert {stratum: entry.share for stratum, entry in papers.strata.items()} == {
-        stratum: entry.share for stratum, entry in manuals.strata.items()
-    }
 
 
 @pytest.mark.parametrize("domain", sorted(DOMAINS))

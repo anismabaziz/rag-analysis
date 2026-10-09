@@ -1,5 +1,9 @@
 # Two corpus domains, results reported per domain
 
+> Superseded by 0007: the manuals domain was removed because a ten-thousand-page corpus
+> could not be ingested on the hardware available. What follows is the original reasoning,
+> kept as a record.
+
 The corpus spans two heterogeneous domains, and every metric is reported as a pooled figure
 plus a per-domain breakdown rather than a single average.
 

@@ -23,7 +23,7 @@ from tests.fast.test_evaluation_run import found_everywhere, found_nothing, offl
 def retrieve_from_both(chunks_for):
     """A retriever that answers each question of either committed set with the passages named."""
 
-    sets = {domain: load_evaluation_set(domain) for domain in ("papers", "manuals")}
+    sets = {domain: load_evaluation_set(domain) for domain in ("papers",)}
 
     def asked_of_the_sets(query: str, top_k: int = 5) -> list[Chunk]:
         for evaluation_set in sets.values():
@@ -87,7 +87,7 @@ def every_architecture_two_domains(tmp_path, monkeypatch):
     """
     finders = {"naive": found_everywhere}
 
-    for domain in ("papers", "manuals"):
+    for domain in ("papers",):
         for registered in retrieval_architectures():
             run_over_results(
                 tmp_path,
@@ -117,7 +117,7 @@ def test_every_architecture_is_compared_in_one_table(tmp_path, monkeypatch, offl
 
     assert "sparse" in registered_names
     for name in registered_names:
-        assert table.count(f"| {name} |") == 3, name
+        assert table.count(f"| {name} |") == 2, name
 
 
 def test_the_sparse_architecture_is_reported_pooled_and_per_domain(
@@ -130,7 +130,7 @@ def test_the_sparse_architecture_is_reported_pooled_and_per_domain(
     )
     scopes = {row.scope for row in summary.rows if row.architecture == "sparse"}
 
-    assert scopes == {"papers", "manuals", "pooled"}
+    assert scopes == {"papers", "pooled"}
 
 
 def test_every_metric_is_reported_pooled_and_per_domain(tmp_path, monkeypatch, offline):
@@ -142,7 +142,6 @@ def test_every_metric_is_reported_pooled_and_per_domain(tmp_path, monkeypatch, o
     table = render_markdown(summarize(load_committed_runs(runs)))
 
     assert "| papers |" in table
-    assert "| manuals |" in table
     assert "| pooled |" in table
     for metric in ("recall@1", "recall@3", "recall@5", "ndcg@1", "ndcg@3", "ndcg@5"):
         assert metric in table
